@@ -1,8 +1,8 @@
-import { Stripe } from 'stripe';
+import Stripe from 'stripe';
 import config from '../../../config';
 
 class PaymentService {
-  private stripe: Stripe;
+  private stripe: InstanceType<typeof Stripe>;
 
   constructor() {
     this.stripe = new Stripe(config.stripe.secretKey, {
