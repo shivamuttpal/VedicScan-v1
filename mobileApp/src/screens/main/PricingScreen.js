@@ -1,49 +1,100 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  Alert,
+  Alert, Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { VedicCard, GoldBar } from '../../components/VedicCard';
 import api from '../../config/api';
 
-const PLANS = [
-  {
-    id: 'free',
-    name: 'Free',
-    price: '₹0',
-    period: 'Forever',
-    icon: '🌱',
-    features: ['5 AI chats / day', 'Basic Rashifal', '1 profile'],
-    color: '#6B5040',
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: '₹299',
-    period: '/month',
-    icon: '⭐',
-    features: ['50 AI chats / day', 'Detailed Rashifal', '5 profiles', 'Compatibility analysis', 'Baby naming'],
-    featured: true,
-    color: '#D4760A',
-  },
-  {
-    id: 'premium',
-    name: 'Premium',
-    price: '₹799',
-    period: '/month',
-    icon: '👑',
-    features: ['Unlimited chats', 'All features', '10 profiles', 'Priority support', 'Advanced charts'],
-    color: '#7B1A38',
-  },
-];
-
 const PricingScreen = ({ navigation }) => {
-  const [selectedPlan, setSelectedPlan] = useState('pro');
+  const [selectedPlan, setSelectedPlan] = useState('standard');
+  const [currency, setCurrency] = useState('INR');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    detectLocation();
+  }, []);
+
+  const detectLocation = async () => {
+    try {
+      const response = await fetch('https://ipapi.co/json/');
+      const data = await response.json();
+      if (data.country_code !== 'IN') {
+        setCurrency('USD');
+      }
+    } catch (error) {
+      console.log('Location detection failed', error);
+    }
+  };
+
+  const prices = {
+    INR: {
+      standard: { monthly: '₹299', annual: '₹2,999', symbol: '₹' },
+      premium: { monthly: '₹999', annual: '₹9,999', symbol: '₹' },
+    },
+    USD: {
+      standard: { monthly: '$29', annual: '$290', symbol: '$' },
+      premium: { monthly: '$99', annual: '$990', symbol: '$' },
+    }
+  };
+
+  const PLANS = [
+    {
+      id: 'free',
+      name: 'Free',
+      price: currency === 'INR' ? '₹0' : '$0',
+      period: 'Forever',
+      icon: '🌱',
+      features: ['3 AI questions / day', 'Basic profile', 'Daily insights'],
+      color: '#6B5040',
+    },
+    {
+      id: 'standard',
+      name: 'Standard',
+      price: prices[currency].standard.monthly,
+      period: '/month',
+      icon: '⭐',
+      features: ['11 AI questions / day', 'Priority support', 'Advanced predictions', 'Chat history saved'],
+      featured: true,
+      color: '#D4760A',
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      price: prices[currency].premium.monthly,
+      period: '/month',
+      icon: '👑',
+      features: ['51 AI questions / day', 'Everything in Standard', 'Monthly reports', 'Real astrologer review'],
+      color: '#7B1A38',
+    },
+  ];
 
   const handleSubscribe = async (planId) => {
-    Alert.alert('Coming Soon', 'Subscription payments will be available soon!');
+    if (planId === 'free') return;
+    
+    setLoading(true);
+    try {
+      const { data } = await api.post('/api/subscription/create-checkout-session', {
+        plan: planId,
+        billingCycle: 'monthly',
+        currency: currency,
+      });
+
+      if (data.url) {
+        // In a real mobile app, you'd use a WebView or In-App Browser
+        // For now, alerting the URL or using Linking
+        Alert.alert('Payment Redirect', 'Redirecting to secure payment page...', [
+          { text: 'OK', onPress: () => Linking.openURL(data.url) }
+        ]);
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to initiate payment.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -58,6 +109,21 @@ const PricingScreen = ({ navigation }) => {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.body}>
+          {/* Currency Toggle */}
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity 
+              style={[styles.toggleBtn, currency === 'INR' && styles.toggleBtnActive]}
+              onPress={() => setCurrency('INR')}
+            >
+              <Text style={[styles.toggleText, currency === 'INR' && styles.toggleTextActive]}>🇮🇳 INR</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.toggleBtn, currency === 'USD' && styles.toggleBtnActive]}
+              onPress={() => setCurrency('USD')}
+            >
+              <Text style={[styles.toggleText, currency === 'USD' && styles.toggleTextActive]}>🌐 USD</Text>
+            </TouchableOpacity>
+          </View>
           {PLANS.map((plan) => (
             <TouchableOpacity
               key={plan.id}
@@ -153,6 +219,31 @@ const styles = StyleSheet.create({
   subBtn: { borderRadius: radius.md, overflow: 'hidden', marginTop: spacing.md },
   gradBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: radius.md },
   gradBtnText: { color: C.white, fontSize: fontSize.lg, fontWeight: '700' },
+  toggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: radius.lg,
+    padding: 4,
+    marginBottom: spacing.lg,
+  },
+  toggleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: radius.md,
+  },
+  toggleBtnActive: {
+    backgroundColor: C.white,
+    ...shadow.sm,
+  },
+  toggleText: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: C.textMuted,
+  },
+  toggleTextActive: {
+    color: C.text,
+  },
 });
 
 export default PricingScreen;

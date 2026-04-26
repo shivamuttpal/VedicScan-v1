@@ -47,20 +47,36 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
 };
 
 /**
- * Plan Prices in Paise (INR * 100)
+ * Plan Prices in lowest currency unit (Paise for INR, Cents for USD)
  */
 export const PLAN_PRICES = {
-  standard: {
-    monthly: 29900,
-    annual: 299900,
+  INR: {
+    standard: {
+      monthly: 29900,
+      annual: 299900,
+    },
+    premium: {
+      monthly: 99900,
+      annual: 999900,
+    },
+    'one-time': {
+      compatibility: 99900,
+      'baby-naming': 99900,
+    }
   },
-  premium: {
-    monthly: 99900,
-    annual: 999900,
-  },
-  'one-time': {
-    compatibility: 99900,
-    'baby-naming': 99900,
+  USD: {
+    standard: {
+      monthly: 2900,
+      annual: 29000,
+    },
+    premium: {
+      monthly: 9900,
+      annual: 99000,
+    },
+    'one-time': {
+      compatibility: 9900,
+      'baby-naming': 9900,
+    }
   }
 };
 

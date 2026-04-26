@@ -105,7 +105,7 @@ export const subscriptionController = {
    */
   async createOrder(req: AuthRequest, res: Response) {
     try {
-      const { plan, billingCycle, successUrl, cancelUrl } = req.body;
+      const { plan, billingCycle, successUrl, cancelUrl, currency = 'INR' } = req.body;
       const userId = req.user!.userId;
 
       if (!['standard', 'premium'].includes(plan)) {
@@ -113,8 +113,14 @@ export const subscriptionController = {
         return;
       }
 
+      const selectedCurrency = (currency as string).toUpperCase();
+      if (!['INR', 'USD'].includes(selectedCurrency)) {
+        res.status(400).json({ success: false, message: 'Unsupported currency.' });
+        return;
+      }
+
       const cycle = billingCycle === 'annual' ? 'annual' : 'monthly';
-      const amount = (PLAN_PRICES as any)[plan][cycle];
+      const amount = (PLAN_PRICES as any)[selectedCurrency][plan][cycle];
 
       if (!amount) {
         res.status(400).json({ success: false, message: 'Invalid pricing configuration.' });
@@ -126,6 +132,7 @@ export const subscriptionController = {
         userId,
         email: (req.user as any).email, // from auth token
         amount,
+        currency: selectedCurrency,
         plan,
         billingCycle: cycle,
         successUrl: successUrl || `${req.protocol}://${req.get('host')}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
@@ -137,6 +144,7 @@ export const subscriptionController = {
         userId,
         stripeSessionId: session.id,
         amount,
+        currency: selectedCurrency,
         plan,
         billingCycle: cycle,
         status: TransactionStatus.PENDING,

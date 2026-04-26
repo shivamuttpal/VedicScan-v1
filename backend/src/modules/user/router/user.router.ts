@@ -13,6 +13,7 @@ import {
   verifySignupSchema,
   verifyEmailSchema,
   verifyPhoneSchema,
+  resendOTPSchema,
 } from './user.validation';
 
 const router = Router();
@@ -22,6 +23,7 @@ router.post('/register', validate(registerSchema), userController.register.bind(
 router.post('/verify-email', validate(verifyEmailSchema), userController.verifyEmailSignup.bind(userController));
 router.post('/verify-phone', validate(verifyPhoneSchema), userController.verifyPhoneSignup.bind(userController));
 router.post('/verify-signup', validate(verifySignupSchema), userController.verifySignup.bind(userController));
+router.post('/resend-otp', validate(resendOTPSchema), userController.resendOTP.bind(userController));
 router.post('/login', validate(loginSchema), userController.login.bind(userController));
 router.post('/google-login', userController.googleLogin.bind(userController));
 router.post('/forgot-password', validate(forgotPasswordSchema), userController.forgotPassword.bind(userController));

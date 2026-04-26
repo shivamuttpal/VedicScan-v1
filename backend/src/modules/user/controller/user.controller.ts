@@ -214,6 +214,25 @@ export class UserController {
       next(error);
     }
   }
+
+  async resendOTP(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { email, phone } = req.body;
+      const result = await userService.resendSignupOTP(email, phone);
+      
+      if (result.email && result.emailOtp) {
+        await sendSignupVerificationEmail(result.email, result.emailOtp);
+      }
+      
+      if (result.phone && result.phoneOtp) {
+        await sendPhoneOTP(result.phone, result.phoneOtp);
+      }
+
+      successResponse(res, null, 'Verification code resent successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const userController = new UserController();

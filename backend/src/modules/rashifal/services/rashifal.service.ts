@@ -27,8 +27,8 @@ class RashifalService {
 
       console.log(`🚀 Starting daily Rashifal generation for ${today} (${dayOfWeek})...`);
 
-      // 1. Delete old data for today if any (just in case of retry)
-      await Rashifal.deleteMany({ date: today });
+      // 1. Clear all old data (we only keep predictions for the current day)
+      await Rashifal.deleteMany({});
 
       // 2. Prepare the prompt for batch generation
       const prompt = `Generate daily Vedic Astrology predictions (Rashifal) for all 12 zodiac signs for today, ${dayOfWeek}. 

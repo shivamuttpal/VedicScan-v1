@@ -12,6 +12,17 @@ const VerifyOTPScreen = ({ navigation, route }) => {
   const isEmail = email.includes('@');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  React.useEffect(() => {
+    let interval;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const handleVerify = async () => {
     if (!otp.trim() || otp.length < 4) {
@@ -55,8 +66,12 @@ const VerifyOTPScreen = ({ navigation, route }) => {
       if (purpose === 'forgot-password') {
         await api.post('/api/users/forgot-password', { email });
         Alert.alert('Success', 'A new verification code has been sent.');
+        setResendTimer(60);
       } else {
-        Alert.alert('Notice', 'Please go back and sign in again to receive a new OTP.');
+        const payload = isEmail ? { email } : { phone: email };
+        await api.post('/api/users/resend-otp', payload);
+        Alert.alert('Success', 'A new verification code has been sent.');
+        setResendTimer(60);
       }
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Failed to resend OTP');
@@ -95,9 +110,11 @@ const VerifyOTPScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity onPress={handleResend} style={styles.resendBtn}>
+        <TouchableOpacity onPress={handleResend} disabled={resendTimer > 0 || loading} style={[styles.resendBtn, resendTimer > 0 && { opacity: 0.6 }]}>
           <Text style={styles.resendText}>
-            Didn't receive code? <Text style={styles.resendLink}>Resend OTP</Text>
+            Didn't receive code? <Text style={styles.resendLink}>
+              {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+            </Text>
           </Text>
         </TouchableOpacity>
 

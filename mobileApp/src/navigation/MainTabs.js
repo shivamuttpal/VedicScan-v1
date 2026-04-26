@@ -26,6 +26,7 @@ const HomeStackScreen = () => (
     <HomeStack.Screen name="BabyNaming" component={BabyNamingScreen} />
     <HomeStack.Screen name="Insights" component={InsightsScreen} />
     <HomeStack.Screen name="Pricing" component={PricingScreen} />
+    <HomeStack.Screen name="Profile" component={ProfileScreen} />
   </HomeStack.Navigator>
 );
 
@@ -61,24 +62,24 @@ const MainTabs = () => (
       }}
     />
     <Tab.Screen
-      name="ChatTab"
+      name="Chat"
       component={ChatScreen}
       options={{
-        tabBarIcon: ({ focused }) => <TabIcon icon="🔮" label="Chat" focused={focused} />,
+        tabBarIcon: ({ focused }) => <TabIcon icon="✨" label="Maharshi" focused={focused} />,
       }}
     />
     <Tab.Screen
-      name="Rashifal"
-      component={RashifalScreen}
+      name="BabyNaming"
+      component={BabyNamingScreen}
       options={{
-        tabBarIcon: ({ focused }) => <TabIcon icon="☀️" label="Rashifal" focused={focused} />,
+        tabBarIcon: ({ focused }) => <TabIcon icon="👶" label="Baby" focused={focused} />,
       }}
     />
     <Tab.Screen
-      name="ProfileTab"
-      component={ProfileStackScreen}
+      name="Compatibility"
+      component={CompatibilityScreen}
       options={{
-        tabBarIcon: ({ focused }) => <TabIcon icon="👤" label="Profile" focused={focused} />,
+        tabBarIcon: ({ focused }) => <TabIcon icon="💕" label="Kundali" focused={focused} />,
       }}
     />
   </Tab.Navigator>

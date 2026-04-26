@@ -1,10 +1,20 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { Platform } from 'react-native';
+
 // Use your machine's LAN IP for physical device testing
 // For Android emulator: 10.0.2.2
 // For iOS simulator: localhost works
-const BACKEND_URL = 'http://172.16.196.84:8001';
+// We use localhost by default and recommend 'adb reverse tcp:8001 tcp:8001' for Android
+const BACKEND_URL = Platform.select({
+  android: 'http://localhost:8001', // Use localhost + adb reverse for reliable USB debugging
+  ios: 'http://localhost:8001',
+  default: 'http://localhost:8001',
+});
+
+// If you are using a physical device, you might need to change this to your LAN IP:
+// const BACKEND_URL = 'http://192.168.0.111:8001';
 
 const TOKEN_KEY = 'vedicscan_token';
 
@@ -37,6 +47,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    console.error('API Error:', {
+      message: error.message,
+      code: error.code,
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    
     if (error.response?.status === 401) {
       // Token expired — clear session
       await AsyncStorage.multiRemove([TOKEN_KEY, 'vedicscan_user']);

@@ -1,6 +1,9 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api, { TOKEN_KEY } from '../config/api';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+const GOOGLE_WEB_CLIENT_ID = '174486315809-n8r88rj0o5b61ef2tjbgi8jdj4fvkicr.apps.googleusercontent.com';
 
 const AuthContext = createContext();
 
@@ -14,6 +17,10 @@ export const AuthProvider = ({ children }) => {
   const [hasProfile, setHasProfile] = useState(false);
 
   useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: GOOGLE_WEB_CLIENT_ID,
+      offlineAccess: true,
+    });
     loadSession();
   }, []);
 
@@ -76,6 +83,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleLogin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const { accessToken } = await GoogleSignin.getTokens();
+
+      if (!accessToken) {
+        throw new Error('Google Sign-In failed: No access token');
+      }
+
+      const res = await api.post('/api/users/google-login', { token: accessToken });
+      
+      if (res.data?.success) {
+        const { token: newToken, user: userData } = res.data.data;
+        await saveSession(newToken, userData);
+        return { success: true };
+      } else {
+        return { success: false, message: res.data?.message || 'Verification failed' };
+      }
+    } catch (error) {
+      console.error('Google Sign-In Error:', error);
+      return { success: false, error };
+    }
+  };
+
   const refreshProfileStatus = useCallback(async (authToken) => {
     const currentToken = authToken || token;
     if (!currentToken) {
@@ -117,6 +149,7 @@ export const AuthProvider = ({ children }) => {
     getToken,
     hasProfile,
     refreshProfileStatus,
+    googleLogin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

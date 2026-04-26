@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ScrollView, Alert,
@@ -8,15 +8,40 @@ import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { VedicCard } from '../../components/VedicCard';
 import api from '../../config/api';
+import PhoneInput from 'react-native-phone-number-input';
+import { statusCodes } from '@react-native-google-signin/google-signin';
 
 const SignupScreen = ({ navigation }) => {
-  const { saveSession } = useAuth();
+  const { saveSession, googleLogin } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [formattedPhone, setFormattedPhone] = useState('');
+  const phoneInput = useRef(null);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleSignup = async () => {
+    setLoading(true);
+    const result = await googleLogin();
+    setLoading(false);
+
+    if (!result.success && result.error) {
+      const error = result.error;
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert('In Progress', 'Login is already in progress');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Error', 'Play Services not available');
+      } else {
+        Alert.alert('Login Error', 'Could not sign in with Google');
+      }
+    } else if (!result.success) {
+      Alert.alert('Google Login Failed', result.message || 'Verification failed');
+    }
+  };
 
   const handleSignup = async () => {
     if (!firstName.trim()) {
@@ -40,12 +65,12 @@ const SignupScreen = ({ navigation }) => {
         password,
       };
       if (email.trim()) payload.email = email.trim();
-      if (phone.trim()) payload.phone = phone.trim();
+      if (formattedPhone.trim()) payload.phone = formattedPhone.trim();
 
       const res = await api.post('/api/users/register', payload);
       if (res.data?.success) {
         Alert.alert('Success', res.data?.message || 'Verification code sent!', [
-          { text: 'OK', onPress: () => navigation.navigate('VerifyOTP', { email: email.trim() || phone.trim(), purpose: 'signup' }) }
+          { text: 'OK', onPress: () => navigation.navigate('VerifyOTP', { email: email.trim() || formattedPhone.trim(), purpose: 'signup' }) }
         ]);
       } else {
         Alert.alert('Registration Failed', res.data?.message || 'Please try again');
@@ -76,9 +101,16 @@ const SignupScreen = ({ navigation }) => {
             <Text style={styles.subtitle}>Create your celestial profile</Text>
           </View>
 
-          <TouchableOpacity style={styles.googleBtn} activeOpacity={0.7}>
+          <TouchableOpacity 
+            style={styles.googleBtn} 
+            activeOpacity={0.7}
+            onPress={handleGoogleSignup}
+            disabled={loading}
+          >
             <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.googleText}>Continue with Google</Text>
+            <Text style={styles.googleText}>
+              {loading ? 'Connecting...' : 'Continue with Google'}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.dividerRow}>
@@ -127,17 +159,26 @@ const SignupScreen = ({ navigation }) => {
             </View>
 
             <Text style={styles.label}>Phone Number</Text>
-            <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>📱</Text>
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="+91 9876543210"
-                placeholderTextColor={C.textDim}
-                keyboardType="phone-pad"
-              />
-            </View>
+            <PhoneInput
+              ref={phoneInput}
+              defaultValue={phone}
+              defaultCode="IN"
+              layout="first"
+              onChangeText={(text) => {
+                setPhone(text);
+              }}
+              onChangeFormattedText={(text) => {
+                setFormattedPhone(text);
+              }}
+              containerStyle={styles.phoneContainer}
+              textContainerStyle={styles.phoneTextContainer}
+              textInputStyle={styles.phoneTextInput}
+              codeTextStyle={styles.phoneCodeText}
+              placeholder="9876543210"
+              textInputProps={{
+                placeholderTextColor: C.textDim,
+              }}
+            />
 
             <Text style={styles.label}>Password *</Text>
             <View style={styles.inputWrapper}>
@@ -236,6 +277,31 @@ const styles = StyleSheet.create({
 
   backHome: { marginTop: spacing.xxl },
   backHomeText: { fontSize: fontSize.sm, color: C.textMuted },
+  
+  phoneContainer: {
+    width: '100%',
+    backgroundColor: C.input,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: C.border,
+    marginBottom: spacing.md,
+    height: 54,
+  },
+  phoneTextContainer: {
+    backgroundColor: 'transparent',
+    paddingVertical: 0,
+    borderTopRightRadius: radius.md,
+    borderBottomRightRadius: radius.md,
+  },
+  phoneTextInput: {
+    fontSize: fontSize.md,
+    color: C.text,
+    height: 50,
+  },
+  phoneCodeText: {
+    fontSize: fontSize.md,
+    color: C.text,
+  },
 });
 
 export default SignupScreen;

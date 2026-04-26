@@ -6,7 +6,7 @@ class PaymentService {
 
   constructor() {
     this.stripe = new Stripe(config.stripe.secretKey, {
-      apiVersion: '2025-01-27ts' as any, // latest stable
+      apiVersion: '2025-01-27.acacia' as any, // latest stable
     });
   }
 
@@ -17,6 +17,7 @@ class PaymentService {
     userId: string;
     email?: string;
     amount: number;
+    currency: string;
     plan: string;
     billingCycle: string;
     successUrl: string;
@@ -28,7 +29,7 @@ class PaymentService {
         line_items: [
           {
             price_data: {
-              currency: 'inr',
+              currency: params.currency.toLowerCase(),
               product_data: {
                 name: `VedicScan ${params.plan.charAt(0).toUpperCase() + params.plan.slice(1)} Plan`,
                 description: `${params.billingCycle === 'annual' ? '1 Year' : '1 Month'} Subscription`,

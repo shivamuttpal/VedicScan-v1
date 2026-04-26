@@ -36,6 +36,18 @@ const Signup = () => {
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  // Timer for resend button
+  useEffect(() => {
+    let interval;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   // Check for resumed verification from navigation state
   useEffect(() => {
@@ -131,6 +143,26 @@ const Signup = () => {
     } catch (err) {
       console.error('Phone verification error:', err);
       toast.error(err.response?.data?.message || 'Invalid or expired phone code.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (resendTimer > 0) return;
+    setLoading(true);
+
+    try {
+      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+      const res = await axios.post(`${BACKEND_URL}/api/users/resend-otp`, { email, phone });
+
+      if (res.data?.success) {
+        toast.success('New verification code sent!');
+        setResendTimer(60); // 60 seconds cooldown
+      }
+    } catch (err) {
+      console.error('Resend OTP error:', err);
+      toast.error(err.response?.data?.message || 'Failed to resend code.');
     } finally {
       setLoading(false);
     }
@@ -394,7 +426,19 @@ const Signup = () => {
                     </div>
                   </div>
 
-                  <div className="text-center pt-2">
+                  <div className="text-center pt-2 space-y-4">
+                    {!emailVerified && (
+                      <p className="text-sm text-vtext-muted">
+                        Didn't receive the code?{' '}
+                        <button 
+                          onClick={handleResendOTP}
+                          disabled={loading || resendTimer > 0}
+                          className={`font-semibold underline transition-colors ${resendTimer > 0 ? "text-vtext-dim cursor-not-allowed" : "text-saffron hover:text-maroon"}`}
+                        >
+                          {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend Code'}
+                        </button>
+                      </p>
+                    )}
                     <p className="text-sm text-vtext-muted">
                       Email must be verified to complete registration.
                     </p>

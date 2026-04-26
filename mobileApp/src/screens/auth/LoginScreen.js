@@ -7,13 +7,35 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../config/api';
+import { statusCodes } from '@react-native-google-signin/google-signin';
 
 const LoginScreen = ({ navigation }) => {
-  const { saveSession } = useAuth();
+  const { saveSession, googleLogin } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    const result = await googleLogin();
+    setLoading(false);
+
+    if (!result.success && result.error) {
+      const error = result.error;
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert('In Progress', 'Login is already in progress');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Error', 'Play Services not available');
+      } else {
+        Alert.alert('Login Error', 'Could not sign in with Google');
+      }
+    } else if (!result.success) {
+      Alert.alert('Google Login Failed', result.message || 'Verification failed');
+    }
+  };
 
   const handleLogin = async () => {
     if (!identifier.trim() || !password.trim()) {
@@ -65,9 +87,16 @@ const LoginScreen = ({ navigation }) => {
             <Text style={styles.subtitle}>Sign in to your cosmic journey</Text>
           </View>
 
-          <TouchableOpacity style={styles.googleBtn} activeOpacity={0.7}>
+          <TouchableOpacity 
+            style={styles.googleBtn} 
+            activeOpacity={0.7}
+            onPress={handleGoogleLogin}
+            disabled={loading}
+          >
             <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.googleText}>Sign in with Google</Text>
+            <Text style={styles.googleText}>
+              {loading ? 'Connecting...' : 'Sign in with Google'}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.dividerRow}>

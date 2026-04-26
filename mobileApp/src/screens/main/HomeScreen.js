@@ -1,52 +1,155 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  RefreshControl, Dimensions, Animated,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  Dimensions,
+  Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
-import { VedicCard } from '../../components/VedicCard';
 import api from '../../config/api';
 import { SIGNS } from '../../data/signs';
 
 const { width } = Dimensions.get('window');
 
+// ── Helper: Determine Rashi based on DOB (Sun sign ranges) ──
+const determineRashi = (dateStr) => {
+  if (!dateStr) return 'Mesh';
+  const date = new Date(dateStr);
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+
+  if ((m === 3 && d >= 21) || (m === 4 && d <= 19)) return 'Mesh';
+  if ((m === 4 && d >= 20) || (m === 5 && d <= 20)) return 'Vrishabh';
+  if ((m === 5 && d >= 21) || (m === 6 && d <= 20)) return 'Mithun';
+  if ((m === 6 && d >= 21) || (m === 7 && d <= 22)) return 'Kark';
+  if ((m === 7 && d >= 23) || (m === 8 && d <= 22)) return 'Simha';
+  if ((m === 8 && d >= 23) || (m === 9 && d <= 22)) return 'Kanya';
+  if ((m === 9 && d >= 23) || (m === 10 && d <= 22)) return 'Tula';
+  if ((m === 10 && d >= 23) || (m === 11 && d <= 21)) return 'Vrishchik';
+  if ((m === 11 && d >= 22) || (m === 12 && d <= 21)) return 'Dhanu';
+  if ((m === 12 && d >= 22) || (m === 1 && d <= 19)) return 'Makar';
+  if ((m === 1 && d >= 20) || (m === 2 && d <= 18)) return 'Kumbh';
+  if ((m === 2 && d >= 19) || (m === 3 && d <= 20)) return 'Meen';
+  return 'Mesh';
+};
+
+// ── Helper: format today's date as "Wednesday, 22 April" ──
+const formatDate = () => {
+  const d = new Date();
+  return d.toLocaleDateString('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+};
+
+// ── Feature list items (list-style, not grid) ──
 const FEATURES = [
-  { id: 'chat', icon: '🔮', title: 'Ask Maharshi', desc: 'AI-powered Vedic guidance', route: 'Chat', color: '#7B1A38' },
-  { id: 'compat', icon: '💕', title: 'Compatibility', desc: 'Kundli Milan analysis', route: 'Compatibility', color: '#D4760A' },
-  { id: 'baby', icon: '👶', title: 'Baby Names', desc: 'Astr\u200bologically aligned names', route: 'BabyNaming', color: '#0C7C6B' },
-  { id: 'insights', icon: '📊', title: 'Insights', desc: 'Kundli & planetary chart', route: 'Insights', color: '#6C3FA0' },
+  {
+    id: 'chat',
+    icon: '✨',
+    title: 'Maharshi AI',
+    badge: 'AI Powered',
+    badgeColor: '#1A7D4E',
+    badgeBg: '#D4EFDF',
+    desc: 'Chat with your personal Vedic AI astrologer',
+    route: 'Chat',
+    iconBg: '#FFF3E0',
+    iconColor: '#C8660A',
+  },
+  {
+    id: 'baby',
+    icon: '👶',
+    title: 'Baby Naming',
+    badge: 'Vedic + Modern',
+    badgeColor: '#0B7060',
+    badgeBg: '#D0F0EA',
+    desc: 'Discover auspicious names by Nakshatra & Rashi',
+    route: 'BabyNaming',
+    iconBg: '#D0F0EA',
+    iconColor: '#0B7060',
+  },
+  {
+    id: 'kundali',
+    icon: '💕',
+    title: 'Kundali Matching',
+    badge: '36 Gunas',
+    badgeColor: '#7B1A38',
+    badgeBg: '#F2D8E0',
+    desc: 'Ashtakoot compatibility & gun milan analysis',
+    route: 'Compatibility',
+    iconBg: '#F2D8E0',
+    iconColor: '#7B1A38',
+  },
+  {
+    id: 'insights',
+    icon: '📊',
+    title: 'My Kundali',
+    badge: 'Charts',
+    badgeColor: '#6C3FA0',
+    badgeBg: '#EDE3F7',
+    desc: 'Planetary chart, Dasha timeline & insights',
+    route: 'Insights',
+    iconBg: '#EDE3F7',
+    iconColor: '#6C3FA0',
+  },
 ];
+
+// ── User's active Rashi (comes from profile) ──
+const USER_RASHI = SIGNS[0]; // Mesh/Aries for demo
 
 const HomeScreen = ({ navigation }) => {
   const { user, hasProfile, isAuthenticated, refreshProfileStatus } = useAuth();
-  const [rashifal, setRashifal] = useState(null);
+  const [predictions, setPredictions] = useState({});
+  const [loadingPredictions, setLoadingPredictions] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [pulseAnim] = useState(new Animated.Value(1));
+  const [selectedSignName, setSelectedSignName] = useState('Mesh');
+  const [defaultProfile, setDefaultProfile] = useState(null);
 
-  useEffect(() => {
-    // Pulse animation for OM symbol
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.08, duration: 2000, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
-      ])
-    ).start();
-  }, []);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadRashifal();
-    }
-  }, [isAuthenticated]);
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        loadRashifal();
+        fetchDefaultProfile();
+      }
+    }, [isAuthenticated])
+  );
 
   const loadRashifal = async () => {
     try {
-      const res = await api.get('/api/rashifal?rashi=Mesh&period=daily');
-      if (res.data) setRashifal(res.data);
+      setLoadingPredictions(true);
+      const res = await api.get('/api/rashifal');
+      if (res.data?.success) {
+        const predMap = {};
+        res.data.data.forEach((p) => {
+          predMap[p.sign] = p.prediction;
+        });
+        setPredictions(predMap);
+      }
     } catch (err) {
       console.log('Rashifal not available:', err?.message);
+    } finally {
+      setLoadingPredictions(false);
+    }
+  };
+
+  const fetchDefaultProfile = async () => {
+    try {
+      const res = await api.get('/api/profiles/default');
+      if (res.data) {
+        setDefaultProfile(res.data);
+        const rashi = determineRashi(res.data.dateOfBirth);
+        setSelectedSignName(rashi);
+      }
+    } catch (err) {
+      console.log('Failed to fetch default profile:', err?.message);
     }
   };
 
@@ -54,237 +157,604 @@ const HomeScreen = ({ navigation }) => {
     setRefreshing(true);
     await refreshProfileStatus();
     await loadRashifal();
+    await fetchDefaultProfile();
     setRefreshing(false);
   };
 
   const handleFeaturePress = (route) => {
-    if (!hasProfile && route !== 'Pricing') {
-      navigation.navigate('ProfileTab', { screen: 'ProfileMain', params: { setup: true } });
+    if (!hasProfile) {
+      navigation.navigate('Profile', {
+        setup: true,
+      });
       return;
     }
-    // Navigate to the screen — for features in a stack
     navigation.navigate(route);
   };
 
+  const firstName = defaultProfile?.name || user?.firstName || 'Arjun';
+  const selectedSign = SIGNS.find((s) => s.rashi === selectedSignName) || SIGNS[0];
+  const insightText =
+    predictions[selectedSignName] ||
+    'The alignment of the planets favors a balanced approach for your sign today. Trust your intuition.';
+
   return (
-    <View style={styles.container}>
+    <View style={styles.root}>
       <ScrollView
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.saffron} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#C8660A"
+          />
+        }
       >
-        {/* Hero Section */}
-        <LinearGradient colors={C.heroGradient} style={styles.hero}>
-          {/* Orbital Rings (decorative) */}
-          <View style={styles.orbitalContainer}>
-            <View style={[styles.orbit, styles.orbit1]} />
-            <View style={[styles.orbit, styles.orbit2]} />
-            <View style={[styles.orbit, styles.orbit3]} />
-            <Animated.View style={[styles.omContainer, { transform: [{ scale: pulseAnim }] }]}>
-              <Text style={styles.omSymbol}>ॐ</Text>
-            </Animated.View>
+        {/* ── HERO ── */}
+        <LinearGradient
+          colors={['#6E1532', '#7B1A38', '#8B2040']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.hero}
+        >
+          <View style={styles.heroHeader}>
+            <View>
+              <Text style={styles.heroDate}>{formatDate()}</Text>
+              <Text style={styles.heroGreeting}>
+                Namaste, {firstName} {'🙏'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.profileBtn}
+              onPress={() => navigation.navigate('Profile')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.profileBtnIcon}>⚙️</Text>
+            </TouchableOpacity>
           </View>
+          <Text style={styles.heroTagline}>{'✨'} Ancient wisdom for modern life</Text>
 
-          <Text style={styles.brandText}>
-            Vedic<Text style={styles.brandAccent}>Scan</Text>
-          </Text>
-          <Text style={styles.heroSubtitle}>ANCIENT WISDOM · MODERN AI</Text>
-
-          {isAuthenticated && user && (
-            <Text style={styles.greeting}>
-              Namaste, {user.firstName || 'Seeker'} 🙏
-            </Text>
-          )}
-
-          {/* Profile Warning */}
+          {/* Profile setup warning */}
           {isAuthenticated && !hasProfile && (
             <TouchableOpacity
               style={styles.profileWarning}
-              onPress={() => navigation.navigate('ProfileTab', { screen: 'ProfileMain', params: { setup: true } })}
-              activeOpacity={0.8}
+              onPress={() =>
+                navigation.navigate('Profile', {
+                  setup: true,
+                })
+              }
+              activeOpacity={0.85}
             >
-              <Text style={styles.warningIcon}>⚠️</Text>
-              <View style={styles.warningContent}>
-                <Text style={styles.warningTitle}>Profile Setup Required</Text>
-                <Text style={styles.warningDesc}>Create your birth profile to unlock all cosmic features</Text>
+              <Text style={styles.warningIcon}>{'⚠️'}</Text>
+              <View style={styles.warningBody}>
+                <Text style={styles.warningTitle}>Profile setup required</Text>
+                <Text style={styles.warningDesc}>
+                  Create your birth profile to unlock all features
+                </Text>
               </View>
-              <Text style={styles.warningArrow}>→</Text>
+              <Text style={styles.warningArrow}>{'→'}</Text>
             </TouchableOpacity>
           )}
         </LinearGradient>
 
-        {/* Features Grid */}
-        <View style={styles.body}>
-          <Text style={styles.sectionTitle}>✨ Cosmic Tools</Text>
-          <View style={styles.grid}>
+        {/* ── RASHI CARD (overlaps hero bottom) ── */}
+        <View style={styles.rashiCardWrap}>
+          <View style={styles.rashiCard}>
+            {/* Gold top bar */}
+            <View style={styles.rashiCardGoldBar} />
+
+            {/* Rashi identity row */}
+            <View style={styles.rashiIdentityRow}>
+              {/* Zodiac symbol icon */}
+              <View style={styles.rashiIconBox}>
+                <Text style={styles.rashiIconSym}>{selectedSign.sym}</Text>
+              </View>
+
+              {/* Name + tags */}
+              <View style={styles.rashiInfo}>
+                <View style={styles.rashiNameRow}>
+                  <Text style={styles.rashiName}>{selectedSign.rashi}</Text>
+                  <Text style={styles.rashiDot}> · </Text>
+                  <Text style={styles.rashiZodiac}>{selectedSign.zodiac}</Text>
+                </View>
+                <View style={styles.rashiTagRow}>
+                  <View style={[styles.rashiTag, styles.rashiTagMars]}>
+                    <Text style={[styles.rashiTagText, { color: '#C0392B' }]}>
+                      Lord: {selectedSign.lord}
+                    </Text>
+                  </View>
+                  <View style={[styles.rashiTag, styles.rashiTagFire]}>
+                    <Text style={[styles.rashiTagText, { color: '#C8660A' }]}>
+                      {selectedSign.el} {selectedSign.icon}
+                    </Text>
+                  </View>
+                  <Text style={styles.rashiDev}>{selectedSign.rashiDev}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Divider */}
+            <View style={styles.rashiDivider} />
+
+            {/* Today's insight */}
+            <View style={styles.insightBox}>
+              <Text style={styles.insightLabel}>TODAY'S INSIGHT</Text>
+              <Text style={styles.insightText}>{insightText}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* ── DAILY RASHIFAL ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>DAILY RASHIFAL</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.rashiScrollContent}
+          >
+            {SIGNS.map((sg) => (
+              <TouchableOpacity
+                key={sg.rashi}
+                style={[
+                  styles.rashiChip,
+                  selectedSignName === sg.rashi && styles.rashiChipActive,
+                ]}
+                onPress={() => setSelectedSignName(sg.rashi)}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.rashiChipSym}>{sg.sym}</Text>
+                <Text
+                  style={[
+                    styles.rashiChipName,
+                    selectedSignName === sg.rashi && styles.rashiChipNameActive,
+                  ]}
+                >
+                  {sg.rashi}
+                </Text>
+                <Text style={styles.rashiChipZodiac}>{sg.zodiac}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          {/* Gold accent line */}
+          <View style={styles.rashiGoldLine} />
+        </View>
+
+        {/* ── EXPLORE FEATURES ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>EXPLORE FEATURES</Text>
+          <View style={styles.featureList}>
             {FEATURES.map((f) => (
               <TouchableOpacity
                 key={f.id}
-                style={styles.featureCard}
+                style={styles.featureRow}
                 onPress={() => handleFeaturePress(f.route)}
-                activeOpacity={0.7}
+                activeOpacity={0.78}
               >
-                <VedicCard style={styles.featureInner}>
-                  <View style={styles.featurePad}>
-                    <View style={[styles.iconCircle, { backgroundColor: f.color + '15' }]}>
-                      <Text style={styles.featureIcon}>{f.icon}</Text>
-                    </View>
+                {/* Icon */}
+                <View style={[styles.featureIcon, { backgroundColor: f.iconBg }]}>
+                  <Text style={styles.featureIconText}>{f.icon}</Text>
+                </View>
+
+                {/* Text block */}
+                <View style={styles.featureTextBlock}>
+                  <View style={styles.featureTitleRow}>
                     <Text style={styles.featureTitle}>{f.title}</Text>
-                    <Text style={styles.featureDesc}>{f.desc}</Text>
+                    <View
+                      style={[
+                        styles.featureBadge,
+                        { backgroundColor: f.badgeBg },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.featureBadgeText, { color: f.badgeColor }]}
+                      >
+                        {f.badge}
+                      </Text>
+                    </View>
                   </View>
-                </VedicCard>
+                  <Text style={styles.featureDesc}>{f.desc}</Text>
+                </View>
+
+                {/* Arrow */}
+                <Text style={styles.featureArrow}>{'›'}</Text>
               </TouchableOpacity>
             ))}
           </View>
+        </View>
 
-          {/* Quick Rashifal Preview */}
-          <TouchableOpacity
-            style={styles.rashifalPreview}
-            onPress={() => navigation.navigate('Rashifal')}
-            activeOpacity={0.7}
-          >
-            <VedicCard style={{ overflow: 'hidden' }}>
-              <LinearGradient
-                colors={['#FFF7ED', '#FFFBF0']}
-                style={styles.rashifalInner}
-              >
-                <View style={styles.rashifalHeader}>
-                  <Text style={styles.rashifalTitle}>☀️ Today's Rashifal</Text>
-                  <Text style={styles.rashifalLink}>View All →</Text>
-                </View>
-                <Text style={styles.rashifalHint}>
-                  Check your daily horoscope based on your Rashi
-                </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.rashiRow}>
-                  {SIGNS.slice(0, 6).map((s, i) => (
-                    <View key={i} style={styles.miniRashi}>
-                      <Text style={styles.miniSym}>{s.sym}</Text>
-                      <Text style={styles.miniName}>{s.rashi}</Text>
-                    </View>
-                  ))}
-                  <View style={styles.moreRashi}>
-                    <Text style={styles.moreText}>+6</Text>
-                  </View>
-                </ScrollView>
-              </LinearGradient>
-            </VedicCard>
-          </TouchableOpacity>
-
-          {/* Pricing CTA */}
+        {/* ── PREMIUM CTA ── */}
+        <View style={styles.section}>
           <TouchableOpacity
             onPress={() => navigation.navigate('Pricing')}
-            activeOpacity={0.8}
-            style={styles.pricingCTA}
+            activeOpacity={0.85}
+            style={styles.premiumBtn}
           >
             <LinearGradient
               colors={['#7B1A38', '#4A0E22']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={styles.pricingInner}
+              style={styles.premiumGrad}
             >
-              <Text style={styles.pricingIcon}>👑</Text>
-              <View style={styles.pricingTextWrap}>
-                <Text style={styles.pricingTitle}>Unlock Premium Features</Text>
-                <Text style={styles.pricingDesc}>Unlimited chats, detailed charts & more</Text>
+              <Text style={styles.premiumIcon}>{'👑'}</Text>
+              <View style={styles.premiumText}>
+                <Text style={styles.premiumTitle}>Unlock Premium</Text>
+                <Text style={styles.premiumDesc}>
+                  Unlimited chats, detailed charts & more
+                </Text>
               </View>
-              <Text style={styles.pricingArrow}>→</Text>
+              <Text style={styles.premiumArrow}>{'→'}</Text>
             </LinearGradient>
           </TouchableOpacity>
-
-          <View style={{ height: 40 }} />
         </View>
+
+        <View style={{ height: 140 }} />
       </ScrollView>
+
     </View>
   );
 };
 
+// ──────────────────────────────────────────
+// STYLES
+// ──────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  root: {
+    flex: 1,
+    backgroundColor: '#F9F3EB',
+  },
+  scrollContent: {
+    paddingBottom: 0,
+  },
+
+  // ── HERO ──
   hero: {
-    paddingTop: 60,
-    paddingBottom: 32,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-    overflow: 'hidden',
+    paddingTop: Platform.OS === 'ios' ? 64 : 48,
+    paddingBottom: 64,
+    paddingHorizontal: 24,
   },
-  orbitalContainer: {
-    width: 140,
-    height: 140,
+  heroDate: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.55)',
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  heroGreeting: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+    marginBottom: 6,
+  },
+  heroTagline: {
+    fontSize: 13,
+    color: '#D4BA80',
+    fontWeight: '500',
+  },
+  heroHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  profileBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  orbit: {
-    position: 'absolute',
-    borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(184,134,11,0.2)',
+    borderColor: 'rgba(255,255,255,0.2)',
   },
-  orbit1: { width: 100, height: 100 },
-  orbit2: { width: 130, height: 130, borderColor: 'rgba(184,134,11,0.12)' },
-  orbit3: { width: 160, height: 160, borderColor: 'rgba(184,134,11,0.06)' },
-  omContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(184,134,11,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  profileBtnIcon: {
+    fontSize: 22,
   },
-  omSymbol: { fontSize: 30, color: C.goldBorder },
-  brandText: { fontSize: fontSize.h1, fontWeight: '800', color: C.white, marginBottom: 2 },
-  brandAccent: { color: C.saffron },
-  heroSubtitle: { fontSize: fontSize.xs, color: C.goldBorder, letterSpacing: 3, marginBottom: spacing.md },
-  greeting: { fontSize: fontSize.lg, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
+
+  // Profile warning
   profileWarning: {
-    marginTop: spacing.md,
+    marginTop: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(212,118,10,0.15)',
-    borderRadius: radius.md,
-    padding: spacing.md,
+    backgroundColor: 'rgba(212,118,10,0.18)',
+    borderRadius: 12,
+    padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(212,118,10,0.3)',
-    width: '100%',
+    borderColor: 'rgba(212,118,10,0.35)',
   },
-  warningIcon: { fontSize: 20, marginRight: spacing.sm },
-  warningContent: { flex: 1 },
-  warningTitle: { color: C.saffron, fontWeight: '700', fontSize: fontSize.md },
-  warningDesc: { color: 'rgba(255,255,255,0.5)', fontSize: fontSize.sm },
-  warningArrow: { color: C.saffron, fontSize: 18, fontWeight: '700' },
-  body: { padding: spacing.lg },
-  sectionTitle: { fontSize: fontSize.xl, fontWeight: '700', color: C.text, marginBottom: spacing.md },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  featureCard: { width: (width - 56) / 2, marginBottom: spacing.md },
-  featureInner: {},
-  featurePad: { padding: spacing.md, alignItems: 'center' },
-  iconCircle: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.sm },
-  featureIcon: { fontSize: 22 },
-  featureTitle: { fontSize: fontSize.md, fontWeight: '700', color: C.text, marginBottom: 2 },
-  featureDesc: { fontSize: fontSize.xs, color: C.textMuted, textAlign: 'center' },
-  rashifalPreview: { marginTop: spacing.md, marginBottom: spacing.md },
-  rashifalInner: { padding: spacing.md },
-  rashifalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  rashifalTitle: { fontSize: fontSize.lg, fontWeight: '700', color: C.text },
-  rashifalLink: { fontSize: fontSize.sm, color: C.saffron, fontWeight: '600' },
-  rashifalHint: { fontSize: fontSize.sm, color: C.textMuted, marginBottom: spacing.md },
-  rashiRow: { flexDirection: 'row' },
-  miniRashi: { alignItems: 'center', marginRight: 14 },
-  miniSym: { fontSize: 22 },
-  miniName: { fontSize: fontSize.xs, color: C.textMid, marginTop: 2 },
-  moreRashi: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: C.saffronSoft, justifyContent: 'center', alignItems: 'center',
+  warningIcon: { fontSize: 18, marginRight: 10 },
+  warningBody: { flex: 1 },
+  warningTitle: { color: '#D4760A', fontWeight: '700', fontSize: 14 },
+  warningDesc: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 1 },
+  warningArrow: { color: '#D4760A', fontSize: 18, fontWeight: '700' },
+
+  // ── RASHI CARD ──
+  rashiCardWrap: {
+    marginTop: -40,
+    paddingHorizontal: 20,
+    zIndex: 10,
   },
-  moreText: { fontSize: fontSize.sm, fontWeight: '700', color: C.saffron },
-  pricingCTA: { marginTop: spacing.md, borderRadius: radius.lg, overflow: 'hidden' },
-  pricingInner: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: radius.lg },
-  pricingIcon: { fontSize: 26, marginRight: spacing.md },
-  pricingTextWrap: { flex: 1 },
-  pricingTitle: { color: C.white, fontWeight: '700', fontSize: fontSize.lg },
-  pricingDesc: { color: 'rgba(255,255,255,0.6)', fontSize: fontSize.sm },
-  pricingArrow: { color: C.goldBorder, fontSize: 22, fontWeight: '700' },
+  rashiCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    overflow: 'hidden',
+    shadowColor: '#2C1E12',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  rashiCardGoldBar: {
+    height: 3,
+    backgroundColor: 'transparent',
+    backgroundImage: 'linear-gradient(90deg, transparent, #D4BA80, #C8660A, #D4BA80, transparent)',
+    // For React Native, use a View with gold color:
+    backgroundColor: '#D4BA80',
+  },
+  rashiIdentityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    paddingBottom: 16,
+    gap: 16,
+  },
+  rashiIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    backgroundColor: '#EDE3F7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D9CFF0',
+  },
+  rashiIconSym: {
+    fontSize: 26,
+    color: '#6C3FA0',
+  },
+  rashiInfo: {
+    flex: 1,
+  },
+  rashiNameRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 6,
+  },
+  rashiName: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#2C1E12',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+  },
+  rashiDot: {
+    fontSize: 16,
+    color: '#9A8878',
+  },
+  rashiZodiac: {
+    fontSize: 14,
+    color: '#9A8878',
+    fontWeight: '400',
+  },
+  rashiTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  rashiTag: {
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  rashiTagMars: {
+    backgroundColor: '#FADBD8',
+  },
+  rashiTagFire: {
+    backgroundColor: '#FFF3E0',
+  },
+  rashiTagText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  rashiDev: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#C8660A',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  rashiDivider: {
+    height: 1,
+    backgroundColor: '#F0E8DE',
+    marginHorizontal: 16,
+  },
+  insightBox: {
+    backgroundColor: '#FFF7ED',
+    margin: 12,
+    borderRadius: 12,
+    padding: 14,
+    borderLeftWidth: 3,
+    borderLeftColor: '#C8660A',
+  },
+  insightLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#C8660A',
+    letterSpacing: 1.2,
+    marginBottom: 6,
+    textTransform: 'uppercase',
+  },
+  insightText: {
+    fontSize: 14,
+    color: '#2C1E12',
+    lineHeight: 21,
+    fontWeight: '400',
+  },
+
+  // ── SECTION WRAPPER ──
+  section: {
+    paddingHorizontal: 20,
+    paddingTop: 32,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#6B5040',
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+
+  // ── DAILY RASHIFAL HORIZONTAL SCROLL ──
+  rashiScrollContent: {
+    paddingRight: 16,
+    gap: 10,
+  },
+  rashiChip: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E8DFD2',
+    minWidth: 68,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  rashiChipActive: {
+    backgroundColor: '#FFF7ED',
+    borderColor: '#C8660A',
+    borderWidth: 2,
+  },
+  rashiChipSym: {
+    fontSize: 22,
+    marginBottom: 4,
+  },
+  rashiChipName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2C1E12',
+    marginBottom: 1,
+  },
+  rashiChipNameActive: {
+    color: '#C8660A',
+  },
+  rashiChipZodiac: {
+    fontSize: 10,
+    color: '#9A8878',
+    fontWeight: '400',
+  },
+  rashiGoldLine: {
+    height: 2.5,
+    backgroundColor: '#D4BA80',
+    borderRadius: 2,
+    marginTop: 14,
+    opacity: 0.5,
+  },
+
+  // ── FEATURE LIST ──
+  featureList: {
+    gap: 12,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 18,
+    gap: 16,
+    borderWidth: 1,
+    borderColor: '#E8DFD2',
+    shadowColor: '#2C1E12',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  featureIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  featureIconText: {
+    fontSize: 22,
+  },
+  featureTextBlock: {
+    flex: 1,
+  },
+  featureTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+    flexWrap: 'wrap',
+  },
+  featureTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#2C1E12',
+  },
+  featureBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  featureBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  featureDesc: {
+    fontSize: 12,
+    color: '#9A8878',
+    lineHeight: 17,
+  },
+  featureArrow: {
+    fontSize: 22,
+    color: '#C4B8AC',
+    fontWeight: '300',
+    flexShrink: 0,
+  },
+
+  // ── PREMIUM CTA ──
+  premiumBtn: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  premiumGrad: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 14,
+  },
+  premiumIcon: {
+    fontSize: 26,
+  },
+  premiumText: {
+    flex: 1,
+  },
+  premiumTitle: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 16,
+    marginBottom: 2,
+  },
+  premiumDesc: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+  },
+  premiumArrow: {
+    color: '#D4BA80',
+    fontSize: 22,
+    fontWeight: '600',
+  },
+
 });
 
 export default HomeScreen;

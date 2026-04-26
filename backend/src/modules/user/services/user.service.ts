@@ -410,6 +410,41 @@ export class UserService {
 
     return { user: updatedUser, token };
   }
+
+  async resendSignupOTP(email?: string, phone?: string): Promise<{ emailOtp?: string; phoneOtp?: string; email?: string; phone?: string }> {
+    let user = null;
+    if (email) {
+      user = await userRepository.findByEmail(email);
+    } else if (phone) {
+      user = await userRepository.findByPhone(phone);
+    }
+
+    if (!user) {
+      throw new ApiError(404, 'User not found');
+    }
+
+    if (user.isActive) {
+      throw new ApiError(400, 'Account is already active');
+    }
+
+    const emailOtp = user.email ? Math.floor(100000 + Math.random() * 900000).toString() : undefined;
+    const phoneOtp = (!user.email && user.phone) ? Math.floor(100000 + Math.random() * 900000).toString() : undefined;
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    await userRepository.update(user._id.toString(), {
+      emailOTP: emailOtp,
+      emailOTPExpires: otpExpires,
+      phoneOTP: phoneOtp,
+      phoneOTPExpires: otpExpires,
+    });
+
+    return { 
+      emailOtp, 
+      phoneOtp,
+      email: user.email,
+      phone: user.phone
+    };
+  }
 }
 
 export const userService = new UserService();

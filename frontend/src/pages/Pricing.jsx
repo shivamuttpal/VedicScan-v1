@@ -15,6 +15,42 @@ const Pricing = () => {
   const { isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [currency, setCurrency] = useState('INR'); // Default to INR
+
+  // Detect location on mount
+  React.useEffect(() => {
+    const detectLocation = async () => {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        if (data.country_code !== 'IN') {
+          setCurrency('USD');
+        }
+      } catch (error) {
+        // Fallback to timezone detection if API fails
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (tz !== 'Asia/Kolkata') {
+          setCurrency('USD');
+        }
+      }
+    };
+    detectLocation();
+  }, []);
+
+  const prices = {
+    INR: {
+      standard: { monthly: 299, annual: 2999 },
+      premium: { monthly: 999, annual: 9999 },
+      symbol: '₹'
+    },
+    USD: {
+      standard: { monthly: 29, annual: 290 },
+      premium: { monthly: 99, annual: 990 },
+      symbol: '$'
+    }
+  };
+
+  const currentPrices = prices[currency];
 
   const handleSubscribe = async (plan) => {
     if (!isAuthenticated) {
@@ -24,60 +60,24 @@ const Pricing = () => {
 
     setLoading(true);
     try {
-      const { data: orderData } = await api.post('/api/subscription/create-order', {
+      const { data: orderData } = await api.post('/api/subscription/create-checkout-session', {
         plan,
-        billingCycle
+        billingCycle,
+        currency,
+        successUrl: window.location.origin + '/dashboard?payment=success',
+        cancelUrl: window.location.origin + '/pricing?payment=cancelled'
       });
 
       if (!orderData.success) {
         throw new Error(orderData.message || 'Failed to create order');
       }
 
-      const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: 'VedicScan',
-        description: `${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan Subscription`,
-        order_id: orderData.orderId,
-        handler: async function (response) {
-          try {
-            setLoading(true);
-            const { data: verifyData } = await api.post('/api/subscription/verify-payment', {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
-            });
-
-            if (verifyData.success) {
-              toast.success('Subscription activated successfully!');
-              navigate('/dashboard');
-            } else {
-              toast.error(verifyData.message || 'Payment verification failed');
-            }
-          } catch (err) {
-            console.error('Verification error:', err);
-            toast.error('Failed to verify payment. Please contact support.');
-          } finally {
-            setLoading(false);
-          }
-        },
-        prefill: {
-          name: '',
-          email: '',
-        },
-        theme: {
-          color: plan === 'premium' ? '#6C3FA0' : '#D4760A',
-        },
-        modal: {
-          ondismiss: function() {
-            setLoading(false);
-          }
-        }
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      // Redirect to Stripe Checkout
+      if (orderData.url) {
+        window.location.href = orderData.url;
+      } else {
+        throw new Error('Stripe session URL not found');
+      }
 
     } catch (error) {
       console.error('Error subscribing:', error);
@@ -85,17 +85,6 @@ const Pricing = () => {
       setLoading(false);
     }
   };
-
-  React.useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
 
   return (
     <div className="min-h-screen bg-vedic-bg font-outfit">
@@ -116,29 +105,56 @@ const Pricing = () => {
             <h1 className="text-4xl lg:text-5xl font-bold mb-3 text-vtext font-playfair">Choose Your <span className="text-saffron">Plan</span></h1>
             <p className="text-lg text-vtext-muted mb-8">Unlock unlimited cosmic insights</p>
             
-            {/* Billing Toggle */}
-            <div className="inline-flex items-center bg-vedic-bg-warm rounded-xl p-1 border border-vborder">
-              <button
-                onClick={() => setBillingCycle('monthly')}
-                className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  billingCycle === 'monthly'
-                    ? 'bg-white text-vtext shadow-sm'
-                    : 'text-vtext-muted hover:text-vtext'
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle('annual')}
-                className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                  billingCycle === 'annual'
-                    ? 'bg-white text-vtext shadow-sm'
-                    : 'text-vtext-muted hover:text-vtext'
-                }`}
-              >
-                Annual
-                <span className="ml-1 text-xs text-vgreen font-semibold">Save 16%</span>
-              </button>
+            {/* Pricing Toggles */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+              {/* Billing Toggle */}
+              <div className="inline-flex items-center bg-vedic-bg-warm rounded-xl p-1 border border-vborder">
+                <button
+                  onClick={() => setBillingCycle('monthly')}
+                  className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    billingCycle === 'monthly'
+                      ? 'bg-white text-vtext shadow-sm'
+                      : 'text-vtext-muted hover:text-vtext'
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingCycle('annual')}
+                  className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    billingCycle === 'annual'
+                      ? 'bg-white text-vtext shadow-sm'
+                      : 'text-vtext-muted hover:text-vtext'
+                  }`}
+                >
+                  Annual
+                  <span className="ml-1 text-xs text-vgreen font-semibold">Save 16%</span>
+                </button>
+              </div>
+
+              {/* Currency Toggle */}
+              <div className="inline-flex items-center bg-vedic-bg-warm rounded-xl p-1 border border-vborder">
+                <button
+                  onClick={() => setCurrency('INR')}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    currency === 'INR'
+                      ? 'bg-white text-vtext shadow-sm'
+                      : 'text-vtext-muted hover:text-vtext'
+                  }`}
+                >
+                  🇮🇳 INR
+                </button>
+                <button
+                  onClick={() => setCurrency('USD')}
+                  className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    currency === 'USD'
+                      ? 'bg-white text-vtext shadow-sm'
+                      : 'text-vtext-muted hover:text-vtext'
+                  }`}
+                >
+                  🌐 USD
+                </button>
+              </div>
             </div>
           </div>
 
@@ -150,7 +166,7 @@ const Pricing = () => {
                 <h3 className="text-2xl font-bold text-vtext font-playfair">Free</h3>
                 <p className="text-vtext-muted text-sm mt-1">Get started with basics</p>
                 <div className="mt-4 mb-6">
-                  <span className="text-4xl font-bold text-vtext">₹0</span>
+                  <span className="text-4xl font-bold text-vtext">{currentPrices.symbol}0</span>
                   <span className="text-vtext-muted">/month</span>
                 </div>
                 <div className="space-y-3 mb-6">
@@ -196,14 +212,14 @@ const Pricing = () => {
                   <div className="mt-4 mb-6">
                     {billingCycle === 'monthly' ? (
                       <>
-                        <span className="text-4xl font-bold text-saffron">₹299</span>
+                        <span className="text-4xl font-bold text-saffron">{currentPrices.symbol}{currentPrices.standard.monthly}</span>
                         <span className="text-vtext-muted">/month</span>
                       </>
                     ) : (
                       <>
-                        <span className="text-4xl font-bold text-saffron">₹2,999</span>
+                        <span className="text-4xl font-bold text-saffron">{currentPrices.symbol}{currentPrices.standard.annual}</span>
                         <span className="text-vtext-muted">/year</span>
-                        <p className="text-sm text-vgreen mt-1">Save ₹589/year</p>
+                        <p className="text-sm text-vgreen mt-1">Save {currentPrices.symbol}{Math.round(currentPrices.standard.monthly * 12 - currentPrices.standard.annual)}/year</p>
                       </>
                     )}
                   </div>
@@ -254,14 +270,14 @@ const Pricing = () => {
                   <div className="mt-4 mb-6">
                     {billingCycle === 'monthly' ? (
                       <>
-                        <span className="text-4xl font-bold text-vpurple">₹999</span>
+                        <span className="text-4xl font-bold text-vpurple">{currentPrices.symbol}{currentPrices.premium.monthly}</span>
                         <span className="text-vtext-muted">/month</span>
                       </>
                     ) : (
                       <>
-                        <span className="text-4xl font-bold text-vpurple">₹9,999</span>
+                        <span className="text-4xl font-bold text-vpurple">{currentPrices.symbol}{currentPrices.premium.annual}</span>
                         <span className="text-vtext-muted">/year</span>
-                        <p className="text-sm text-vgreen mt-1">Save ₹1,989/year</p>
+                        <p className="text-sm text-vgreen mt-1">Save {currentPrices.symbol}{Math.round(currentPrices.premium.monthly * 12 - currentPrices.premium.annual)}/year</p>
                       </>
                     )}
                   </div>
@@ -311,7 +327,7 @@ const Pricing = () => {
                 <div className="p-6">
                   <h3 className="text-lg font-bold text-vtext font-playfair">Compatibility Report</h3>
                   <p className="text-sm text-vtext-muted mb-4">Detailed Kundli Milan analysis</p>
-                  <div className="text-3xl font-bold text-maroon mb-4">₹999</div>
+                  <div className="text-3xl font-bold text-maroon mb-4">{currentPrices.symbol}{currency === 'INR' ? '999' : '9'}</div>
                   <Button 
                     onClick={() => navigate('/compatibility')}
                     className="w-full bg-gradient-to-r from-maroon to-maroon-600 text-white rounded-xl hover:shadow-lg transition-all"
@@ -325,7 +341,7 @@ const Pricing = () => {
                 <div className="p-6">
                   <h3 className="text-lg font-bold text-vtext font-playfair">Baby Naming</h3>
                   <p className="text-sm text-vtext-muted mb-4">Auspicious name suggestions</p>
-                  <div className="text-3xl font-bold text-vteal mb-4">₹999</div>
+                  <div className="text-3xl font-bold text-vteal mb-4">{currentPrices.symbol}{currency === 'INR' ? '999' : '9'}</div>
                   <Button 
                     onClick={() => navigate('/baby-naming')}
                     className="w-full bg-gradient-to-r from-vteal to-vteal-600 text-white rounded-xl hover:shadow-lg transition-all"

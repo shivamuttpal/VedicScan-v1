@@ -13,6 +13,17 @@ const VerifyOTP = () => {
   const email = location.state?.email || '';
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  React.useEffect(() => {
+    let interval;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,6 +49,26 @@ const VerifyOTP = () => {
     } catch (err) {
       console.error('Verify OTP error:', err);
       toast.error(err.response?.data?.message || 'Invalid OTP or it has expired.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendTimer > 0) return;
+    setLoading(true);
+
+    try {
+      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+      const res = await axios.post(`${BACKEND_URL}/api/users/forgot-password`, { email });
+
+      if (res.data?.success) {
+        toast.success('New verification code sent!');
+        setResendTimer(60);
+      }
+    } catch (err) {
+      console.error('Resend OTP error:', err);
+      toast.error(err.response?.data?.message || 'Failed to resend code.');
     } finally {
       setLoading(false);
     }
@@ -99,10 +130,11 @@ const VerifyOTP = () => {
               <p className="text-sm text-vtext-muted">
                 Didn't receive the code?{' '}
                 <button 
-                  onClick={() => navigate('/forgot-password')}
-                  className="text-saffron hover:text-maroon font-semibold underline transition-colors"
+                  onClick={handleResend}
+                  disabled={loading || resendTimer > 0}
+                  className={`font-semibold underline transition-colors ${resendTimer > 0 ? "text-vtext-dim cursor-not-allowed" : "text-saffron hover:text-maroon"}`}
                 >
-                  Resend OTP
+                  {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
                 </button>
               </p>
               <Link to="/forgot-password" className="text-sm text-vtext-muted hover:text-saffron flex items-center justify-center gap-2 font-medium transition-colors">

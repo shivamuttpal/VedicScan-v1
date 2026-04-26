@@ -8,6 +8,7 @@ import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { VedicCard, GoldBar } from '../../components/VedicCard';
 import api from '../../config/api';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const GENDERS = ['Male', 'Female', 'Other'];
 const RELATIONSHIPS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Friend', 'Other'];
@@ -22,10 +23,16 @@ const ProfileScreen = ({ route }) => {
 
   // Form state
   const [form, setForm] = useState({
-    fullName: '', dateOfBirth: '', timeOfBirth: '', placeOfBirth: '',
-    gender: 'Male', relationship: 'Self',
+    fullName: '',
+    dateOfBirth: '',
+    timeOfBirth: '',
+    placeOfBirth: '',
+    relationship: 'Self',
+    isDefault: false,
   });
   const [editingId, setEditingId] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
     fetchProfiles();
@@ -68,6 +75,7 @@ const ProfileScreen = ({ route }) => {
         timeOfBirth: form.timeOfBirth,
         placeOfBirth: form.placeOfBirth,
         relationship: form.relationship,
+        isDefault: form.isDefault,
       };
       
       if (editingId) {
@@ -79,7 +87,14 @@ const ProfileScreen = ({ route }) => {
       }
       setShowForm(false);
       setEditingId(null);
-      setForm({ fullName: '', dateOfBirth: '', timeOfBirth: '', placeOfBirth: '', gender: 'Male', relationship: 'Self' });
+      setForm({
+        fullName: '',
+        dateOfBirth: '',
+        timeOfBirth: '',
+        placeOfBirth: '',
+        relationship: 'Self',
+        isDefault: false,
+      });
       await fetchProfiles();
       await refreshProfileStatus();
     } catch (err) {
@@ -95,11 +110,39 @@ const ProfileScreen = ({ route }) => {
       dateOfBirth: profile.dateOfBirth || '',
       timeOfBirth: profile.timeOfBirth || '',
       placeOfBirth: profile.placeOfBirth || '',
-      gender: profile.gender || 'Male',
       relationship: profile.relationship || 'Self',
+      isDefault: profile.isDefault || false,
     });
-    setEditingId(profile._id || profile.id);
+    setEditingId(profile.id || profile._id);
     setShowForm(true);
+  };
+
+  const handleSetDefault = async (profileId) => {
+    try {
+      await api.put(`/api/profiles/${profileId}`, { isDefault: true });
+      await fetchProfiles();
+      await refreshProfileStatus();
+      Alert.alert('Success', 'Primary profile updated');
+    } catch (err) {
+      Alert.alert('Error', 'Failed to update primary profile');
+    }
+  };
+
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      setForm({ ...form, dateOfBirth: dateStr });
+    }
+  };
+
+  const onTimeChange = (event, selectedTime) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      const hours = selectedTime.getHours().toString().padStart(2, '0');
+      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+      setForm({ ...form, timeOfBirth: `${hours}:${minutes}` });
+    }
   };
 
   const handleDelete = (id) => {
@@ -186,23 +229,51 @@ const ProfileScreen = ({ route }) => {
                   placeholderTextColor={C.textDim}
                 />
 
-                <Text style={styles.label}>Date of Birth * (YYYY-MM-DD)</Text>
-                <TextInput
+                <Text style={styles.label}>Date of Birth *</Text>
+                <TouchableOpacity
                   style={styles.input}
-                  value={form.dateOfBirth}
-                  onChangeText={(t) => setForm({ ...form, dateOfBirth: t })}
-                  placeholder="1995-08-15"
-                  placeholderTextColor={C.textDim}
-                />
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={[styles.inputText, !form.dateOfBirth && { color: C.textDim }]}>
+                    {form.dateOfBirth || 'Select Date (YYYY-MM-DD)'}
+                  </Text>
+                </TouchableOpacity>
 
-                <Text style={styles.label}>Time of Birth * (HH:MM)</Text>
-                <TextInput
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={form.dateOfBirth ? new Date(form.dateOfBirth) : new Date(2000, 0, 1)}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onDateChange}
+                    maximumDate={new Date()}
+                  />
+                )}
+
+                <Text style={styles.label}>Time of Birth *</Text>
+                <TouchableOpacity
                   style={styles.input}
-                  value={form.timeOfBirth}
-                  onChangeText={(t) => setForm({ ...form, timeOfBirth: t })}
-                  placeholder="14:30"
-                  placeholderTextColor={C.textDim}
-                />
+                  onPress={() => setShowTimePicker(true)}
+                >
+                  <Text style={[styles.inputText, !form.timeOfBirth && { color: C.textDim }]}>
+                    {form.timeOfBirth || 'Select Time (HH:MM)'}
+                  </Text>
+                </TouchableOpacity>
+
+                {showTimePicker && (
+                  <DateTimePicker
+                    value={(() => {
+                      const d = new Date();
+                      if (form.timeOfBirth) {
+                        const [h, m] = form.timeOfBirth.split(':');
+                        d.setHours(parseInt(h), parseInt(m));
+                      }
+                      return d;
+                    })()}
+                    mode="time"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onTimeChange}
+                  />
+                )}
 
                 <Text style={styles.label}>Place of Birth *</Text>
                 <TextInput
@@ -213,19 +284,14 @@ const ProfileScreen = ({ route }) => {
                   placeholderTextColor={C.textDim}
                 />
 
-                <Text style={styles.label}>Gender</Text>
-                <View style={styles.chipRow}>
-                  {GENDERS.map((g) => (
-                    <TouchableOpacity
-                      key={g}
-                      style={[styles.selectChip, form.gender === g && styles.selectChipActive]}
-                      onPress={() => setForm({ ...form, gender: g })}
-                    >
-                      <Text style={[styles.selectChipText, form.gender === g && styles.selectChipTextActive]}>
-                        {g}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                <View style={styles.switchRow}>
+                  <TouchableOpacity
+                    style={styles.checkbox}
+                    onPress={() => setForm({ ...form, isDefault: !form.isDefault })}
+                  >
+                    <View style={[styles.checkboxInner, form.isDefault && styles.checkboxActive]} />
+                  </TouchableOpacity>
+                  <Text style={styles.switchLabel}>Make this my primary profile</Text>
                 </View>
 
                 <Text style={styles.label}>Relationship</Text>
@@ -279,14 +345,26 @@ const ProfileScreen = ({ route }) => {
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.profileName}>{p.name}</Text>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.profileName}>{p.name}</Text>
+                      {p.isDefault && (
+                        <View style={styles.primaryBadge}>
+                          <Text style={styles.primaryBadgeText}>Primary</Text>
+                        </View>
+                      )}
+                    </View>
                     <Text style={styles.profileRel}>{p.relationship || 'Self'}</Text>
                   </View>
                   <View style={styles.profileActions}>
+                    {!p.isDefault && (
+                      <TouchableOpacity onPress={() => handleSetDefault(p.id)} style={styles.actionBtn}>
+                        <Text style={styles.actionText}>⭐</Text>
+                      </TouchableOpacity>
+                    )}
                     <TouchableOpacity onPress={() => handleEdit(p)} style={styles.actionBtn}>
                       <Text style={styles.actionText}>✏️</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDelete(p._id)} style={styles.actionBtn}>
+                    <TouchableOpacity onPress={() => handleDelete(p.id)} style={styles.actionBtn}>
                       <Text style={styles.actionText}>🗑️</Text>
                     </TouchableOpacity>
                   </View>
@@ -304,10 +382,6 @@ const ProfileScreen = ({ route }) => {
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Place</Text>
                     <Text style={styles.detailValue}>{p.placeOfBirth || '—'}</Text>
-                  </View>
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Gender</Text>
-                    <Text style={styles.detailValue}>{p.gender || '—'}</Text>
                   </View>
                 </View>
               </View>
@@ -364,6 +438,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md, color: C.text,
     borderWidth: 1, borderColor: C.border,
   },
+  inputText: {
+    fontSize: fontSize.md,
+    color: C.text,
+  },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   selectChip: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.full,
@@ -400,6 +478,22 @@ const styles = StyleSheet.create({
     borderRadius: radius.md, padding: spacing.md, alignItems: 'center',
   },
   addText: { color: C.saffron, fontWeight: '600', fontSize: fontSize.md },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  primaryBadge: {
+    backgroundColor: C.saffron,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  primaryBadgeText: { color: C.white, fontSize: 10, fontWeight: '800' },
+  switchRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.md, gap: 10 },
+  checkbox: {
+    width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: C.saffron,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  checkboxInner: { width: 10, height: 10, borderRadius: 2, backgroundColor: 'transparent' },
+  checkboxActive: { backgroundColor: C.saffron },
+  switchLabel: { fontSize: fontSize.sm, color: C.textMid, fontWeight: '500' },
 });
 
 export default ProfileScreen;
