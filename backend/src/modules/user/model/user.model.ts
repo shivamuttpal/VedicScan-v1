@@ -6,7 +6,7 @@ export interface IUser extends Document {
   password?: string;
   firstName: string;
   lastName: string;
-  role: 'admin' | 'user';
+  role: 'admin' | 'instructor' | 'student' | 'user';
   isActive: boolean;
   profileImage?: string;
   phone?: string;

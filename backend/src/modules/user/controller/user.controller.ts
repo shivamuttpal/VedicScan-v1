@@ -19,16 +19,17 @@ export class UserController {
       const { emailOtp, phoneOtp, message } = await userService.register(req.body);
       
       // Send Email OTP
-      const emailSent = await sendSignupVerificationEmail(email, emailOtp);
+      if (email && emailOtp) {
+        const emailSent = await sendSignupVerificationEmail(email, emailOtp);
+        if (!emailSent) {
+          errorResponse(res, 'Failed to send verification email', 500);
+          return;
+        }
+      }
 
       // Send SMS OTP if phone is provided and phoneOtp exists
       if (phone && phoneOtp) {
         await sendPhoneOTP(phone, phoneOtp);
-      }
-
-      if (!emailSent) {
-        errorResponse(res, 'Failed to send verification email', 500);
-        return;
       }
 
       successResponse(res, null, message);
@@ -61,7 +62,7 @@ export class UserController {
   async verifySignup(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, otp } = req.body;
-      const result = await userService.verifySignup(email, otp);
+      const result = await userService.verifyEmailSignup(email, otp);
       successResponse(res, result, 'Email verified and registration complete');
     } catch (error) {
       next(error);
