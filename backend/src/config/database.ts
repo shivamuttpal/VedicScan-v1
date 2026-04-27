@@ -20,8 +20,10 @@ const connectDatabase = async (): Promise<void> => {
 
     // Drop problematic Razorpay index if it exists (legacy)
     try {
-      await mongoose.connection.db.collection('transactions').dropIndex('razorpayOrderId_1');
-      console.log('✅ Dropped legacy Razorpay index');
+      if (mongoose.connection.db) {
+        await mongoose.connection.db.collection('transactions').dropIndex('razorpayOrderId_1');
+        console.log('✅ Dropped legacy Razorpay index');
+      }
     } catch (e) {
       // Index likely doesn't exist, which is fine
     }
