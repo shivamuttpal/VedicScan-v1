@@ -52,11 +52,11 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
 export const PLAN_PRICES = {
   INR: {
     standard: {
-      monthly: 100,
+      monthly: 5000,
       annual: 299900,
     },
     premium: {
-      monthly: 100,
+      monthly: 5000,
       annual: 999900,
     },
     'one-time': {

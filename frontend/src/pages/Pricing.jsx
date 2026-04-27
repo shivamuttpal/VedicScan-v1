@@ -39,8 +39,8 @@ const Pricing = () => {
 
   const prices = {
     INR: {
-      standard: { monthly: 1, annual: 2999 },
-      premium: { monthly: 1, annual: 9999 },
+      standard: { monthly: 50, annual: 2999 },
+      premium: { monthly: 50, annual: 9999 },
       symbol: '₹'
     },
     USD: {

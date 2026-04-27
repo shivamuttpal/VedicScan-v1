@@ -31,8 +31,8 @@ const PricingScreen = ({ navigation }) => {
 
   const prices = {
     INR: {
-      standard: { monthly: '₹1', annual: '₹2,999', symbol: '₹' },
-      premium: { monthly: '₹1', annual: '₹9,999', symbol: '₹' },
+      standard: { monthly: '₹50', annual: '₹2,999', symbol: '₹' },
+      premium: { monthly: '₹50', annual: '₹9,999', symbol: '₹' },
     },
     USD: {
       standard: { monthly: '$29', annual: '$290', symbol: '$' },
