@@ -27,8 +27,6 @@ const AppNavigator = () => {
     <NavigationContainer>
       {!isAuthenticated ? (
         <AuthStack />
-      ) : !hasProfile ? (
-        <SetupStack />
       ) : (
         <MainTabs />
       )}

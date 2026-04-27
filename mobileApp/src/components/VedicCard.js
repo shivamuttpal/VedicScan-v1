@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: C.border,
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   goldBar: {
     height: 2.5,

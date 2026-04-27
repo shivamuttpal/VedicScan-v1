@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  FlatList, KeyboardAvoidingView, Platform, Animated, Alert,
+  FlatList, KeyboardAvoidingView, Platform, Animated, Alert, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
@@ -101,7 +101,10 @@ const ChatScreen = ({ navigation }) => {
       <View style={[styles.msgRow, isUser ? styles.msgRowUser : styles.msgRowAi]}>
         {!isUser && (
           <View style={styles.aiAvatar}>
-            <Text style={styles.aiAvatarText}>🔮</Text>
+            <Image 
+              source={{ uri: 'https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png' }}
+              style={{ width: 22, height: 22, resizeMode: 'contain' }}
+            />
           </View>
         )}
         <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
@@ -118,9 +121,17 @@ const ChatScreen = ({ navigation }) => {
       {/* Header */}
       <LinearGradient colors={['#7B1A38', '#4A0E22']} style={styles.header}>
         <View style={styles.headerInner}>
-          <View>
-            <Text style={styles.headerTitle}>🔮 Maharshi AI</Text>
-            <Text style={styles.headerSub}>Your Vedic Guide</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ backgroundColor: '#FFF', borderRadius: 8, padding: 2, marginRight: 10 }}>
+              <Image 
+                source={{ uri: 'https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png' }}
+                style={{ width: 28, height: 28, resizeMode: 'contain' }}
+              />
+            </View>
+            <View>
+              <Text style={styles.headerTitle}>Maharshi AI</Text>
+              <Text style={styles.headerSub}>Your Vedic Guide</Text>
+            </View>
           </View>
           <TouchableOpacity onPress={clearChat} style={styles.clearBtn}>
             <Text style={styles.clearText}>🗑️</Text>
@@ -169,7 +180,10 @@ const ChatScreen = ({ navigation }) => {
         {loading && (
           <View style={styles.typingRow}>
             <View style={styles.aiAvatar}>
-              <Text style={styles.aiAvatarText}>🔮</Text>
+              <Image 
+                source={{ uri: 'https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png' }}
+                style={{ width: 22, height: 22, resizeMode: 'contain' }}
+              />
             </View>
             <View style={styles.typingBubble}>
               <Text style={styles.typingText}>Channeling cosmic wisdom...</Text>
@@ -236,10 +250,11 @@ const styles = StyleSheet.create({
   msgRowAi: { justifyContent: 'flex-start' },
   aiAvatar: {
     width: 30, height: 30, borderRadius: 15,
-    backgroundColor: C.saffronPale, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center',
     marginRight: 8,
+    borderWidth: 1,
+    borderColor: C.border,
   },
-  aiAvatarText: { fontSize: 14 },
   bubble: {
     maxWidth: '78%', padding: spacing.md,
     borderRadius: radius.lg,

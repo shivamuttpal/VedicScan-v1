@@ -23,8 +23,8 @@ const ProtectedRoute = ({ children }) => {
   }
 
   // If user is authenticated but has no profile, redirect to profile
-  // unless they are already on the profile page
-  if (!hasProfile && location.pathname !== '/profile') {
+  // unless they are already on the profile page or dashboard
+  if (!hasProfile && location.pathname !== '/profile' && location.pathname !== '/dashboard') {
     return <Navigate to="/profile" state={{ enforceProfile: true }} replace />;
   }
 

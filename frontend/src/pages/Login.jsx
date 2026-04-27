@@ -38,7 +38,7 @@ const Login = () => {
         if (res.data?.data?.token) {
           saveSession(res.data.data.token, res.data.data.user);
           toast.success('Login successful!');
-          navigate('/profile');
+          navigate('/dashboard');
         }
       } else {
         toast.error('Login failed. Please check your credentials.');
@@ -63,7 +63,7 @@ const Login = () => {
         if (res.data?.success && res.data?.data?.token) {
           saveSession(res.data.data.token, res.data.data.user);
           toast.success('Google Login successful!');
-          navigate('/profile');
+          navigate('/dashboard');
         } else {
           toast.error('Google Login failed.');
         }

@@ -69,9 +69,7 @@ const SignupScreen = ({ navigation }) => {
 
       const res = await api.post('/api/users/register', payload);
       if (res.data?.success) {
-        Alert.alert('Success', res.data?.message || 'Verification code sent!', [
-          { text: 'OK', onPress: () => navigation.navigate('VerifyOTP', { email: email.trim() || formattedPhone.trim(), purpose: 'signup' }) }
-        ]);
+        navigation.navigate('VerifyOTP', { email: email.trim() || formattedPhone.trim(), purpose: 'signup' });
       } else {
         Alert.alert('Registration Failed', res.data?.message || 'Please try again');
       }

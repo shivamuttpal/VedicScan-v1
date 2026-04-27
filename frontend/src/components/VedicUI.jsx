@@ -56,7 +56,7 @@ export const GoldBar = ({ className = '' }) => (
 
 // ── Gold Card — card with gold gradient top border ──
 export const GoldCard = ({ children, className = '' }) => (
-  <div className={`bg-white rounded-2xl border border-vborder relative overflow-hidden ${className}`}>
+  <div className={`bg-white rounded-2xl border border-vborder relative ${className.includes('overflow-') ? '' : 'overflow-visible'} ${className}`}>
     <div className="absolute top-0 left-0 right-0 h-[2.5px]" style={{
       background: 'linear-gradient(90deg, transparent, #B8860B90, #D4760A, #B8860B90, transparent)'
     }} />

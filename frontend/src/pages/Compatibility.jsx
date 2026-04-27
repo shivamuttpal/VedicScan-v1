@@ -9,6 +9,62 @@ import api from '../utils/api';
 import { toast } from 'sonner';
 import { formatAIResponse } from '../utils/formatAI';
 import { GoldCard, Mandala } from '../components/VedicUI';
+import LocationInput from '../components/LocationInput';
+
+const PersonForm = ({ title, data, setData, icon: Icon, accentColor, accentBg }) => (
+  <GoldCard className="shadow-lg">
+    <div className={`${accentBg} px-6 py-4 border-b border-vborder`}>
+      <h3 className={`flex items-center ${accentColor} font-semibold`}>
+        <Icon className="w-5 h-5 mr-2" />
+        {title}
+      </h3>
+      <p className="text-sm text-vtext-muted mt-0.5">Enter birth details</p>
+    </div>
+    <div className="p-6 space-y-4">
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-vtext-mid">Full Name</label>
+        <input
+          value={data.name}
+          onChange={(e) => setData({...data, name: e.target.value})}
+          placeholder="Enter name"
+          className="vedic-input"
+          required
+        />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-vtext-mid">Date of Birth</label>
+          <input
+            type="date"
+            value={data.dateOfBirth}
+            onChange={(e) => setData({...data, dateOfBirth: e.target.value})}
+            className="vedic-input"
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-vtext-mid">Time of Birth</label>
+          <input
+            type="time"
+            value={data.timeOfBirth}
+            onChange={(e) => setData({...data, timeOfBirth: e.target.value})}
+            className="vedic-input"
+            required
+          />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-vtext-mid">Place of Birth</label>
+        <LocationInput
+          value={data.placeOfBirth}
+          onChange={(e) => setData({...data, placeOfBirth: e.target.value})}
+          placeholder="City, Country"
+          className="vedic-input"
+        />
+      </div>
+    </div>
+  </GoldCard>
+);
 
 const Compatibility = () => {
   const navigate = useNavigate();
@@ -113,66 +169,14 @@ Remember: The scores and doshas are calculated by a deterministic rules engine. 
     }
   };
 
-  const PersonForm = ({ title, data, setData, icon: Icon, accentColor, accentBg }) => (
-    <GoldCard className="shadow-lg">
-      <div className={`${accentBg} px-6 py-4 border-b border-vborder`}>
-        <h3 className={`flex items-center ${accentColor} font-semibold`}>
-          <Icon className="w-5 h-5 mr-2" />
-          {title}
-        </h3>
-        <p className="text-sm text-vtext-muted mt-0.5">Enter birth details</p>
-      </div>
-      <div className="p-6 space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-vtext-mid">Full Name</label>
-          <input
-            value={data.name}
-            onChange={(e) => setData({...data, name: e.target.value})}
-            placeholder="Enter name"
-            className="vedic-input"
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-vtext-mid">Date of Birth</label>
-          <input
-            type="date"
-            value={data.dateOfBirth}
-            onChange={(e) => setData({...data, dateOfBirth: e.target.value})}
-            className="vedic-input"
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-vtext-mid">Time of Birth</label>
-          <input
-            type="time"
-            value={data.timeOfBirth}
-            onChange={(e) => setData({...data, timeOfBirth: e.target.value})}
-            className="vedic-input"
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-vtext-mid">Place of Birth</label>
-          <input
-            value={data.placeOfBirth}
-            onChange={(e) => setData({...data, placeOfBirth: e.target.value})}
-            placeholder="City, Country"
-            className="vedic-input"
-            required
-          />
-        </div>
-      </div>
-    </GoldCard>
-  );
+
 
   return (
     <div className="min-h-screen bg-vedic-bg font-outfit">
       <BetaBanner />
       <Navbar />
 
-      <div className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 relative">
         <div className="absolute top-20 right-[-60px]">
           <Mandala size={240} opacity={0.03} color="#7B1A38" />
         </div>

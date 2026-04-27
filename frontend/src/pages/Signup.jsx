@@ -108,7 +108,7 @@ const Signup = () => {
         if (res.data.data?.isFullyVerified && res.data.data?.token) {
           saveSession(res.data.data.token, res.data.data.user);
           toast.success('Welcome to VedicScan 🎉');
-          navigate('/profile');
+          navigate('/dashboard');
         }
       }
     } catch (err) {
@@ -137,7 +137,7 @@ const Signup = () => {
         if (res.data.data?.isFullyVerified && res.data.data?.token) {
           saveSession(res.data.data.token, res.data.data.user);
           toast.success('Welcome to VedicScan 🎉');
-          navigate('/profile');
+          navigate('/dashboard');
         }
       }
     } catch (err) {

@@ -212,6 +212,25 @@ const Home = () => {
                     ⚠️ Profile Setup Required
                   </p>
                 )}
+                
+                {/* Maharishi AI Hero Button */}
+                <div className="mt-8">
+                  <button
+                    onClick={() => navigate('/chat')}
+                    className="group relative inline-flex items-center justify-center p-0.5 mb-2 mr-2 overflow-hidden text-sm font-medium text-gray-900 rounded-2xl group bg-gradient-to-br from-saffron to-maroon hover:text-white focus:ring-4 focus:outline-none focus:ring-saffron/30 shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <span className="relative px-8 py-4 transition-all ease-in duration-75 bg-white rounded-2xl group-hover:bg-opacity-0 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-saffron/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                        <img src="https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png" alt="Maharishi AI" className="w-8 h-8 object-contain animate-pulse" />
+                      </div>
+                      <div className="text-left">
+                        <span className="block text-[10px] font-black text-saffron group-hover:text-gold-pale uppercase tracking-[0.2em] leading-none mb-1">Divine Guidance</span>
+                        <span className="text-xl font-bold tracking-tight text-maroon group-hover:text-white transition-colors font-playfair">ASK MAHARISHI AI</span>
+                      </div>
+                      <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform text-maroon group-hover:text-white" />
+                    </span>
+                  </button>
+                </div>
                 {!isAuthenticated ? (
                   <p className="text-maroon-soft/60 text-sm mt-2">✨ Ancient wisdom for modern life</p>
                 ) : !hasProfile ? (
@@ -293,7 +312,10 @@ const Home = () => {
       {/* Quick Question Cards */}
       {isAuthenticated && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-          <p className="text-sm text-vtext-mid font-bold tracking-wider uppercase mb-4">Ask Maharshi</p>
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-4 h-4 text-saffron animate-pulse" />
+            <p className="text-sm text-vtext-mid font-black tracking-[0.2em] uppercase">Ask Maharishi AI</p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {sampleQuestions.slice(0, 6).map((question, index) => (
               <div
@@ -415,6 +437,28 @@ const Home = () => {
       </section>
 
       <Footer />
+
+      {/* Floating Maharishi AI Assistant Button */}
+      <div className="fixed bottom-24 right-6 z-50">
+        <button
+          onClick={() => navigate('/chat')}
+          className="group relative flex items-center gap-3 bg-white p-2 pr-6 rounded-full shadow-[0_10px_40px_rgba(123,26,56,0.25)] hover:shadow-[0_15px_50px_rgba(123,26,56,0.4)] transition-all duration-500 hover:-translate-y-2 active:scale-95 border border-gold/30 hover:border-gold animate-bounce-subtle"
+        >
+          {/* Animated Background Glow */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-saffron/20 to-maroon/20 blur-xl group-hover:opacity-100 opacity-0 transition-opacity duration-500"></div>
+          
+          <div className="relative w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg group-hover:rotate-[360deg] transition-transform duration-1000 overflow-hidden border border-gold/20">
+            <img src="https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png" alt="Maharishi AI" className="w-9 h-9 object-contain" />
+          </div>
+          <div className="relative flex flex-col items-start">
+            <span className="text-[10px] font-black text-saffron uppercase tracking-widest leading-none mb-1">AI Guru</span>
+            <span className="text-sm font-bold text-maroon leading-none">Chat with Maharishi</span>
+          </div>
+          
+          {/* Notification Dot */}
+          <div className="absolute top-0 left-0 w-4 h-4 bg-gold rounded-full border-2 border-white animate-pulse"></div>
+        </button>
+      </div>
     </div>
   );
 };

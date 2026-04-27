@@ -1,13 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  Alert, ActivityIndicator,
+  Alert, ActivityIndicator, TextInput, Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import LocationInput from '../../components/LocationInput';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { VedicCard, GoldBar } from '../../components/VedicCard';
 import api from '../../config/api';
+
+const ProfileSelector = ({ label, selected, onSelect, excludeId, profiles }) => (
+  <View style={styles.selectorWrap}>
+    <Text style={styles.selectorLabel}>{label}</Text>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      {profiles
+        .filter((p) => p._id !== excludeId)
+        .map((p) => (
+          <TouchableOpacity
+            key={p._id}
+            style={[styles.profileChip, selected?._id === p._id && styles.profileChipActive]}
+            onPress={() => onSelect(p)}
+          >
+            <Text style={[styles.profileChipText, selected?._id === p._id && styles.profileChipTextActive]}>
+              {p.name || p.fullName}
+            </Text>
+            <Text style={styles.profileChipSub}>{p.relationship}</Text>
+          </TouchableOpacity>
+        ))}
+    </ScrollView>
+  </View>
+);
 
 const CompatibilityScreen = ({ navigation }) => {
   const { hasProfile } = useAuth();
@@ -16,6 +40,17 @@ const CompatibilityScreen = ({ navigation }) => {
   const [person2, setPerson2] = useState(null);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  
+  // Manual Entry State (optional enhancement to match web)
+  const [manualEntry, setManualEntry] = useState(false);
+  const [manualData, setManualData] = useState({
+    name: '',
+    dateOfBirth: '',
+    timeOfBirth: '',
+    placeOfBirth: '',
+  });
 
   useEffect(() => {
     if (!hasProfile) {
@@ -33,20 +68,29 @@ const CompatibilityScreen = ({ navigation }) => {
   };
 
   const checkCompatibility = async () => {
-    if (!person1 || !person2) {
-      Alert.alert('Error', 'Please select both profiles');
-      return;
+    if (!manualEntry) {
+      if (!person1 || !person2) {
+        Alert.alert('Error', 'Please select both profiles');
+        return;
+      }
+      if (person1._id === person2._id) {
+        Alert.alert('Error', 'Please select two different profiles');
+        return;
+      }
+    } else {
+      if (!person1 || !manualData.name || !manualData.dateOfBirth || !manualData.timeOfBirth || !manualData.placeOfBirth) {
+        Alert.alert('Error', 'Please select Person 1 and fill all details for Person 2');
+        return;
+      }
     }
-    if (person1._id === person2._id) {
-      Alert.alert('Error', 'Please select two different profiles');
-      return;
-    }
+
     setLoading(true);
     try {
-      const res = await api.post('/api/compatibility', {
-        profile1Id: person1._id,
-        profile2Id: person2._id,
-      });
+      const payload = manualEntry 
+        ? { profile1Id: person1._id, manualPerson2: manualData }
+        : { profile1Id: person1._id, profile2Id: person2._id };
+
+      const res = await api.post('/api/compatibility', payload);
       if (res.data) setResult(res.data);
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Compatibility check failed');
@@ -54,28 +98,6 @@ const CompatibilityScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
-
-  const ProfileSelector = ({ label, selected, onSelect, excludeId }) => (
-    <View style={styles.selectorWrap}>
-      <Text style={styles.selectorLabel}>{label}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {profiles
-          .filter((p) => p._id !== excludeId)
-          .map((p) => (
-            <TouchableOpacity
-              key={p._id}
-              style={[styles.profileChip, selected?._id === p._id && styles.profileChipActive]}
-              onPress={() => onSelect(p)}
-            >
-              <Text style={[styles.profileChipText, selected?._id === p._id && styles.profileChipTextActive]}>
-                {p.fullName}
-              </Text>
-              <Text style={styles.profileChipSub}>{p.relationship}</Text>
-            </TouchableOpacity>
-          ))}
-      </ScrollView>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
@@ -87,13 +109,102 @@ const CompatibilityScreen = ({ navigation }) => {
         <Text style={styles.headerSub}>Kundli Milan Analysis</Text>
       </LinearGradient>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={styles.body}>
           <VedicCard>
             <View style={styles.formPad}>
-              <ProfileSelector label="Person 1" selected={person1} onSelect={setPerson1} excludeId={person2?._id} />
-              <View style={styles.vsCircle}><Text style={styles.vsText}>💕</Text></View>
-              <ProfileSelector label="Person 2" selected={person2} onSelect={setPerson2} excludeId={person1?._id} />
+              <ProfileSelector label="Person 1" selected={person1} onSelect={setPerson1} excludeId={person2?._id} profiles={profiles} />
+              
+              <View style={styles.vsCircle}>
+                <Text style={styles.vsText}>💕</Text>
+              </View>
+
+              <View style={styles.toggleRow}>
+                <Text style={styles.selectorLabel}>Person 2</Text>
+                <TouchableOpacity 
+                  onPress={() => setManualEntry(!manualEntry)}
+                  style={styles.manualToggle}
+                >
+                  <Text style={styles.manualToggleText}>
+                    {manualEntry ? 'Select Existing' : 'Enter Manually'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {manualEntry ? (
+                <View style={styles.manualForm}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Partner's Full Name"
+                    value={manualData.name}
+                    onChangeText={(t) => setManualData({...manualData, name: t})}
+                    placeholderTextColor={C.textDim}
+                  />
+                  <View style={styles.row}>
+                    <TouchableOpacity 
+                      style={[styles.input, {flex: 1, marginRight: 8}]}
+                      onPress={() => setShowDatePicker(true)}
+                    >
+                      <Text style={{color: manualData.dateOfBirth ? C.text : C.textDim}}>
+                        {manualData.dateOfBirth || 'Birth Date'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.input, {flex: 1}]}
+                      onPress={() => setShowTimePicker(true)}
+                    >
+                      <Text style={{color: manualData.timeOfBirth ? C.text : C.textDim}}>
+                        {manualData.timeOfBirth || 'Birth Time'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <LocationInput
+                    style={styles.input}
+                    value={manualData.placeOfBirth}
+                    onChangeText={(t) => setManualData({...manualData, placeOfBirth: t})}
+                    placeholder="Birth Place (City, Country)"
+                  />
+                </View>
+              ) : (
+                <ProfileSelector label="" selected={person2} onSelect={setPerson2} excludeId={person1?._id} profiles={profiles} />
+              )}
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={manualData.dateOfBirth ? new Date(manualData.dateOfBirth) : new Date(2000, 0, 1)}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(e, d) => {
+                    setShowDatePicker(false);
+                    if(d) setManualData({...manualData, dateOfBirth: d.toISOString().split('T')[0]});
+                  }}
+                  maximumDate={new Date()}
+                />
+              )}
+
+              {showTimePicker && (
+                <DateTimePicker
+                  value={(() => {
+                    const d = new Date();
+                    if (manualData.timeOfBirth) {
+                      const [h, m] = manualData.timeOfBirth.split(':');
+                      d.setHours(parseInt(h), parseInt(m));
+                    }
+                    return d;
+                  })()}
+                  mode="time"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(e, t) => {
+                    setShowTimePicker(false);
+                    if(t) {
+                      const h = t.getHours().toString().padStart(2, '0');
+                      const m = t.getMinutes().toString().padStart(2, '0');
+                      setManualData({...manualData, timeOfBirth: `${h}:${m}`});
+                    }
+                  }}
+                />
+              )}
 
               <TouchableOpacity
                 style={[styles.checkBtn, loading && { opacity: 0.6 }]}
@@ -204,10 +315,19 @@ const styles = StyleSheet.create({
   percentage: { fontSize: fontSize.h3, fontWeight: '700', color: C.green, marginBottom: spacing.sm },
   verdictBadge: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: radius.full },
   verdictText: { fontWeight: '700', fontSize: fontSize.md },
-  section: { alignSelf: 'stretch', marginTop: spacing.md },
-  sectionTitle: { fontSize: fontSize.lg, fontWeight: '700', color: C.text, marginBottom: spacing.sm },
   listItem: { fontSize: fontSize.md, color: C.textMid, lineHeight: 22, marginBottom: 4 },
   rawResult: { fontSize: fontSize.md, color: C.text, lineHeight: 22, textAlign: 'center' },
+  toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm, marginTop: spacing.md },
+  manualToggle: { backgroundColor: C.saffronPale, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.sm },
+  manualToggleText: { color: C.saffron, fontSize: fontSize.xs, fontWeight: '700' },
+  manualForm: { gap: 10, marginBottom: spacing.md },
+  input: {
+    backgroundColor: C.input, borderRadius: radius.md,
+    paddingHorizontal: spacing.md, paddingVertical: 13,
+    fontSize: fontSize.md, color: C.text,
+    borderWidth: 1, borderColor: C.border,
+  },
+  row: { flexDirection: 'row', gap: 0 },
 });
 
 export default CompatibilityScreen;

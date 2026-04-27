@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { VedicCard, GoldBar } from '../../components/VedicCard';
+import LocationInput from '../../components/LocationInput';
 import api from '../../config/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -30,6 +31,22 @@ const ProfileScreen = ({ route }) => {
     relationship: 'Self',
     isDefault: false,
   });
+
+  // Auto-populate name from user context when relationship is Self
+  useEffect(() => {
+    if (!editingId && showForm && form.relationship === 'Self' && !form.fullName && user) {
+      const nameFromContext = (user.firstName || user.name || '').trim();
+      const lastNameFromContext = (user.lastName || '').trim();
+      const fullName = `${nameFromContext} ${lastNameFromContext}`.trim();
+      
+      if (fullName) {
+        setForm(prev => ({ ...prev, fullName }));
+      } else if (user.email || user.phone) {
+        const fallback = (user.email ? user.email.split('@')[0] : user.phone) || '';
+        if (fallback) setForm(prev => ({ ...prev, fullName: fallback }));
+      }
+    }
+  }, [user, showForm, form.relationship, editingId, form.fullName]);
   const [editingId, setEditingId] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -187,6 +204,7 @@ const ProfileScreen = ({ route }) => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.saffron} />}
       >
         <View style={styles.body}>
@@ -276,12 +294,11 @@ const ProfileScreen = ({ route }) => {
                 )}
 
                 <Text style={styles.label}>Place of Birth *</Text>
-                <TextInput
+                <LocationInput
                   style={styles.input}
                   value={form.placeOfBirth}
                   onChangeText={(t) => setForm({ ...form, placeOfBirth: t })}
                   placeholder="Mumbai, Maharashtra"
-                  placeholderTextColor={C.textDim}
                 />
 
                 <View style={styles.switchRow}>
@@ -295,7 +312,7 @@ const ProfileScreen = ({ route }) => {
                 </View>
 
                 <Text style={styles.label}>Relationship</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                   <View style={styles.chipRow}>
                     {RELATIONSHIPS.map((r) => (
                       <TouchableOpacity

@@ -8,7 +8,10 @@ import {
   RefreshControl,
   Dimensions,
   Platform,
+  Animated,
+  Image,
 } from 'react-native';
+import { useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
@@ -112,6 +115,24 @@ const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSignName, setSelectedSignName] = useState('Mesh');
   const [defaultProfile, setDefaultProfile] = useState(null);
+  const bounceAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(bounceAnim, {
+          toValue: -10,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bounceAnim, {
+          toValue: 0,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [bounceAnim]);
 
   useFocusEffect(
     useCallback(() => {
@@ -235,6 +256,27 @@ const HomeScreen = ({ navigation }) => {
               <Text style={styles.warningArrow}>{'→'}</Text>
             </TouchableOpacity>
           )}
+
+          {/* Maharishi AI Hero Button */}
+          <TouchableOpacity
+            style={styles.heroAiBtn}
+            onPress={() => navigation.navigate('Chat')}
+            activeOpacity={0.9}
+          >
+            <View style={styles.heroAiBtnInner}>
+              <View style={styles.heroAiIconBox}>
+                <Image 
+                  source={{ uri: 'https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png' }}
+                  style={{ width: 32, height: 32, resizeMode: 'contain' }}
+                />
+              </View>
+              <View style={styles.heroAiTextContent}>
+                <Text style={styles.heroAiBtnLabel}>DIVINE GUIDANCE</Text>
+                <Text style={styles.heroAiBtnTitle}>ASK MAHARISHI AI</Text>
+              </View>
+              <Text style={styles.heroAiArrow}>→</Text>
+            </View>
+          </TouchableOpacity>
         </LinearGradient>
 
         {/* ── RASHI CARD (overlaps hero bottom) ── */}
@@ -390,6 +432,34 @@ const HomeScreen = ({ navigation }) => {
         <View style={{ height: 140 }} />
       </ScrollView>
 
+      {/* Floating Maharishi AI Button */}
+      <Animated.View style={[styles.floatingAiWrap, { transform: [{ translateY: bounceAnim }] }]}>
+        <TouchableOpacity
+          style={styles.floatingAiBtn}
+          onPress={() => navigation.navigate('Chat')}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={[C.saffron, C.maroon]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.floatingAiGrad}
+          >
+            <View style={{ backgroundColor: '#FFF', borderRadius: 20, padding: 4, marginRight: 4 }}>
+              <Image 
+                source={{ uri: 'https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png' }}
+                style={{ width: 24, height: 24, resizeMode: 'contain' }}
+              />
+            </View>
+            <View>
+              <Text style={styles.floatingAiLabel}>AI GURU</Text>
+              <Text style={styles.floatingAiTitle}>Ask Maharishi</Text>
+            </View>
+          </LinearGradient>
+          {/* Notification Dot */}
+          <View style={styles.notificationDot} />
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 };
@@ -753,6 +823,105 @@ const styles = StyleSheet.create({
     color: '#D4BA80',
     fontSize: 22,
     fontWeight: '600',
+  },
+
+  // ── MAHARISHI AI HIGHLIGHTS ──
+  heroAiBtn: {
+    marginTop: 20,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    ...shadow.lg,
+    overflow: 'hidden',
+  },
+  heroAiBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    paddingHorizontal: 16,
+  },
+  heroAiIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#FFF7ED',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+    borderWidth: 1,
+    borderColor: '#F5DFC5',
+  },
+  heroAiIcon: {
+    fontSize: 24,
+  },
+  heroAiTextContent: {
+    flex: 1,
+  },
+  heroAiBtnLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#D4760A',
+    letterSpacing: 1.2,
+    marginBottom: 2,
+  },
+  heroAiBtnTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#7B1A38',
+    letterSpacing: 0.5,
+  },
+  heroAiArrow: {
+    fontSize: 24,
+    color: '#7B1A38',
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+
+  floatingAiWrap: {
+    position: 'absolute',
+    bottom: 40,
+    right: 20,
+    zIndex: 100,
+  },
+  floatingAiBtn: {
+    borderRadius: 30,
+    ...shadow.lg,
+    shadowColor: '#7B1A38',
+    shadowOpacity: 0.4,
+  },
+  floatingAiGrad: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    paddingRight: 24,
+    borderRadius: 30,
+    gap: 12,
+  },
+  floatingAiIcon: {
+    fontSize: 28,
+    marginLeft: 4,
+  },
+  floatingAiLabel: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#F5DFC5',
+    letterSpacing: 1.5,
+    marginBottom: 1,
+  },
+  floatingAiTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#D4BA80',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 
 });

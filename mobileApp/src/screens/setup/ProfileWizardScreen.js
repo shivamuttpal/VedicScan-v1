@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { VedicCard } from '../../components/VedicCard';
+import LocationInput from '../../components/LocationInput';
 import api from '../../config/api';
 
 const GENDERS = ['Male', 'Female', 'Other'];
@@ -24,7 +25,7 @@ const ProfileWizardScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    fullName: user?.firstName || '',
+    fullName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
     dateOfBirth: '',
     timeOfBirth: '',
     placeOfBirth: '',
@@ -105,7 +106,12 @@ const ProfileWizardScreen = ({ navigation }) => {
                 <TextInput style={styles.input} value={form.timeOfBirth} onChangeText={t => setForm({...form, timeOfBirth: t})} placeholder="HH:MM" placeholderTextColor={C.textDim} />
 
                 <Text style={styles.label}>Place of Birth *</Text>
-                <TextInput style={styles.input} value={form.placeOfBirth} onChangeText={t => setForm({...form, placeOfBirth: t})} placeholder="City, State, Country" placeholderTextColor={C.textDim} />
+                <LocationInput 
+                  style={styles.input} 
+                  value={form.placeOfBirth} 
+                  onChangeText={t => setForm({...form, placeOfBirth: t})} 
+                  placeholder="City, State, Country" 
+                />
 
                 <View style={styles.infoBox}>
                   <Text style={styles.infoText}>💡 Time of birth is crucial for accurate Lagna (Ascendant) and house calculations. Provide as accurately as possible.</Text>

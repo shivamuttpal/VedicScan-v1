@@ -85,8 +85,8 @@ const ResponseFeedback = ({ messageId, conversationId, onFeedbackSubmit }) => {
 const VedicBookLoader = () => (
   <div className="flex justify-start">
     <div className="flex items-start space-x-3">
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-saffron to-maroon flex items-center justify-center flex-shrink-0">
-        <Sparkles className="w-5 h-5 text-white" />
+      <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 border border-gold-soft overflow-hidden">
+        <img src="https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png" alt="Maharishi" className="w-8 h-8 object-contain animate-pulse" />
       </div>
       <div className="bg-gradient-to-br from-saffron-pale to-white border border-gold-soft rounded-2xl px-6 py-5">
         <div className="flex items-center space-x-4">
@@ -632,8 +632,8 @@ Note: This data is calculated using high-precision astronomical calculations (Ve
                       <MessageSquare className="w-5 h-5" />
                     </button>
                   )}
-                  <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center mr-4 border border-white/20">
-                    <Sparkles className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center mr-4 border border-white/20 overflow-hidden shadow-inner">
+                    <img src="https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png" alt="Maharishi" className="w-10 h-10 object-contain" />
                   </div>
                   <div>
                     <h1 className="text-xl lg:text-2xl font-bold font-playfair">Maharshi — AI Vedic Astrologer</h1>

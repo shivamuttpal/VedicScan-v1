@@ -181,6 +181,13 @@ code {
         0%, 100% { transform: rotateY(0deg); }
         50% { transform: rotateY(-140deg); }
     }
+    @keyframes bounce-subtle {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    .animate-bounce-subtle {
+        animation: bounce-subtle 3s infinite ease-in-out;
+    }
 }
 
 /* Scrollbar styling */

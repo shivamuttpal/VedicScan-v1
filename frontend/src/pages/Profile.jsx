@@ -9,11 +9,12 @@ import api from '../utils/api';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { GoldCard, Mandala } from '../components/VedicUI';
+import LocationInput from '../components/LocationInput';
 
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { checkAuth, refreshProfileStatus } = useAuth();
+  const { user, checkAuth, refreshProfileStatus } = useAuth();
   const [profiles, setProfiles] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,24 @@ const Profile = () => {
     relationship: 'Self',
     isDefault: false
   });
+
+  // Auto-populate name from user context
+  useEffect(() => {
+    // Only auto-populate for 'Self' relationship and if name is empty
+    if (!editingProfile && showForm && formData.relationship === 'Self' && !formData.name && user) {
+      const nameFromContext = (user.firstName || user.name || '').trim();
+      const lastNameFromContext = (user.lastName || '').trim();
+      const fullName = `${nameFromContext} ${lastNameFromContext}`.trim();
+      
+      if (fullName) {
+        setFormData(prev => ({ ...prev, name: fullName }));
+      } else if (user.email) {
+        // Fallback to email prefix if no name is available
+        const emailPrefix = user.email.split('@')[0];
+        setFormData(prev => ({ ...prev, name: emailPrefix }));
+      }
+    }
+  }, [user, showForm, formData.relationship, editingProfile, formData.name]);
 
   useEffect(() => {
     // Check if first time user or redirected via enforcement
@@ -189,7 +208,7 @@ const Profile = () => {
       <BetaBanner />
       <Navbar />
 
-      <div className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div className="pt-28 pb-16 px-4 sm:px-6 lg:px-8 relative">
         <div className="absolute bottom-0 left-[-60px]">
           <Mandala size={200} opacity={0.03} color="#D4760A" />
         </div>
@@ -283,13 +302,12 @@ const Profile = () => {
 
                   <div className="space-y-1.5">
                     <label htmlFor="placeOfBirth" className="text-sm font-medium text-vtext-mid">Place of Birth</label>
-                    <input
+                    <LocationInput
                       id="placeOfBirth"
                       name="placeOfBirth"
                       value={formData.placeOfBirth}
                       onChange={handleInputChange}
                       placeholder="City, State, Country"
-                      required
                       className="vedic-input mt-1"
                     />
                   </div>
