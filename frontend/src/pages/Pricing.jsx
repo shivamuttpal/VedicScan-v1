@@ -64,7 +64,7 @@ const Pricing = () => {
         plan,
         billingCycle,
         currency,
-        successUrl: window.location.origin + '/dashboard?payment=success',
+        successUrl: window.location.origin + '/payment-success',
         cancelUrl: window.location.origin + '/pricing?payment=cancelled'
       });
 

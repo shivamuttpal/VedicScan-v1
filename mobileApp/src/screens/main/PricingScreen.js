@@ -127,7 +127,7 @@ const PricingScreen = ({ navigation }) => {
           {PLANS.map((plan) => (
             <TouchableOpacity
               key={plan.id}
-              activeOpacity={0.8}
+              activeOpacity={0.9}
               onPress={() => setSelectedPlan(plan.id)}
             >
               <VedicCard
@@ -137,15 +137,23 @@ const PricingScreen = ({ navigation }) => {
                   plan.featured && styles.planFeatured,
                 ]}
               >
+                {plan.featured && (
+                  <LinearGradient
+                    colors={['#D4760A', '#B8860B']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.featuredBadge}
+                  >
+                    <Text style={styles.featuredBadgeText}>✨ MOST POPULAR ✨</Text>
+                  </LinearGradient>
+                )}
+                
                 <View style={styles.planInner}>
-                  {plan.featured && (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>MOST POPULAR</Text>
-                    </View>
-                  )}
                   <View style={styles.planHeader}>
-                    <Text style={styles.planIcon}>{plan.icon}</Text>
-                    <View>
+                    <View style={[styles.iconCircle, { backgroundColor: plan.color + '15' }]}>
+                      <Text style={styles.planIcon}>{plan.icon}</Text>
+                    </View>
+                    <View style={styles.planTitleContainer}>
                       <Text style={styles.planName}>{plan.name}</Text>
                       <View style={styles.priceRow}>
                         <Text style={[styles.planPrice, { color: plan.color }]}>{plan.price}</Text>
@@ -154,25 +162,29 @@ const PricingScreen = ({ navigation }) => {
                     </View>
                   </View>
 
-                  <GoldBar />
+                  <View style={styles.divider} />
 
-                  {plan.features.map((f, i) => (
-                    <View key={i} style={styles.featureRow}>
-                      <Text style={styles.checkmark}>✓</Text>
-                      <Text style={styles.featureText}>{f}</Text>
-                    </View>
-                  ))}
+                  <View style={styles.featuresList}>
+                    {plan.features.map((f, i) => (
+                      <View key={i} style={styles.featureRow}>
+                        <View style={[styles.checkCircle, { backgroundColor: C.green + '15' }]}>
+                          <Text style={styles.checkmark}>✓</Text>
+                        </View>
+                        <Text style={styles.featureText}>{f}</Text>
+                      </View>
+                    ))}
+                  </View>
 
                   <TouchableOpacity
                     style={styles.subBtn}
                     onPress={() => handleSubscribe(plan.id)}
                   >
                     <LinearGradient
-                      colors={plan.id === 'free' ? [C.textMuted, C.textMid] : ['#D4760A', '#B8860B']}
+                      colors={plan.id === 'free' ? ['#F3F4F6', '#E5E7EB'] : [plan.color, plan.color + 'CC']}
                       style={styles.gradBtn}
                     >
-                      <Text style={styles.gradBtnText}>
-                        {plan.id === 'free' ? 'Current Plan' : 'Subscribe'}
+                      <Text style={[styles.gradBtnText, plan.id === 'free' && { color: C.textMuted }]}>
+                        {plan.id === 'free' ? 'Your Current Plan' : 'Get Started Now'}
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -198,37 +210,77 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: fontSize.h3, fontWeight: '700', color: C.white },
   headerSub: { fontSize: fontSize.md, color: 'rgba(255,255,255,0.6)' },
   body: { padding: spacing.lg },
-  planCard: { marginBottom: spacing.md },
-  planSelected: { borderColor: C.saffron, borderWidth: 2 },
-  planFeatured: { borderColor: C.saffron },
-  planInner: { padding: spacing.lg },
-  badge: {
-    backgroundColor: C.saffron, borderRadius: radius.full,
-    paddingHorizontal: 12, paddingVertical: 4, alignSelf: 'flex-start', marginBottom: spacing.sm,
+  planCard: { 
+    marginBottom: spacing.xl,
+    backgroundColor: C.white,
+    borderWidth: 0,
+    ...shadow.md,
   },
-  badgeText: { color: C.white, fontSize: fontSize.xs, fontWeight: '700', letterSpacing: 1 },
+  planSelected: { 
+    borderColor: C.saffron, 
+    borderWidth: 2,
+    transform: [{ scale: 1.02 }],
+  },
+  planFeatured: { 
+    borderColor: C.saffron,
+  },
+  featuredBadge: {
+    paddingVertical: 6,
+    alignItems: 'center',
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+  },
+  featuredBadgeText: {
+    color: C.white,
+    fontSize: fontSize.xs,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+  planInner: { padding: spacing.xl },
   planHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  planIcon: { fontSize: 36 },
-  planName: { fontSize: fontSize.xl, fontWeight: '700', color: C.text },
-  priceRow: { flexDirection: 'row', alignItems: 'baseline' },
-  planPrice: { fontSize: fontSize.h3, fontWeight: '800' },
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  planIcon: { fontSize: 30 },
+  planTitleContainer: { flex: 1 },
+  planName: { fontSize: fontSize.xl, fontWeight: '800', color: C.text },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 2 },
+  planPrice: { fontSize: fontSize.h3, fontWeight: '900' },
   planPeriod: { fontSize: fontSize.sm, color: C.textMuted, marginLeft: 4 },
-  featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  checkmark: { color: C.green, fontWeight: '700', fontSize: fontSize.md, marginRight: spacing.sm, width: 20 },
-  featureText: { fontSize: fontSize.md, color: C.textMid },
-  subBtn: { borderRadius: radius.md, overflow: 'hidden', marginTop: spacing.md },
-  gradBtn: { paddingVertical: 14, alignItems: 'center', borderRadius: radius.md },
-  gradBtnText: { color: C.white, fontSize: fontSize.lg, fontWeight: '700' },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    marginVertical: spacing.xl,
+  },
+  featuresList: { marginBottom: spacing.xl },
+  featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  checkCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  checkmark: { color: C.green, fontWeight: '800', fontSize: fontSize.sm },
+  featureText: { fontSize: fontSize.md, color: C.textMid, flex: 1 },
+  subBtn: { borderRadius: radius.lg, overflow: 'hidden' },
+  gradBtn: { paddingVertical: 16, alignItems: 'center' },
+  gradBtnText: { color: C.white, fontSize: fontSize.lg, fontWeight: '800' },
   toggleContainer: {
     flexDirection: 'row',
     backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: radius.lg,
     padding: 4,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   toggleBtn: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     alignItems: 'center',
     borderRadius: radius.md,
   },
@@ -238,7 +290,7 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     fontSize: fontSize.sm,
-    fontWeight: '600',
+    fontWeight: '700',
     color: C.textMuted,
   },
   toggleTextActive: {

@@ -15,6 +15,7 @@ import BabyNaming from "./pages/BabyNaming";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyOTP from "./pages/VerifyOTP";
 import ResetPassword from "./pages/ResetPassword";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import { FeedbackButton } from "./components/FeedbackButton";
 import { Toaster } from "./components/ui/sonner";
 import { useEffect } from "react";
@@ -79,6 +80,14 @@ function AppRouter() {
         } 
       />
       <Route path="/pricing" element={<Pricing />} />
+      <Route 
+        path="/payment-success" 
+        element={
+          <ProtectedRoute>
+            <PaymentSuccess />
+          </ProtectedRoute>
+        } 
+      />
     </Routes>
   );
 }

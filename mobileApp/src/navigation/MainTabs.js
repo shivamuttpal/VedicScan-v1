@@ -13,6 +13,7 @@ import CompatibilityScreen from '../screens/main/CompatibilityScreen';
 import BabyNamingScreen from '../screens/main/BabyNamingScreen';
 import InsightsScreen from '../screens/main/InsightsScreen';
 import PricingScreen from '../screens/main/PricingScreen';
+import PaymentSuccessScreen from '../screens/main/PaymentSuccessScreen';
 
 const Tab = createBottomTabNavigator();
 const HomeStack = createNativeStackNavigator();
@@ -26,6 +27,7 @@ const HomeStackScreen = () => (
     <HomeStack.Screen name="BabyNaming" component={BabyNamingScreen} />
     <HomeStack.Screen name="Insights" component={InsightsScreen} />
     <HomeStack.Screen name="Pricing" component={PricingScreen} />
+    <HomeStack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} />
     <HomeStack.Screen name="Profile" component={ProfileScreen} />
   </HomeStack.Navigator>
 );

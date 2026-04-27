@@ -32,7 +32,17 @@ export const usageLimitMiddleware = async (
       await usage.save();
     }
 
-    const plan = usage.plan as PlanType;
+    let plan = usage.plan as PlanType;
+
+    // ─── Check for plan expiration ───
+    if (plan !== 'free' && usage.planEndDate && new Date() > usage.planEndDate) {
+      console.log(`[UsageMiddleware] Plan ${plan} expired for user ${userId}. Reverting to free.`);
+      usage.plan = 'free';
+      usage.billingCycle = 'none';
+      await usage.save();
+      plan = 'free';
+    }
+
     const limits = getPlanLimits(plan);
 
     // ─── Auto-reset daily counters ───

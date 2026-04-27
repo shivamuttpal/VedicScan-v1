@@ -21,6 +21,7 @@ export interface IUser extends Document {
   phoneOTP?: string;
   phoneOTPExpires?: Date;
   isPhoneVerified?: boolean;
+  isSubscriber?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -101,6 +102,10 @@ const UserSchema = new Schema<IUser>(
       type: Date,
     },
     isPhoneVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isSubscriber: {
       type: Boolean,
       default: false,
     },

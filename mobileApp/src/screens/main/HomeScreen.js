@@ -221,9 +221,19 @@ const HomeScreen = ({ navigation }) => {
           <View style={styles.heroHeader}>
             <View>
               <Text style={styles.heroDate}>{formatDate()}</Text>
-              <Text style={styles.heroGreeting}>
-                Namaste, {firstName} {'🙏'}
-              </Text>
+              <View style={styles.greetingRow}>
+                <Text style={styles.heroGreeting}>
+                  Namaste, {firstName} {'🙏'}
+                </Text>
+                {user?.isSubscriber && (
+                  <LinearGradient
+                    colors={['#FFD700', '#D4AF37']}
+                    style={styles.premiumBadge}
+                  >
+                    <Text style={styles.premiumBadgeText}>PREMIUM</Text>
+                  </LinearGradient>
+                )}
+              </View>
             </View>
             <TouchableOpacity
               style={styles.profileBtn}
@@ -493,7 +503,25 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.3,
+  },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     marginBottom: 6,
+  },
+  premiumBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  premiumBadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#332200',
+    letterSpacing: 0.5,
   },
   heroTagline: {
     fontSize: 13,

@@ -5,6 +5,8 @@ import { UserUsage, getISTMidnight, getISTMonthStart } from '../model/subscripti
 import { Transaction, TransactionStatus } from '../model/transaction.model';
 import { getPlanLimits, PlanType, PLAN_PRICES } from '../../../config/plans';
 import { paymentService } from '../services/payment.service';
+import { User } from '../../user/model/user.model';
+import { sendPaymentSuccessEmail } from '../../../utils/mail.util';
 
 export const subscriptionController = {
   /**
@@ -22,7 +24,17 @@ export const subscriptionController = {
         await usage.save();
       }
 
-      const plan = usage.plan as PlanType;
+      let plan = usage.plan as PlanType;
+
+      // ─── Check for plan expiration ───
+      if (plan !== 'free' && usage.planEndDate && new Date() > usage.planEndDate) {
+        console.log(`[SubscriptionController] Plan ${plan} expired for user ${userId}. Reverting to free.`);
+        usage.plan = 'free';
+        usage.billingCycle = 'none';
+        await usage.save();
+        plan = 'free';
+      }
+
       const limits = getPlanLimits(plan);
 
       // Auto-reset counters if needed
@@ -226,8 +238,19 @@ export const subscriptionController = {
 
         await usage.save({ session: dbSession });
 
+        // 4. Set User as Subscriber & Send Email
+        const user = await User.findById(userId).session(dbSession);
+        if (user) {
+          user.isSubscriber = true;
+          await user.save({ session: dbSession });
+          
+          // Send async email (don't wait for it to commit transaction, though usually safe)
+          sendPaymentSuccessEmail(user.email, transaction.plan, transaction.amount, transaction.currency)
+            .catch(err => console.error('[Stripe Webhook] Email failed:', err));
+        }
+
         await dbSession.commitTransaction();
-        console.log(`[Stripe Webhook] Success: Plan ${transaction.plan} activated for user ${userId}`);
+        console.log(`[Stripe Webhook] Success: Plan ${transaction.plan} activated and email sent for user ${userId}`);
       } catch (error) {
         await dbSession.abortTransaction();
         console.error('[Stripe Webhook] DB Error:', error);
