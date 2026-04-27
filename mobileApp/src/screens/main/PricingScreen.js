@@ -11,7 +11,7 @@ import api from '../../config/api';
 const PricingScreen = ({ navigation }) => {
   const [selectedPlan, setSelectedPlan] = useState('standard');
   const [currency, setCurrency] = useState('INR');
-  const [loading, setLoading] = useState(false);
+  const [processingPlanId, setProcessingPlanId] = useState(null);
 
   useEffect(() => {
     detectLocation();
@@ -31,8 +31,8 @@ const PricingScreen = ({ navigation }) => {
 
   const prices = {
     INR: {
-      standard: { monthly: '₹299', annual: '₹2,999', symbol: '₹' },
-      premium: { monthly: '₹999', annual: '₹9,999', symbol: '₹' },
+      standard: { monthly: '₹1', annual: '₹2,999', symbol: '₹' },
+      premium: { monthly: '₹1', annual: '₹9,999', symbol: '₹' },
     },
     USD: {
       standard: { monthly: '$29', annual: '$290', symbol: '$' },
@@ -73,8 +73,8 @@ const PricingScreen = ({ navigation }) => {
 
   const handleSubscribe = async (planId) => {
     if (planId === 'free') return;
-    
-    setLoading(true);
+
+    setProcessingPlanId(planId);
     try {
       const { data } = await api.post('/api/subscription/create-checkout-session', {
         plan: planId,
@@ -83,8 +83,6 @@ const PricingScreen = ({ navigation }) => {
       });
 
       if (data.url) {
-        // In a real mobile app, you'd use a WebView or In-App Browser
-        // For now, alerting the URL or using Linking
         Alert.alert('Payment Redirect', 'Redirecting to secure payment page...', [
           { text: 'OK', onPress: () => Linking.openURL(data.url) }
         ]);
@@ -93,7 +91,7 @@ const PricingScreen = ({ navigation }) => {
       console.error(error);
       Alert.alert('Error', 'Failed to initiate payment.');
     } finally {
-      setLoading(false);
+      setProcessingPlanId(null);
     }
   };
 
@@ -111,13 +109,13 @@ const PricingScreen = ({ navigation }) => {
         <View style={styles.body}>
           {/* Currency Toggle */}
           <View style={styles.toggleContainer}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.toggleBtn, currency === 'INR' && styles.toggleBtnActive]}
               onPress={() => setCurrency('INR')}
             >
               <Text style={[styles.toggleText, currency === 'INR' && styles.toggleTextActive]}>🇮🇳 INR</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.toggleBtn, currency === 'USD' && styles.toggleBtnActive]}
               onPress={() => setCurrency('USD')}
             >
@@ -147,7 +145,7 @@ const PricingScreen = ({ navigation }) => {
                     <Text style={styles.featuredBadgeText}>✨ MOST POPULAR ✨</Text>
                   </LinearGradient>
                 )}
-                
+
                 <View style={styles.planInner}>
                   <View style={styles.planHeader}>
                     <View style={[styles.iconCircle, { backgroundColor: plan.color + '15' }]}>
@@ -178,13 +176,18 @@ const PricingScreen = ({ navigation }) => {
                   <TouchableOpacity
                     style={styles.subBtn}
                     onPress={() => handleSubscribe(plan.id)}
+                    disabled={!!processingPlanId}
                   >
                     <LinearGradient
                       colors={plan.id === 'free' ? ['#F3F4F6', '#E5E7EB'] : [plan.color, plan.color + 'CC']}
                       style={styles.gradBtn}
                     >
                       <Text style={[styles.gradBtnText, plan.id === 'free' && { color: C.textMuted }]}>
-                        {plan.id === 'free' ? 'Your Current Plan' : 'Get Started Now'}
+                        {plan.id === 'free'
+                          ? 'Your Current Plan'
+                          : processingPlanId === plan.id
+                            ? 'Processing...'
+                            : 'Get Started Now'}
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -210,18 +213,18 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: fontSize.h3, fontWeight: '700', color: C.white },
   headerSub: { fontSize: fontSize.md, color: 'rgba(255,255,255,0.6)' },
   body: { padding: spacing.lg },
-  planCard: { 
+  planCard: {
     marginBottom: spacing.xl,
     backgroundColor: C.white,
     borderWidth: 0,
     ...shadow.md,
   },
-  planSelected: { 
-    borderColor: C.saffron, 
+  planSelected: {
+    borderColor: C.saffron,
     borderWidth: 2,
     transform: [{ scale: 1.02 }],
   },
-  planFeatured: { 
+  planFeatured: {
     borderColor: C.saffron,
   },
   featuredBadge: {

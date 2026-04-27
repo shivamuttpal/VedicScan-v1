@@ -13,7 +13,7 @@ import { GoldCard, Mandala } from '../components/VedicUI';
 const Pricing = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const [processingPlan, setProcessingPlan] = useState(null);
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [currency, setCurrency] = useState('INR'); // Default to INR
 
@@ -39,8 +39,8 @@ const Pricing = () => {
 
   const prices = {
     INR: {
-      standard: { monthly: 299, annual: 2999 },
-      premium: { monthly: 999, annual: 9999 },
+      standard: { monthly: 1, annual: 2999 },
+      premium: { monthly: 1, annual: 9999 },
       symbol: '₹'
     },
     USD: {
@@ -58,7 +58,7 @@ const Pricing = () => {
       return;
     }
 
-    setLoading(true);
+    setProcessingPlan(plan);
     try {
       const { data: orderData } = await api.post('/api/subscription/create-checkout-session', {
         plan,
@@ -82,7 +82,7 @@ const Pricing = () => {
     } catch (error) {
       console.error('Error subscribing:', error);
       toast.error(error.response?.data?.message || error.message || 'Failed to initiate subscription');
-      setLoading(false);
+      setProcessingPlan(null);
     }
   };
 
@@ -187,7 +187,7 @@ const Pricing = () => {
                   onClick={() => navigate('/dashboard')}
                   variant="outline" 
                   className="w-full rounded-xl border-vborder text-vtext-mid hover:bg-saffron-pale hover:text-saffron"
-                  disabled={loading}
+                  disabled={!!processingPlan}
                 >
                   Current Plan
                 </Button>
@@ -244,9 +244,9 @@ const Pricing = () => {
                   <Button 
                     onClick={() => handleSubscribe('standard')}
                     className="w-full bg-gradient-to-r from-saffron to-maroon hover:from-saffron-600 hover:to-maroon-600 text-white font-bold py-6 rounded-xl shadow-md hover:shadow-lg transition-all"
-                    disabled={loading}
+                    disabled={!!processingPlan}
                   >
-                    {loading ? 'Processing...' : 'Get Standard Plan'}
+                    {processingPlan === 'standard' ? 'Processing...' : 'Get Standard Plan'}
                   </Button>
                 </div>
               </GoldCard>
@@ -310,9 +310,9 @@ const Pricing = () => {
                   <Button 
                     onClick={() => handleSubscribe('premium')}
                     className="w-full bg-gradient-to-r from-vpurple to-vpurple-600 hover:from-vpurple-600 hover:to-vpurple text-white font-bold py-6 rounded-xl shadow-md hover:shadow-lg transition-all"
-                    disabled={loading}
+                    disabled={!!processingPlan}
                   >
-                    {loading ? 'Processing...' : 'Get Premium Plan'}
+                    {processingPlan === 'premium' ? 'Processing...' : 'Get Premium Plan'}
                   </Button>
                 </div>
               </GoldCard>

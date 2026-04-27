@@ -17,6 +17,14 @@ const connectDatabase = async (): Promise<void> => {
     await mongoose.connect(mongoUri);
     
     console.log(`✅ MongoDB connected successfully to ${config.mongo.dbName}`);
+
+    // Drop problematic Razorpay index if it exists (legacy)
+    try {
+      await mongoose.connection.db.collection('transactions').dropIndex('razorpayOrderId_1');
+      console.log('✅ Dropped legacy Razorpay index');
+    } catch (e) {
+      // Index likely doesn't exist, which is fine
+    }
     
     mongoose.connection.on('error', (err) => {
       console.error('❌ MongoDB connection error:', err);
