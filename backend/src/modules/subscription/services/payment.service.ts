@@ -25,7 +25,7 @@ class PaymentService {
   }) {
     try {
       const session = await this.stripe.checkout.sessions.create({
-        payment_method_types: ['card'], // Add 'upi' or others if enabled in Dashboard
+        payment_method_types: ['card', 'upi'], // Add 'upi' or others if enabled in Dashboard
         line_items: [
           {
             price_data: {
