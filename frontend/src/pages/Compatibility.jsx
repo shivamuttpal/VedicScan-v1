@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { formatAIResponse } from '../utils/formatAI';
 import { GoldCard, Mandala } from '../components/VedicUI';
 import LocationInput from '../components/LocationInput';
+import VedicLoader from '../components/VedicLoader';
 
 const PersonForm = ({ title, data, setData, icon: Icon, accentColor, accentBg }) => (
   <GoldCard className="shadow-lg">
@@ -385,9 +386,8 @@ Remember: The scores and doshas are calculated by a deterministic rules engine. 
                 </div>
                 <div className="p-6">
                   {loadingAi ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-saffron mr-2" />
-                      <span className="text-vtext-muted">Consulting the ancient texts...</span>
+                    <div className="py-8">
+                      <VedicLoader message="Maharshi is consulting the ancient texts..." />
                     </div>
                   ) : aiExplanation ? (
                     <div className="prose prose-sm max-w-none">

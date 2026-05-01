@@ -106,15 +106,25 @@ export const chatController = {
       chat.messages.push({ role: 'assistant', content: botResponse });
       await chat.save();
 
-      // ─── Update Usage Counters ───
+      // ─── Update Usage Counters (Atomic) ───
       if (userUsage) {
+        await UserUsage.updateOne(
+          { _id: userUsage._id },
+          {
+            $inc: {
+              dailyQuestionsUsed: 1,
+              monthlyQuestionsUsed: 1,
+              dailyTokensUsed: (promptTokens + completionTokens),
+              monthlyTokensUsed: (promptTokens + completionTokens),
+              totalPromptTokens: promptTokens,
+              totalCompletionTokens: completionTokens,
+            }
+          }
+        );
+        
+        // Refresh local object for the frontend usage stats below
         userUsage.dailyQuestionsUsed += 1;
         userUsage.monthlyQuestionsUsed += 1;
-        userUsage.dailyTokensUsed += (promptTokens + completionTokens);
-        userUsage.monthlyTokensUsed += (promptTokens + completionTokens);
-        userUsage.totalPromptTokens += promptTokens;
-        userUsage.totalCompletionTokens += completionTokens;
-        await userUsage.save();
       }
 
       // ─── Build usage stats for frontend ───

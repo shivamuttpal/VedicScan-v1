@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { formatAIResponse } from '../utils/formatAI';
 import { GoldCard, Mandala } from '../components/VedicUI';
+import VedicLoader from '../components/VedicLoader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -357,9 +358,8 @@ const BabyNaming = () => {
                   </div>
                   <div className="p-6">
                     {explanationLoading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-8 h-8 animate-spin text-saffron" />
-                        <span className="ml-3 text-vtext-muted">Loading explanation...</span>
+                      <div className="py-8">
+                        <VedicLoader message="Revealing spiritual significance..." />
                       </div>
                     ) : explanation ? (
                       <div 

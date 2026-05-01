@@ -9,6 +9,7 @@ import UsageBanner from '../components/UsageBanner';
 import BetaBanner from '../components/BetaBanner';
 import api from '../utils/api';
 import { toast } from 'sonner';
+import VedicLoader from '../components/VedicLoader';
 import { formatAIResponse } from '../utils/formatAI';
 import { DisclaimerLink } from '../components/DisclaimerModal';
 
@@ -81,7 +82,7 @@ const ResponseFeedback = ({ messageId, conversationId, onFeedbackSubmit }) => {
   );
 };
 
-// Vedic book loading animation component - pages flipping through ancient text
+// Vedic book loading animation component
 const VedicBookLoader = () => (
   <div className="flex justify-start">
     <div className="flex items-start space-x-3">
@@ -90,21 +91,11 @@ const VedicBookLoader = () => (
       </div>
       <div className="bg-gradient-to-br from-saffron-pale to-white border border-gold-soft rounded-2xl px-6 py-5">
         <div className="flex items-center space-x-4">
-          {/* 3D Book with flipping pages */}
-          <div className="book-container">
-            <div className="book">
-              <div className="book-cover-back"></div>
-              <div className="book-pages-bg"></div>
-              <div className="page page-1"></div>
-              <div className="page page-2"></div>
-              <div className="page page-3"></div>
-              <div className="page page-4"></div>
-              <div className="page page-5"></div>
-              <div className="book-cover-front"></div>
-            </div>
+          <div className="scale-75 origin-left">
+            <VedicLoader message="" />
           </div>
           <div>
-            <p className="text-sm font-medium text-saffron-600">Consulting the ancient texts...</p>
+            <p className="text-sm font-medium text-saffron-600 -ml-8">Consulting the ancient texts...</p>
           </div>
         </div>
       </div>

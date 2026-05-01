@@ -94,7 +94,7 @@ const PaymentSuccess = () => {
             </Button>
             
             <Button 
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/subscription')}
               variant="ghost"
               className="w-full text-vtext-muted hover:text-vtext hover:bg-black/5 rounded-2xl py-6"
             >

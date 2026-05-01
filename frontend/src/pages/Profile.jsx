@@ -9,6 +9,7 @@ import api from '../utils/api';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { GoldCard, Mandala } from '../components/VedicUI';
+import VedicLoader from '../components/VedicLoader';
 import LocationInput from '../components/LocationInput';
 
 const Profile = () => {
@@ -369,8 +370,10 @@ const Profile = () => {
           )}
 
           {/* Profiles List */}
-          {profiles.length === 0 && !showForm ? (
-            <GoldCard className="text-center py-16">
+          {loadingProfiles ? (
+            <VedicLoader message="Loading your profiles..." />
+          ) : profiles.length === 0 && !showForm ? (
+            <GoldCard className="text-center py-16 animate-in fade-in duration-500">
               <div className="p-6">
                 <div className="w-16 h-16 rounded-2xl bg-saffron-pale flex items-center justify-center mx-auto mb-4">
                   <User className="w-8 h-8 text-saffron" />

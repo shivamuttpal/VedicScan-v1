@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { Check, Crown, Sparkles, Star } from 'lucide-react';
+import { Check, Crown, Sparkles, Star, CheckCircle2, Zap } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import BetaBanner from '../components/BetaBanner';
@@ -15,27 +15,34 @@ const Pricing = () => {
   const { isAuthenticated } = useAuth();
   const [processingPlan, setProcessingPlan] = useState(null);
   const [billingCycle, setBillingCycle] = useState('monthly');
-  const [currency, setCurrency] = useState('INR'); // Default to INR
+  const [currency, setCurrency] = useState('INR');
+  const [currentPlan, setCurrentPlan] = useState('free'); // user's active plan
+  const [planEnd, setPlanEnd] = useState(null);
 
-  // Detect location on mount
+  // Detect location on mount + fetch current subscription
   React.useEffect(() => {
     const detectLocation = async () => {
       try {
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
-        if (data.country_code !== 'IN') {
-          setCurrency('USD');
-        }
+        if (data.country_code !== 'IN') setCurrency('USD');
       } catch (error) {
-        // Fallback to timezone detection if API fails
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (tz !== 'Asia/Kolkata') {
-          setCurrency('USD');
-        }
+        if (tz !== 'Asia/Kolkata') setCurrency('USD');
       }
     };
     detectLocation();
-  }, []);
+
+    // Fetch subscription status if authenticated
+    if (isAuthenticated) {
+      api.get('/api/subscription/status')
+        .then(({ data }) => {
+          setCurrentPlan(data.plan || 'free');
+          setPlanEnd(data.planEndDate || null);
+        })
+        .catch(() => {}); // silent fail
+    }
+  }, [isAuthenticated]);
 
   const prices = {
     INR: {
@@ -58,6 +65,13 @@ const Pricing = () => {
       return;
     }
 
+    // Block if user already has this plan active
+    if (currentPlan === plan) {
+      toast.info('You already have this plan active!');
+      navigate('/subscription');
+      return;
+    }
+
     setProcessingPlan(plan);
     try {
       const { data: orderData } = await api.post('/api/subscription/create-checkout-session', {
@@ -72,7 +86,6 @@ const Pricing = () => {
         throw new Error(orderData.message || 'Failed to create order');
       }
 
-      // Redirect to Stripe Checkout
       if (orderData.url) {
         window.location.href = orderData.url;
       } else {
@@ -84,6 +97,26 @@ const Pricing = () => {
       toast.error(error.response?.data?.message || error.message || 'Failed to initiate subscription');
       setProcessingPlan(null);
     }
+  };
+
+  // Helper: determine button state for a plan card
+  const getPlanButtonProps = (planKey) => {
+    const isCurrentPlan = currentPlan === planKey;
+    const isProcessing = processingPlan === planKey;
+    const hasActivePlan = currentPlan !== 'free';
+
+    if (isCurrentPlan) {
+      return {
+        label: '✓ Current Plan',
+        disabled: true,
+        className: 'w-full bg-vgreen/10 border border-vgreen/30 text-vgreen font-bold py-6 rounded-xl cursor-default',
+        onClick: () => navigate('/subscription'),
+      };
+    }
+    if (isProcessing) {
+      return { label: 'Processing...', disabled: true, className: 'w-full font-bold py-6 rounded-xl opacity-70' };
+    }
+    return null; // use default
   };
 
   return (
@@ -242,11 +275,12 @@ const Pricing = () => {
                     </div>
                   </div>
                   <Button 
-                    onClick={() => handleSubscribe('standard')}
-                    className="w-full bg-gradient-to-r from-saffron to-maroon hover:from-saffron-600 hover:to-maroon-600 text-white font-bold py-6 rounded-xl shadow-md hover:shadow-lg transition-all"
-                    disabled={!!processingPlan}
+                    onClick={getPlanButtonProps('standard')?.onClick || (() => handleSubscribe('standard'))}
+                    className={getPlanButtonProps('standard')?.className || 'w-full bg-gradient-to-r from-saffron to-maroon hover:from-saffron-600 hover:to-maroon-600 text-white font-bold py-6 rounded-xl shadow-md hover:shadow-lg transition-all'}
+                    disabled={getPlanButtonProps('standard')?.disabled || !!processingPlan}
                   >
-                    {processingPlan === 'standard' ? 'Processing...' : 'Get Standard Plan'}
+                    {getPlanButtonProps('standard')?.label ||
+                      (processingPlan === 'standard' ? 'Processing...' : 'Get Standard Plan')}
                   </Button>
                 </div>
               </GoldCard>
@@ -308,11 +342,12 @@ const Pricing = () => {
                     </div>
                   </div>
                   <Button 
-                    onClick={() => handleSubscribe('premium')}
-                    className="w-full bg-gradient-to-r from-vpurple to-vpurple-600 hover:from-vpurple-600 hover:to-vpurple text-white font-bold py-6 rounded-xl shadow-md hover:shadow-lg transition-all"
-                    disabled={!!processingPlan}
+                    onClick={getPlanButtonProps('premium')?.onClick || (() => handleSubscribe('premium'))}
+                    className={getPlanButtonProps('premium')?.className || 'w-full bg-gradient-to-r from-vpurple to-vpurple-600 hover:from-vpurple-600 hover:to-vpurple text-white font-bold py-6 rounded-xl shadow-md hover:shadow-lg transition-all'}
+                    disabled={getPlanButtonProps('premium')?.disabled || !!processingPlan}
                   >
-                    {processingPlan === 'premium' ? 'Processing...' : 'Get Premium Plan'}
+                    {getPlanButtonProps('premium')?.label ||
+                      (processingPlan === 'premium' ? 'Processing...' : 'Get Premium Plan')}
                   </Button>
                 </div>
               </GoldCard>

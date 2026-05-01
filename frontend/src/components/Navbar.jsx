@@ -35,7 +35,7 @@ const Navbar = () => {
   };
 
   const navLinks = [
-    { to: '/chat', label: 'AI Astrologer', icon: Sparkles, desc: 'Deep insights from Maharshi' },
+    { to: '/chat', label: 'Maharishi', icon: Sparkles, desc: 'Ask our AI Vedic astrologer' },
     { to: '/baby-naming', label: 'Baby Naming', icon: Star, desc: 'Find the perfect name' },
     { to: '/compatibility', label: 'Kundali Matching', icon: Heart, desc: 'Check cosmic alignment' },
     { to: '/muhurta', label: 'Muhurta Finder', icon: Calendar, comingSoon: true, desc: 'Timing is everything' },
@@ -134,6 +134,13 @@ const Navbar = () => {
                         <span className="text-[10px] text-vtext-muted">View your readings</span>
                       </div>
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/subscription')} className="flex items-center p-3 rounded-xl cursor-pointer hover:bg-vbg-warm">
+                      <CreditCard className="w-4 h-4 mr-3 opacity-60" />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold">My Subscription</span>
+                        <span className="text-[10px] text-vtext-muted">Plan, usage & billing</span>
+                      </div>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-vborder/40 my-1" />
                     <DropdownMenuItem onClick={handleLogout} className="flex items-center p-3 rounded-xl cursor-pointer hover:bg-red-50 text-red-600">
                       <LogOut className="w-4 h-4 mr-3" />
@@ -230,6 +237,21 @@ const Navbar = () => {
                   >
                     <CreditCard className="w-5 h-5 mr-3 text-vtext-muted" />
                     <span className="text-sm font-semibold">Pricing</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      navigate('/subscription');
+                    }}
+                    className={`flex items-center w-full px-4 py-3 rounded-xl transition-all ${
+                      isActiveLink('/subscription')
+                        ? 'bg-saffron-pale text-saffron'
+                        : 'text-vtext-mid active:bg-vbg-warm'
+                    }`}
+                  >
+                    <CreditCard className="w-5 h-5 mr-3 text-vtext-muted" />
+                    <span className="text-sm font-semibold">My Subscription</span>
                   </button>
 
                   <button

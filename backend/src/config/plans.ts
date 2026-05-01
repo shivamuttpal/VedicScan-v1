@@ -62,7 +62,7 @@ export const PLAN_PRICES = {
     'one-time': {
       compatibility: 99900,
       'baby-naming': 99900,
-    }
+    } as Record<string, number>,
   },
   USD: {
     standard: {
@@ -76,8 +76,52 @@ export const PLAN_PRICES = {
     'one-time': {
       compatibility: 9900,
       'baby-naming': 9900,
-    }
+    } as Record<string, number>,
   }
+};
+
+/**
+ * ─── Centralized Validation Lists ─────────────────────
+ * Add new plans or features in ONE place. Everything else reads from here.
+ */
+
+/** Subscription plans that have recurring billing */
+export const SUBSCRIPTION_PLANS: PlanType[] = ['standard', 'premium'];
+
+/** One-time purchasable features. Add new features here only. */
+export const ONE_TIME_FEATURES: string[] = ['compatibility', 'baby-naming'];
+
+/** All valid purchasable items (subscriptions + one-time) */
+export const ALL_PURCHASABLE = [...SUBSCRIPTION_PLANS, ...ONE_TIME_FEATURES];
+
+/** Plan display names for emails */
+export const PLAN_DISPLAY_NAMES: Record<string, string> = {
+  free: 'Free',
+  standard: 'Standard',
+  premium: 'Premium',
+  compatibility: 'Compatibility Analysis',
+  'baby-naming': 'Baby Naming',
+};
+
+/**
+ * Check if a plan string is a valid subscription plan
+ */
+export const isSubscriptionPlan = (plan: string): plan is PlanType => {
+  return SUBSCRIPTION_PLANS.includes(plan as PlanType);
+};
+
+/**
+ * Check if a plan string is a valid one-time feature
+ */
+export const isOneTimeFeature = (plan: string): boolean => {
+  return ONE_TIME_FEATURES.includes(plan);
+};
+
+/**
+ * Check if a plan string is any valid purchasable item
+ */
+export const isValidPurchase = (plan: string): boolean => {
+  return ALL_PURCHASABLE.includes(plan as PlanType);
 };
 
 /**

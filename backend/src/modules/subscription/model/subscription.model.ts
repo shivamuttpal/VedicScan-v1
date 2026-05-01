@@ -25,6 +25,11 @@ export interface IUserUsage extends Document {
   planStartDate: Date;
   planEndDate?: Date;
   billingCycle: 'monthly' | 'annual' | 'none';
+  previousPlan?: string;
+
+  // Email notification tracking
+  expiryWarningNotified: boolean;
+  expiryNotified: boolean;
 
   createdAt: Date;
   updatedAt: Date;
@@ -74,6 +79,11 @@ const userUsageSchema = new Schema<IUserUsage>(
       enum: ['monthly', 'annual', 'none'],
       default: 'none',
     },
+    previousPlan: { type: String },
+
+    // Email notification tracking
+    expiryWarningNotified: { type: Boolean, default: false },
+    expiryNotified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

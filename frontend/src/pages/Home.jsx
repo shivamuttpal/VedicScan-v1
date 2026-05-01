@@ -7,6 +7,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import BetaBanner from '../components/BetaBanner';
 import { Mandala, GoldCard, GoldBar, RashiChip, SIGNS, C } from '../components/VedicUI';
+import VedicLoader from '../components/VedicLoader';
 import { sampleQuestions } from '../mock';
 import { useAuth } from '../context/AuthContext';
 
@@ -278,9 +279,20 @@ const Home = () => {
             <div className="mt-4 p-3.5 bg-saffron-pale rounded-xl border-l-[3px] border-saffron min-h-[80px] flex flex-col justify-center">
               <p className="text-[11px] text-saffron font-bold uppercase tracking-wider mb-1">Today's insight</p>
               {loadingPredictions ? (
-                <div className="flex items-center gap-2 text-saffron/60">
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  <span className="text-xs italic">Consulting the stars...</span>
+                <div className="flex flex-col items-center justify-center py-4 text-saffron">
+                  <div className="book-container scale-75 mb-2">
+                    <div className="book">
+                      <div className="book-cover-back"></div>
+                      <div className="book-pages-bg"></div>
+                      <div className="page page-1"></div>
+                      <div className="page page-2"></div>
+                      <div className="page page-3"></div>
+                      <div className="page page-4"></div>
+                      <div className="page page-5"></div>
+                      <div className="book-cover-front"></div>
+                    </div>
+                  </div>
+                  <span className="text-xs italic animate-pulse">Consulting the stars...</span>
                 </div>
               ) : (
                 <p className="text-sm text-vtext leading-relaxed animate-in slide-in-from-left-2 duration-500">

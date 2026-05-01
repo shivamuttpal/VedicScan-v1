@@ -10,6 +10,11 @@ class PaymentService {
     });
   }
 
+  /** Expose stripe client for advanced calls (e.g. subscriptions.retrieve) */
+  get stripeClient() {
+    return this.stripe;
+  }
+
   /**
    * Create a Stripe Checkout Session
    */
@@ -22,24 +27,44 @@ class PaymentService {
     billingCycle: string;
     successUrl: string;
     cancelUrl: string;
+    isOneTime?: boolean;
   }) {
     try {
-      const session = await this.stripe.checkout.sessions.create({
-        payment_method_types: ['card', 'upi'], // Add 'upi' or others if enabled in Dashboard
-        line_items: [
-          {
+      const isOneTimePurchase = params.isOneTime || params.billingCycle === 'none';
+
+      // One-time: use a regular unit_amount price_data (no recurring field)
+      // Subscription: use recurring price_data so Stripe auto-charges on renewal
+      const lineItem = isOneTimePurchase
+        ? {
             price_data: {
               currency: params.currency.toLowerCase(),
               product_data: {
-                name: `VedicScan ${params.plan.charAt(0).toUpperCase() + params.plan.slice(1)} Plan`,
-                description: `${params.billingCycle === 'annual' ? '1 Year' : '1 Month'} Subscription`,
+                name: `VedicScan ${params.plan.charAt(0).toUpperCase() + params.plan.slice(1)}`,
+                description: 'One-time service',
               },
               unit_amount: params.amount,
             },
             quantity: 1,
-          },
-        ],
-        mode: 'payment',
+          }
+        : {
+            price_data: {
+              currency: params.currency.toLowerCase(),
+              product_data: {
+                name: `VedicScan ${params.plan.charAt(0).toUpperCase() + params.plan.slice(1)} Plan`,
+                description: params.billingCycle === 'annual' ? '1 Year Subscription' : 'Monthly Subscription',
+              },
+              unit_amount: params.amount,
+              recurring: {
+                interval: params.billingCycle === 'annual' ? ('year' as const) : ('month' as const),
+              },
+            },
+            quantity: 1,
+          };
+
+      const session = await this.stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [lineItem],
+        mode: isOneTimePurchase ? 'payment' : 'subscription',
         success_url: params.successUrl,
         cancel_url: params.cancelUrl,
         customer_email: params.email,

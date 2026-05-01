@@ -22,6 +22,8 @@ export interface IUser extends Document {
   phoneOTPExpires?: Date;
   isPhoneVerified?: boolean;
   isSubscriber?: boolean;
+  purchasedFeatures?: string[];
+  emailUnsubscribed?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -106,6 +108,14 @@ const UserSchema = new Schema<IUser>(
       default: false,
     },
     isSubscriber: {
+      type: Boolean,
+      default: false,
+    },
+    purchasedFeatures: {
+      type: [String],
+      default: [],
+    },
+    emailUnsubscribed: {
       type: Boolean,
       default: false,
     },

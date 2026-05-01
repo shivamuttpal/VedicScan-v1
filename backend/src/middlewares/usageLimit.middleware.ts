@@ -12,6 +12,7 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth.middleware';
 import { UserUsage, getISTMidnight, getISTMonthStart } from '../modules/subscription/model/subscription.model';
 import { getPlanLimits, PlanType } from '../config/plans';
+import { User } from '../modules/user/model/user.model';
 
 export const usageLimitMiddleware = async (
   req: AuthRequest,
@@ -37,10 +38,14 @@ export const usageLimitMiddleware = async (
     // ─── Check for plan expiration ───
     if (plan !== 'free' && usage.planEndDate && new Date() > usage.planEndDate) {
       console.log(`[UsageMiddleware] Plan ${plan} expired for user ${userId}. Reverting to free.`);
+      usage.previousPlan = usage.plan;
       usage.plan = 'free';
       usage.billingCycle = 'none';
       await usage.save();
       plan = 'free';
+
+      // Revert isSubscriber flag
+      await User.updateOne({ _id: userId }, { $set: { isSubscriber: false } });
     }
 
     const limits = getPlanLimits(plan);
@@ -135,7 +140,10 @@ export const usageLimitMiddleware = async (
     next();
   } catch (error) {
     console.error('Usage limit middleware error:', error);
-    // Don't block the request on middleware failure — let it through
-    next();
+    // SECURITY: Block the request on middleware failure to prevent limit bypass
+    res.status(503).json({
+      success: false,
+      message: 'Service temporarily unavailable. Please try again in a moment.',
+    });
   }
 };

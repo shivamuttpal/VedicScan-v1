@@ -52,7 +52,7 @@ const transporter = nodemailer.createTransport({
 //   }
 // };
 
-const sendFallbackEmail = async (to: string, subject: string, html: string): Promise<boolean> => {
+export const sendFallbackEmail = async (to: string, subject: string, html: string): Promise<boolean> => {
   try {
     await transporter.sendMail({
       from: `"VedicScan" <${config.mail.user}>`,
