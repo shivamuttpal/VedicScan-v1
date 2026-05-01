@@ -248,7 +248,7 @@ const Subscription = () => {
                 Usage This Period
               </h3>
             </div>
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-6">
               <UsageBar
                 label="Daily Questions"
                 used={status?.usage?.daily?.used ?? 0}
@@ -259,24 +259,24 @@ const Subscription = () => {
                 used={status?.usage?.monthly?.used ?? 0}
                 limit={status?.limits?.monthly_questions ?? 90}
               />
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="p-4 rounded-xl bg-vedic-bg border border-vborder/50 text-center">
-                  <p className="text-2xl font-bold text-vtext font-playfair">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div className="p-5 rounded-xl bg-vedic-bg border border-vborder/50 text-center shadow-sm">
+                  <p className="text-3xl font-bold text-vtext font-playfair">
                     {Math.max(0, (status?.limits?.daily_questions ?? 3) - (status?.usage?.daily?.used ?? 0)) >= 99999
                       ? '∞'
                       : Math.max(0, (status?.limits?.daily_questions ?? 3) - (status?.usage?.daily?.used ?? 0))
                     }
                   </p>
-                  <p className="text-xs text-vtext-muted mt-1">Questions left today</p>
+                  <p className="text-[10px] uppercase tracking-wider text-vtext-muted mt-2 font-semibold">Questions left today</p>
                 </div>
-                <div className="p-4 rounded-xl bg-vedic-bg border border-vborder/50 text-center">
-                  <p className="text-2xl font-bold text-vtext font-playfair">
+                <div className="p-5 rounded-xl bg-vedic-bg border border-vborder/50 text-center shadow-sm">
+                  <p className="text-3xl font-bold text-vtext font-playfair">
                     {Math.max(0, (status?.limits?.monthly_questions ?? 90) - (status?.usage?.monthly?.used ?? 0)) >= 99999
                       ? '∞'
                       : Math.max(0, (status?.limits?.monthly_questions ?? 90) - (status?.usage?.monthly?.used ?? 0))
                     }
                   </p>
-                  <p className="text-xs text-vtext-muted mt-1">Questions left this month</p>
+                  <p className="text-[10px] uppercase tracking-wider text-vtext-muted mt-2 font-semibold">Questions left this month</p>
                 </div>
               </div>
             </div>

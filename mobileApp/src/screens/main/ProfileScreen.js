@@ -14,7 +14,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 const GENDERS = ['Male', 'Female', 'Other'];
 const RELATIONSHIPS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Friend', 'Other'];
 
-const ProfileScreen = ({ route }) => {
+const ProfileScreen = ({ route, navigation }) => {
   const { user, hasProfile, refreshProfileStatus, logout } = useAuth();
   const isSetup = route?.params?.setup || false;
   const [profiles, setProfiles] = useState([]);
@@ -208,6 +208,19 @@ const ProfileScreen = ({ route }) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.saffron} />}
       >
         <View style={styles.body}>
+          {/* Subscription Card */}
+          <VedicCard style={{ marginBottom: spacing.md }}>
+            <TouchableOpacity 
+              style={styles.subCard}
+              onPress={() => navigation.navigate('Subscription')}
+            >
+              <View style={styles.subInfo}>
+                <Text style={styles.subTitle}>✨ My Subscription</Text>
+                <Text style={styles.subDesc}>Manage your plan and view AI usage</Text>
+              </View>
+              <Text style={styles.subArrow}>→</Text>
+            </TouchableOpacity>
+          </VedicCard>
           {/* Setup Prompt */}
           {!hasProfile && !showForm && (
             <VedicCard style={{ marginBottom: spacing.md }}>
@@ -511,6 +524,11 @@ const styles = StyleSheet.create({
   checkboxInner: { width: 10, height: 10, borderRadius: 2, backgroundColor: 'transparent' },
   checkboxActive: { backgroundColor: C.saffron },
   switchLabel: { fontSize: fontSize.sm, color: C.textMid, fontWeight: '500' },
+  subCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.md },
+  subInfo: { flex: 1 },
+  subTitle: { fontSize: 16, fontWeight: '700', color: C.text },
+  subDesc: { fontSize: 12, color: C.textMuted, marginTop: 2 },
+  subArrow: { fontSize: 20, color: C.saffron, fontWeight: '700' },
 });
 
 export default ProfileScreen;

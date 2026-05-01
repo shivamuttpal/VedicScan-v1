@@ -52,8 +52,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center space-x-2 group">
             <span className="text-xl transform group-hover:rotate-12 transition-transform duration-300">🔱</span>
             <div className="text-2xl font-bold tracking-tight font-playfair flex items-baseline">
-              <span className="text-maroon">Vedic</span>
-              <span className="bg-gradient-to-r from-saffron to-gold bg-clip-text text-transparent ml-0.5">Scan</span>
+              <span className="bg-gradient-to-r from-saffron via-gold to-maroon bg-clip-text text-transparent">Maharishi</span>
             </div>
           </Link>
 
@@ -130,7 +129,7 @@ const Navbar = () => {
                     <DropdownMenuItem onClick={() => navigate('/profile')} className="flex items-center p-3 rounded-xl cursor-pointer hover:bg-vbg-warm">
                       <LayoutDashboard className="w-4 h-4 mr-3 opacity-60" />
                       <div className="flex flex-col">
-                        <span className="text-sm font-semibold">Dashboard</span>
+                        <span className="text-sm font-semibold">Profile</span>
                         <span className="text-[10px] text-vtext-muted">View your readings</span>
                       </div>
                     </DropdownMenuItem>
@@ -235,7 +234,7 @@ const Navbar = () => {
                         : 'text-vtext-mid active:bg-vbg-warm'
                     }`}
                   >
-                    <CreditCard className="w-5 h-5 mr-3 text-vtext-muted" />
+                    <Zap className="w-5 h-5 mr-3 text-vtext-muted" />
                     <span className="text-sm font-semibold">Pricing</span>
                   </button>
 
@@ -265,8 +264,8 @@ const Navbar = () => {
                         : 'text-vtext-mid active:bg-vbg-warm'
                     }`}
                   >
-                    <LayoutDashboard className="w-5 h-5 mr-3 text-vtext-muted" />
-                    <span className="text-sm font-semibold">My Dashboard</span>
+                    <User className="w-5 h-5 mr-3 text-vtext-muted" />
+                    <span className="text-sm font-semibold">My Readings</span>
                   </button>
 
                   <button
@@ -277,7 +276,7 @@ const Navbar = () => {
                     className="flex items-center w-full px-4 py-3 text-red-600 active:bg-red-50 rounded-xl transition-colors"
                   >
                     <LogOut className="w-5 h-5 mr-3" />
-                    <span className="text-sm font-semibold">Logout</span>
+                    <span className="text-sm font-semibold">Sign Out</span>
                   </button>
                 </>
               )}
