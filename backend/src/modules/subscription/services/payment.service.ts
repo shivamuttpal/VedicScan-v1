@@ -62,7 +62,7 @@ class PaymentService {
           };
 
       const session = await this.stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
+        payment_method_types: ['card', 'upi'],
         line_items: [lineItem],
         mode: isOneTimePurchase ? 'payment' : 'subscription',
         success_url: params.successUrl,
