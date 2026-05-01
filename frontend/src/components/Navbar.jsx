@@ -12,7 +12,8 @@ import {
   Star,
   ChevronDown,
   LayoutDashboard,
-  CreditCard
+  CreditCard,
+  Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -52,7 +53,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center space-x-2 group">
             <span className="text-xl transform group-hover:rotate-12 transition-transform duration-300">🔱</span>
             <div className="text-2xl font-bold tracking-tight font-playfair flex items-baseline">
-              <span className="bg-gradient-to-r from-saffron via-gold to-maroon bg-clip-text text-transparent">Maharishi</span>
+              <span className="bg-gradient-to-r from-saffron via-gold to-maroon bg-clip-text text-transparent">VedicScan</span>
             </div>
           </Link>
 
@@ -264,8 +265,8 @@ const Navbar = () => {
                         : 'text-vtext-mid active:bg-vbg-warm'
                     }`}
                   >
-                    <User className="w-5 h-5 mr-3 text-vtext-muted" />
-                    <span className="text-sm font-semibold">My Readings</span>
+                    <UserIcon className="w-5 h-5 mr-3 text-vtext-muted" />
+                    <span className="text-sm font-semibold">Profile</span>
                   </button>
 
                   <button
