@@ -1,0 +1,319 @@
+{
+  "_schema": {
+    "description": "Moon sign (Rashi) interpretations - represents emotional nature, mind, mother, subconscious patterns. The Moon sign is the single most important factor in Vedic emotional interpretation.",
+    "usage": "Inject these patterns into LLM context when describing how user feels, processes emotions, or relates emotionally."
+  },
+  "aries": {
+    "themes": ["impulsive emotions", "passionate reactions", "needs independence", "quick to feel, quick to forget"],
+    "emotional_patterns": [
+      "feels emotions intensely but briefly",
+      "reacts before reflecting",
+      "needs to express feelings physically or through action",
+      "frustrated when emotions are suppressed",
+      "courageous in vulnerability but impatient with slow processing"
+    ],
+    "relationship_patterns": [
+      "wants partners who match their energy",
+      "loses interest if challenged emotionally for too long",
+      "shows love through bold gestures, not gentle words",
+      "struggles with passive-aggressive partners"
+    ],
+    "career_patterns": [
+      "thrives in leadership and competitive environments",
+      "needs autonomy at work",
+      "burns out in slow, bureaucratic systems"
+    ],
+    "strengths": ["emotional courage", "honest in feelings", "fast recovery from setbacks", "natural pioneer"],
+    "challenges": ["temper flares", "emotional impatience", "difficulty sitting with sadness"],
+    "spiritual_patterns": ["learns through action, not contemplation", "fire-based seeker"],
+    "tone": "energetic, direct, warm",
+    "keywords": ["impulsive", "brave", "restless", "fiery", "self-driven"]
+  },
+  "taurus": {
+    "themes": ["emotional steadiness", "comfort-seeking", "sensual nature", "Moon is exalted here - deeply nurturing"],
+    "emotional_patterns": [
+      "processes feelings slowly and deeply",
+      "needs physical comfort and beauty to feel safe",
+      "stubborn once emotions settle in",
+      "extremely loyal but hard to win back if betrayed",
+      "finds peace in routine, food, music, nature"
+    ],
+    "relationship_patterns": [
+      "values stability over excitement",
+      "shows love through gifts, food, touch, and presence",
+      "slow to commit but deeply committed once decided",
+      "possessive when feeling insecure"
+    ],
+    "career_patterns": [
+      "draws toward finance, arts, hospitality, agriculture",
+      "thrives with consistent income and tangible results",
+      "builds wealth slowly and steadily"
+    ],
+    "strengths": ["emotionally grounded", "patient", "deeply sensual", "loyal", "Moon is exalted - natural healer of others"],
+    "challenges": ["resistance to change", "emotional stagnation", "materialistic clinging"],
+    "spiritual_patterns": ["connects to divine through senses, beauty, and earth"],
+    "tone": "warm, slow, sensual, reassuring",
+    "keywords": ["grounded", "loyal", "sensual", "stubborn", "nurturing"]
+  },
+  "gemini": {
+    "themes": ["mental restlessness", "emotional duality", "needs intellectual connection"],
+    "emotional_patterns": [
+      "rationalizes feelings before feeling them",
+      "talks through emotions to understand them",
+      "easily distracted from emotional depth",
+      "shifts moods quickly - can feel two things at once",
+      "uses humor to deflect heavy feelings"
+    ],
+    "relationship_patterns": [
+      "falls for minds before bodies",
+      "needs conversational partners",
+      "gets bored with emotional sameness",
+      "may struggle with deep emotional intimacy"
+    ],
+    "career_patterns": [
+      "excels in writing, communication, teaching, sales, tech",
+      "needs variety in work",
+      "good at juggling multiple projects"
+    ],
+    "strengths": ["adaptable", "curious", "articulate", "witty"],
+    "challenges": ["emotional inconsistency", "overthinking", "difficulty being still"],
+    "spiritual_patterns": ["seeks through study, conversation, multiple paths"],
+    "tone": "light, curious, playful, intelligent",
+    "keywords": ["curious", "scattered", "verbal", "dual", "restless"]
+  },
+  "cancer": {
+    "themes": ["deeply emotional", "Moon's own sign - strongest placement", "intuitive and protective"],
+    "emotional_patterns": [
+      "feels everything in the body, not just the mind",
+      "absorbs others' emotions like a sponge",
+      "retreats into shell when hurt",
+      "powerful intuition - knows things without being told",
+      "carries family and ancestral emotional patterns"
+    ],
+    "relationship_patterns": [
+      "nurtures through food, care, memory of small details",
+      "needs emotional safety above all",
+      "can be clingy or moody when insecure",
+      "highly devoted to family and chosen family"
+    ],
+    "career_patterns": [
+      "draws toward caregiving, real estate, hospitality, healing, food",
+      "needs emotional connection to work",
+      "succeeds where empathy is an asset"
+    ],
+    "strengths": ["empathic", "nurturing", "intuitive", "protective", "Moon at home - emotional mastery available"],
+    "challenges": ["moodiness", "emotional withdrawal", "difficulty letting go of the past"],
+    "spiritual_patterns": ["devotional path, connection to divine feminine, mother-figure spirituality"],
+    "tone": "tender, nurturing, gentle, protective",
+    "keywords": ["sensitive", "nurturing", "moody", "intuitive", "homely"]
+  },
+  "leo": {
+    "themes": ["dramatic emotions", "needs recognition", "warm-hearted but proud"],
+    "emotional_patterns": [
+      "wears emotions openly and dramatically",
+      "needs to feel seen and valued",
+      "wounded ego heals slowly",
+      "generous when appreciated, withdrawn when ignored",
+      "feels best when expressing creatively"
+    ],
+    "relationship_patterns": [
+      "loves grandly and publicly",
+      "needs admiration and respect from partner",
+      "loyal protector when committed",
+      "can be controlling when insecure"
+    ],
+    "career_patterns": [
+      "natural leadership in performance, politics, creative direction",
+      "needs visibility in work",
+      "thrives with applause and recognition"
+    ],
+    "strengths": ["confident", "warm", "generous", "creatively expressive"],
+    "challenges": ["pride", "need for validation", "drama"],
+    "spiritual_patterns": ["devotion through expression, sun-based, divine purpose orientation"],
+    "tone": "warm, regal, expressive, encouraging",
+    "keywords": ["proud", "generous", "dramatic", "loyal", "radiant"]
+  },
+  "virgo": {
+    "themes": ["analyzes emotions", "self-critical", "anxious mind", "service-oriented heart"],
+    "emotional_patterns": [
+      "overthinks emotions instead of feeling them",
+      "struggles to relax mentally",
+      "often worries internally without showing it outside",
+      "finds peace through routine, cleanliness, helping others",
+      "self-critical inner voice rarely quiets"
+    ],
+    "relationship_patterns": [
+      "shows love through practical help and remembering details",
+      "uncomfortable with messy emotional displays",
+      "wants a partner they can improve with",
+      "may seem cold but feels deeply"
+    ],
+    "career_patterns": [
+      "excels in detail-oriented work - analysis, healthcare, writing, editing",
+      "needs systems and competence around them",
+      "often the dependable one in a team"
+    ],
+    "strengths": ["careful with words", "observant listener", "humble service", "analytical clarity"],
+    "challenges": ["overthinking", "anxiety", "perfectionism", "emotional suppression"],
+    "spiritual_patterns": ["path of seva (service), discipline, mantra, mental purification"],
+    "tone": "careful, gentle, precise, supportive",
+    "keywords": ["analytical", "worried", "helpful", "perfectionist", "humble"]
+  },
+  "libra": {
+    "themes": ["seeks harmony", "emotional fairness", "discomfort with conflict"],
+    "emotional_patterns": [
+      "weighs emotions before expressing them",
+      "avoids conflict even at emotional cost",
+      "needs beauty and balance in surroundings to feel okay",
+      "may suppress true feelings to keep peace",
+      "indecisive when emotionally torn"
+    ],
+    "relationship_patterns": [
+      "partnership-oriented, often defined by relationships",
+      "diplomatic in conflict, sometimes avoidant",
+      "values fairness and reciprocity",
+      "struggles when alone for too long"
+    ],
+    "career_patterns": [
+      "draws toward law, design, diplomacy, counseling, beauty industries",
+      "needs collaborative environments",
+      "good at mediating"
+    ],
+    "strengths": ["diplomatic", "graceful", "fair-minded", "aesthetically refined"],
+    "challenges": ["people-pleasing", "indecision", "conflict avoidance"],
+    "spiritual_patterns": ["path of relationship, equanimity, balance"],
+    "tone": "graceful, balanced, warm, diplomatic",
+    "keywords": ["harmonious", "indecisive", "fair", "social", "aesthetic"]
+  },
+  "scorpio": {
+    "themes": ["intense emotions", "Moon is debilitated here - emotional turbulence", "transformation through pain"],
+    "emotional_patterns": [
+      "feels everything at maximum intensity",
+      "doesn't trust easily but loves deeply once trust is given",
+      "holds grudges and processes betrayal slowly",
+      "drawn to emotional extremes - all or nothing",
+      "secretive about inner world",
+      "Moon is debilitated here - inner peace must be earned through transformation"
+    ],
+    "relationship_patterns": [
+      "intense bonding - merges deeply with partner",
+      "jealousy and possessiveness when insecure",
+      "powerful sexual and emotional magnetism",
+      "loyal to the end or completely cut off"
+    ],
+    "career_patterns": [
+      "draws toward psychology, occult, research, surgery, investigation",
+      "thrives in transformative work",
+      "uncovers what others miss"
+    ],
+    "strengths": ["emotional depth", "loyalty", "intuition into hidden things", "transformative power"],
+    "challenges": ["jealousy", "obsession", "emotional darkness", "Moon debilitation - mood instability"],
+    "spiritual_patterns": ["tantric path, transformation through shadow work, kundalini awakening"],
+    "tone": "intense, deep, magnetic, raw",
+    "keywords": ["intense", "secretive", "loyal", "transformative", "turbulent"]
+  },
+  "sagittarius": {
+    "themes": ["optimistic emotions", "freedom-loving", "philosophical processing"],
+    "emotional_patterns": [
+      "naturally optimistic even in hard times",
+      "processes feelings through meaning-making and philosophy",
+      "needs freedom to feel emotionally safe",
+      "uncomfortable with emotional confinement",
+      "looks for the bigger picture in every feeling"
+    ],
+    "relationship_patterns": [
+      "needs adventure and growth with partner",
+      "honest sometimes to the point of bluntness",
+      "fears emotional traps and possessiveness",
+      "loves through shared exploration and learning"
+    ],
+    "career_patterns": [
+      "draws toward teaching, travel, law, publishing, spirituality",
+      "needs purpose and meaning in work",
+      "thrives with mentors and as a mentor"
+    ],
+    "strengths": ["optimistic", "wise", "adventurous", "honest"],
+    "challenges": ["restlessness", "tactlessness", "commitment issues"],
+    "spiritual_patterns": ["path of wisdom, dharma, teaching, pilgrimage"],
+    "tone": "uplifting, philosophical, expansive, frank",
+    "keywords": ["optimistic", "free", "philosophical", "honest", "expansive"]
+  },
+  "capricorn": {
+    "themes": ["serious emotions", "emotional discipline", "delayed satisfaction"],
+    "emotional_patterns": [
+      "represses emotions for the sake of duty",
+      "feels older than their age emotionally",
+      "fears vulnerability as weakness",
+      "warms up slowly but stays loyal long",
+      "tends toward melancholy in private"
+    ],
+    "relationship_patterns": [
+      "takes relationships seriously - not casual",
+      "shows love through reliability and provision",
+      "struggles to verbalize feelings",
+      "needs partner who respects their work and ambition"
+    ],
+    "career_patterns": [
+      "ambitious - long-term thinking",
+      "thrives in structure, business, government, traditional careers",
+      "rises through patience and effort"
+    ],
+    "strengths": ["dependable", "mature", "disciplined", "responsible"],
+    "challenges": ["emotional coldness", "pessimism", "overwork", "delayed joy"],
+    "spiritual_patterns": ["path of discipline, karma yoga, monk-like restraint"],
+    "tone": "measured, mature, steady, dignified",
+    "keywords": ["disciplined", "ambitious", "reserved", "dutiful", "serious"]
+  },
+  "aquarius": {
+    "themes": ["detached emotions", "humanitarian heart", "intellectual feeling"],
+    "emotional_patterns": [
+      "intellectualizes emotions to manage them",
+      "feels deeply but expresses through ideas, not tears",
+      "uncomfortable with conventional emotional displays",
+      "needs space and freedom to feel safe",
+      "feels different from others and accepts it"
+    ],
+    "relationship_patterns": [
+      "friendship-based love",
+      "needs intellectual equal",
+      "fiercely loyal but emotionally aloof",
+      "unconventional partnership styles"
+    ],
+    "career_patterns": [
+      "draws toward technology, social causes, science, innovation",
+      "thrives in unconventional roles",
+      "future-oriented thinker"
+    ],
+    "strengths": ["original", "humanitarian", "independent", "visionary"],
+    "challenges": ["emotional distance", "rebelliousness", "loneliness"],
+    "spiritual_patterns": ["path of universal love, service to humanity, jnana yoga"],
+    "tone": "calm, intellectual, friendly, distant",
+    "keywords": ["detached", "innovative", "humanitarian", "eccentric", "free"]
+  },
+  "pisces": {
+    "themes": ["dreamy emotions", "boundary-less feelings", "spiritual sensitivity"],
+    "emotional_patterns": [
+      "absorbs others' emotions without filter",
+      "lives partly in dreams, imagination, or fantasy",
+      "highly compassionate but easily overwhelmed",
+      "intuitive to the point of psychic awareness",
+      "may escape pain through fantasy, art, or substances"
+    ],
+    "relationship_patterns": [
+      "loves unconditionally - sometimes loses self in partner",
+      "attracts wounded souls and rescuer dynamics",
+      "needs spiritual or soul connection",
+      "boundaries are hard to maintain"
+    ],
+    "career_patterns": [
+      "draws toward art, music, healing, spirituality, behind-the-scenes work",
+      "thrives in creative and compassionate fields",
+      "struggles in cutthroat environments"
+    ],
+    "strengths": ["compassionate", "imaginative", "intuitive", "spiritually open"],
+    "challenges": ["escapism", "boundary issues", "self-pity", "confusion"],
+    "spiritual_patterns": ["bhakti (devotion), surrender, mystical union, dissolution of ego"],
+    "tone": "soft, dreamy, compassionate, mystical",
+    "keywords": ["dreamy", "empathic", "mystical", "escapist", "compassionate"]
+  }
+}

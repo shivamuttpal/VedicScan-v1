@@ -1,0 +1,154 @@
+{
+  "description": "Natural and temporal planetary friendships, combustion rules, planetary war, and dignity states. Critical for interpreting planet strength.",
+  "natural_friendships": {
+    "sun": {
+      "friends": ["moon", "mars", "jupiter"],
+      "neutrals": ["mercury"],
+      "enemies": ["venus", "saturn", "rahu", "ketu"]
+    },
+    "moon": {
+      "friends": ["sun", "mercury"],
+      "neutrals": ["mars", "jupiter", "venus", "saturn"],
+      "enemies": ["rahu", "ketu"]
+    },
+    "mars": {
+      "friends": ["sun", "moon", "jupiter"],
+      "neutrals": ["venus", "saturn"],
+      "enemies": ["mercury", "rahu", "ketu"]
+    },
+    "mercury": {
+      "friends": ["sun", "venus"],
+      "neutrals": ["mars", "jupiter", "saturn"],
+      "enemies": ["moon", "rahu", "ketu"]
+    },
+    "jupiter": {
+      "friends": ["sun", "moon", "mars"],
+      "neutrals": ["saturn"],
+      "enemies": ["mercury", "venus", "rahu", "ketu"]
+    },
+    "venus": {
+      "friends": ["mercury", "saturn"],
+      "neutrals": ["mars", "jupiter"],
+      "enemies": ["sun", "moon", "rahu", "ketu"]
+    },
+    "saturn": {
+      "friends": ["mercury", "venus", "rahu"],
+      "neutrals": ["jupiter"],
+      "enemies": ["sun", "moon", "mars", "ketu"]
+    },
+    "rahu": {
+      "friends": ["venus", "saturn", "mercury"],
+      "neutrals": ["jupiter"],
+      "enemies": ["sun", "moon", "mars"]
+    },
+    "ketu": {
+      "friends": ["mars", "venus", "saturn"],
+      "neutrals": ["mercury", "jupiter"],
+      "enemies": ["sun", "moon"]
+    }
+  },
+  "combustion": {
+    "description": "When a planet is too close to the Sun (within a certain degree), its light is overwhelmed - called combust or 'asta'. The planet loses strength and signifies ego-related challenges in its domain.",
+    "combustion_degrees": {
+      "moon": 12,
+      "mars": 17,
+      "mercury": 14,
+      "mercury_retrograde": 12,
+      "jupiter": 11,
+      "venus": 10,
+      "venus_retrograde": 8,
+      "saturn": 15
+    },
+    "general_effects": {
+      "moon_combust": ["emotional vulnerability", "mother issues", "low confidence", "mood swings"],
+      "mars_combust": ["anger suppression", "low courage", "sibling conflicts", "ego-driven anger"],
+      "mercury_combust": ["communication issues", "decision difficulty", "but can give brilliant ideas if dignified"],
+      "jupiter_combust": ["wisdom blocked by ego", "father-guru issues", "spiritual doubt"],
+      "venus_combust": ["relationship struggles", "ego in love", "vanity", "marital tension"],
+      "saturn_combust": ["father-authority conflict", "delayed maturity", "ego vs duty conflict"]
+    },
+    "interpretation": "Combust planets create internal tension - the ego (Sun) is overwhelming the natural expression of that planet. Often results in either suppression or exaggerated expression of that planet's themes.",
+    "exceptions": {
+      "mercury_close_to_sun": "Forms Budha-Aditya Yoga if not too close - gives intelligence",
+      "deep_combustion": "Within 5° is severe; beyond combustion degree but still close has milder effects"
+    }
+  },
+  "planetary_war": {
+    "definition": "When two planets are within 1° of each other in same sign (excluding Sun/Moon). The planet at lower degree typically 'wins'.",
+    "general_effect": "Creates internal conflict in life areas ruled by both planets",
+    "common_combinations": {
+      "mars_saturn_war": "Conflict between aggression and discipline; anger management issues",
+      "venus_mars_war": "Conflict between love and passion; relationship intensity",
+      "jupiter_saturn_war": "Conflict between expansion and contraction; philosophical struggles"
+    }
+  },
+  "planetary_dignity_states": {
+    "uchcha_exalted": {
+      "strength": "highest dignity",
+      "meaning": "Planet expresses its highest qualities",
+      "tone_in_reading": "Major strength, blessing, gift to be used"
+    },
+    "moolatrikona": {
+      "strength": "very strong",
+      "meaning": "Planet in special root portion of own sign; gives leadership in its domain",
+      "specific_degrees": {
+        "sun": "Leo 0-20°",
+        "moon": "Taurus 3-30°",
+        "mars": "Aries 0-12°",
+        "mercury": "Virgo 15-20°",
+        "jupiter": "Sagittarius 0-10°",
+        "venus": "Libra 0-15°",
+        "saturn": "Aquarius 0-20°"
+      }
+    },
+    "swakshetra_own_sign": {
+      "strength": "strong",
+      "meaning": "Planet at home; comfortable expression",
+      "tone_in_reading": "Stable strength in that life area"
+    },
+    "mitra_friendly": {
+      "strength": "moderately strong",
+      "meaning": "Planet in friend's sign; supportive environment"
+    },
+    "sama_neutral": {
+      "strength": "average",
+      "meaning": "Planet neither supported nor restricted"
+    },
+    "shatru_enemy": {
+      "strength": "weak",
+      "meaning": "Planet in enemy's sign; struggles to express",
+      "tone_in_reading": "Challenges in that life area; needs effort"
+    },
+    "neecha_debilitated": {
+      "strength": "weakest",
+      "meaning": "Planet expresses its lowest qualities; major challenges in its domain",
+      "tone_in_reading": "Significant lesson; potential for transformation through difficulty",
+      "neecha_bhanga_possible": "Debilitation can be cancelled creating Raja Yoga"
+    }
+  },
+  "shadbala_strength_factors": {
+    "description": "Six-fold strength assessment of planets in classical Vedic astrology",
+    "factors": {
+      "sthana_bala": "Positional strength (dignity)",
+      "dig_bala": "Directional strength (best house for each planet)",
+      "kaala_bala": "Temporal strength (day/night, planetary war, ayana)",
+      "chesta_bala": "Motional strength (retrograde, direct)",
+      "naisargika_bala": "Natural strength (Sun strongest, Saturn weakest naturally)",
+      "drig_bala": "Aspectual strength (benefic/malefic aspects received)"
+    },
+    "dig_bala_houses": {
+      "sun_mars": "10th house (south)",
+      "jupiter_mercury": "1st house (east)",
+      "saturn": "7th house (west)",
+      "moon_venus": "4th house (north)"
+    }
+  },
+  "human_interpretation_rules": {
+    "exalted_planet": "Speak of this as a natural gift, blessing, area of soul mastery",
+    "debilitated_planet": "Speak of this as a soul lesson, area for compassionate growth, possibility of transformation",
+    "combust_planet": "Speak of inner conflict, ego overshadowing natural expression, need to integrate that energy",
+    "retrograde_planet": "Speak of past-life themes, inner exploration, unconventional expression",
+    "well_aspected_planet": "Speak of supported life themes, divine grace in that area",
+    "afflicted_planet": "Speak of karmic lessons, area requiring patience and remedy"
+  }
+}

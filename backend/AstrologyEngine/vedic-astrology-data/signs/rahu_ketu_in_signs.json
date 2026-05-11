@@ -1,0 +1,192 @@
+{
+  "description": "Rahu (North Node) shows worldly desires and karmic obsessions in this life. Ketu (South Node) shows past-life mastery and detachment. They are always 180° apart.",
+  "rahu_in_signs": {
+    "aries": {
+      "themes": ["obsessive ambition", "aggressive desires", "leadership cravings"],
+      "karmic_lesson": "Learn courage and self-assertion in healthy ways; control impulsiveness",
+      "manifestations": ["sudden anger", "fearless risk-taking", "innovative leadership"],
+      "career_directions": ["entrepreneurship", "military", "sports", "competitive fields"],
+      "shadow": "reckless aggression, accidents",
+      "tone": "obsessive, ambitious, impulsive"
+    },
+    "taurus": {
+      "status": "exalted_some_traditions",
+      "themes": ["material obsession", "wealth cravings", "sensual desires"],
+      "karmic_lesson": "Develop healthy relationship with material world without getting trapped",
+      "manifestations": ["sudden wealth", "luxury obsession", "stubborn pursuits"],
+      "career_directions": ["finance", "luxury goods", "real estate", "food industry"],
+      "shadow": "greed, hoarding, materialism",
+      "tone": "materialistic, sensual, fixed"
+    },
+    "gemini": {
+      "themes": ["information obsession", "communication cravings", "intellectual restlessness"],
+      "karmic_lesson": "Master communication and use information wisely",
+      "manifestations": ["media success", "writing/speaking talent", "scattered focus"],
+      "career_directions": ["media", "tech", "writing", "communications"],
+      "shadow": "deceptive speech, scattered mind, gossip",
+      "tone": "restless, curious, scattered"
+    },
+    "cancer": {
+      "themes": ["emotional obsession", "family entanglement", "mother issues"],
+      "karmic_lesson": "Develop emotional security without clinging",
+      "manifestations": ["mood swings", "real estate gains", "foreign mother"],
+      "career_directions": ["food", "hospitality", "real estate", "psychology"],
+      "shadow": "emotional manipulation, family dysfunction",
+      "tone": "moody, attached, insecure"
+    },
+    "leo": {
+      "themes": ["fame obsession", "ego cravings", "recognition desires"],
+      "karmic_lesson": "Develop true confidence without need for external validation",
+      "manifestations": ["sudden fame", "entertainment success", "dramatic personality"],
+      "career_directions": ["entertainment", "politics", "leadership", "creative arts"],
+      "shadow": "ego inflation, arrogance, dramatic falls",
+      "tone": "dramatic, ambitious, proud"
+    },
+    "virgo": {
+      "themes": ["perfectionism obsession", "service cravings", "health anxieties"],
+      "karmic_lesson": "Channel analytical mind without becoming critical",
+      "manifestations": ["health work", "analytical skill", "detail mastery"],
+      "career_directions": ["medicine", "analysis", "service industries", "tech"],
+      "shadow": "hypochondria, over-criticism, anxiety",
+      "tone": "anxious, analytical, perfectionist"
+    },
+    "libra": {
+      "themes": ["relationship obsession", "partnership cravings", "social status desires"],
+      "karmic_lesson": "Find self-worth independent of relationships",
+      "manifestations": ["multiple relationships", "diplomatic skill", "artistic success"],
+      "career_directions": ["law", "diplomacy", "fashion", "partnerships"],
+      "shadow": "people-pleasing, multiple marriages, indecision",
+      "tone": "people-focused, diplomatic, restless"
+    },
+    "scorpio": {
+      "status": "debilitated_some_traditions",
+      "themes": ["occult obsession", "power cravings", "transformation desires"],
+      "karmic_lesson": "Master the shadow self without being consumed by it",
+      "manifestations": ["occult interest", "research depth", "intense transformations"],
+      "career_directions": ["research", "occult", "investigation", "psychology"],
+      "shadow": "obsession, manipulation, power abuse",
+      "tone": "intense, secretive, transformative"
+    },
+    "sagittarius": {
+      "themes": ["wisdom obsession", "philosophical cravings", "freedom desires"],
+      "karmic_lesson": "Seek truth without dogma; balance freedom with commitment",
+      "manifestations": ["foreign travel", "religious interest", "teaching success"],
+      "career_directions": ["teaching", "publishing", "foreign trade", "religion"],
+      "shadow": "fanaticism, hypocrisy, escapism",
+      "tone": "philosophical, expansive, restless"
+    },
+    "capricorn": {
+      "themes": ["status obsession", "ambition cravings", "authority desires"],
+      "karmic_lesson": "Achieve material success without losing humanity",
+      "manifestations": ["political career", "executive success", "structured ambition"],
+      "career_directions": ["politics", "business", "engineering", "government"],
+      "shadow": "ruthless ambition, coldness, depression",
+      "tone": "ambitious, calculating, status-driven"
+    },
+    "aquarius": {
+      "themes": ["humanitarian obsession", "innovation cravings", "group desires"],
+      "karmic_lesson": "Use innovation to serve humanity without losing personal connections",
+      "manifestations": ["tech success", "social work", "unconventional life"],
+      "career_directions": ["technology", "social causes", "innovation", "research"],
+      "shadow": "emotional detachment, eccentric isolation",
+      "tone": "innovative, detached, humanitarian"
+    },
+    "pisces": {
+      "themes": ["spiritual obsession", "escapist cravings", "mystical desires"],
+      "karmic_lesson": "Develop spirituality without losing groundedness",
+      "manifestations": ["spiritual interest", "artistic ability", "foreign connections"],
+      "career_directions": ["spirituality", "arts", "healing", "music"],
+      "shadow": "addiction, escapism, delusion",
+      "tone": "dreamy, spiritual, escapist"
+    }
+  },
+  "ketu_in_signs": {
+    "aries": {
+      "themes": ["past mastery of leadership", "detached from ego battles", "spiritual warrior"],
+      "karmic_lesson": "Use past warrior skills without unnecessary aggression",
+      "manifestations": ["spiritual leadership", "independent action", "tantric ability"],
+      "shadow": "anger flashes, sudden withdrawal from leadership",
+      "tone": "detached warrior, spiritual leader"
+    },
+    "taurus": {
+      "themes": ["past material mastery", "detached from possessions", "renunciation of wealth"],
+      "karmic_lesson": "Don't be paralyzed by past material wisdom; embrace new growth",
+      "manifestations": ["natural simplicity", "spiritual approach to wealth"],
+      "shadow": "sudden financial losses, stubborn renunciation",
+      "tone": "renouncing, simple, grounded-spiritual"
+    },
+    "gemini": {
+      "themes": ["past intellectual mastery", "detached from communication", "silent wisdom"],
+      "karmic_lesson": "Speak when necessary; honor inner knowing",
+      "manifestations": ["mystical knowledge", "writing of spiritual nature"],
+      "shadow": "communication problems, isolation"
+    },
+    "cancer": {
+      "themes": ["past emotional mastery", "detached from family", "spiritual mother"],
+      "karmic_lesson": "Connect to family while maintaining emotional independence",
+      "manifestations": ["spiritual nurturing", "mystical mother figure"],
+      "shadow": "emotional withdrawal, family separation"
+    },
+    "leo": {
+      "themes": ["past royal mastery", "detached from fame", "spiritual nobility"],
+      "karmic_lesson": "Lead from spirit, not ego",
+      "manifestations": ["humble greatness", "spiritual authority"],
+      "shadow": "rejecting recognition that's deserved"
+    },
+    "virgo": {
+      "themes": ["past service mastery", "detached from perfection", "intuitive healer"],
+      "karmic_lesson": "Trust intuition over over-analysis",
+      "manifestations": ["natural healing ability", "spiritual service"],
+      "shadow": "anxiety, hypochondria"
+    },
+    "libra": {
+      "themes": ["past relationship mastery", "detached from partners", "spiritual independence"],
+      "karmic_lesson": "Find balance through inner connection, not outer",
+      "manifestations": ["solo spiritual path", "diplomatic spiritual work"],
+      "shadow": "relationship issues, isolation"
+    },
+    "scorpio": {
+      "status": "exalted_some_traditions",
+      "themes": ["past occult mastery", "natural mystic", "deep spiritual knowing"],
+      "karmic_lesson": "Use occult wisdom for healing, not control",
+      "manifestations": ["natural psychic ability", "tantric mastery"],
+      "shadow": "obsession with hidden realms"
+    },
+    "sagittarius": {
+      "themes": ["past dharmic mastery", "natural teacher", "spiritual sage"],
+      "karmic_lesson": "Share wisdom without dogma",
+      "manifestations": ["natural philosophy", "spiritual teaching"],
+      "shadow": "spiritual arrogance, dogmatism"
+    },
+    "capricorn": {
+      "themes": ["past authority mastery", "detached from status", "spiritual executive"],
+      "karmic_lesson": "Use discipline for spiritual growth",
+      "manifestations": ["spiritual organization", "humble leadership"],
+      "shadow": "depression, rejection of success"
+    },
+    "aquarius": {
+      "themes": ["past humanitarian mastery", "detached from groups", "spiritual innovator"],
+      "karmic_lesson": "Innovate from spirit, not rebellion",
+      "manifestations": ["spiritual technology", "humanitarian mysticism"],
+      "shadow": "emotional isolation, alienation"
+    },
+    "pisces": {
+      "themes": ["past spiritual mastery", "natural mystic", "moksha tendency"],
+      "karmic_lesson": "Ground spiritual gifts in practical life",
+      "manifestations": ["spiritual liberation", "natural devotion", "moksha karaka"],
+      "shadow": "escapism, lack of grounding"
+    }
+  },
+  "rahu_ketu_axis_principle": {
+    "explanation": "Rahu shows what the soul craves and must learn in this life (uncomfortable but growth-bringing). Ketu shows what the soul already mastered in past lives (comfortable but stagnant if clung to).",
+    "rule": "Always interpret Rahu and Ketu together as an axis. They are always in opposite signs.",
+    "common_axes": {
+      "aries_libra": "Self vs others - learning self-assertion (Rahu Aries) while releasing relationship dependency (Ketu Libra)",
+      "taurus_scorpio": "Material vs transformation - learning material stability (Rahu Taurus) while releasing intensity (Ketu Scorpio)",
+      "gemini_sagittarius": "Information vs wisdom - learning detailed knowledge (Rahu Gemini) while releasing dogma (Ketu Sagittarius)",
+      "cancer_capricorn": "Family vs career - learning emotional roots (Rahu Cancer) while releasing status (Ketu Capricorn)",
+      "leo_aquarius": "Individual vs group - learning self-expression (Rahu Leo) while releasing detachment (Ketu Aquarius)",
+      "virgo_pisces": "Service vs spirituality - learning practical service (Rahu Virgo) while releasing escapism (Ketu Pisces)"
+    }
+  }
+}

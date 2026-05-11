@@ -1,0 +1,90 @@
+{
+  "_schema": {
+    "description": "Houses (Bhavas) represent areas of life. Each house governs specific life themes regardless of which planet is placed in it.",
+    "usage": "Used to interpret WHERE a planet's energy plays out. Planet in house 7 = relationships, house 10 = career, etc."
+  },
+  "1": {
+    "name": "Tanu Bhava (House of Self)",
+    "life_areas": ["physical body", "personality", "self-image", "appearance", "vitality", "overall life direction"],
+    "themes": ["who you are", "how you show up", "first impressions"],
+    "keywords": ["self", "identity", "body", "beginning"],
+    "tone_when_emphasized": "self-focused, strong personality, leadership"
+  },
+  "2": {
+    "name": "Dhana Bhava (House of Wealth)",
+    "life_areas": ["money", "savings", "family", "speech", "food", "values", "early childhood"],
+    "themes": ["what you have", "what you value", "what you say"],
+    "keywords": ["wealth", "family", "speech", "values"],
+    "tone_when_emphasized": "values-driven, money-focused, family-attached"
+  },
+  "3": {
+    "name": "Sahaja Bhava (House of Courage)",
+    "life_areas": ["siblings", "courage", "short journeys", "communication", "skills", "efforts", "younger brothers"],
+    "themes": ["effort and willpower", "siblings and peers", "hands-on skills"],
+    "keywords": ["courage", "siblings", "skills", "effort", "communication"],
+    "tone_when_emphasized": "driven, communicative, sibling-influenced"
+  },
+  "4": {
+    "name": "Sukha Bhava (House of Happiness)",
+    "life_areas": ["mother", "home", "land", "vehicles", "emotional foundation", "inner peace", "education (basic)"],
+    "themes": ["emotional roots", "where you feel at home", "mother bond"],
+    "keywords": ["home", "mother", "peace", "roots", "comfort"],
+    "tone_when_emphasized": "emotional, home-oriented, mother-influenced"
+  },
+  "5": {
+    "name": "Putra Bhava (House of Creativity)",
+    "life_areas": ["children", "creativity", "romance", "speculation", "intelligence", "past life merit (purva punya)", "mantras"],
+    "themes": ["creative self-expression", "love affairs", "children", "spiritual practices from past lives"],
+    "keywords": ["creativity", "children", "romance", "intelligence", "purva punya"],
+    "tone_when_emphasized": "creative, romantic, intellectually playful"
+  },
+  "6": {
+    "name": "Ari/Roga Bhava (House of Enemies)",
+    "life_areas": ["health and disease", "enemies", "debt", "service", "daily work", "obstacles", "competition", "maternal uncles"],
+    "themes": ["overcoming obstacles", "daily struggles", "service work"],
+    "keywords": ["enemies", "health", "service", "debt", "obstacles"],
+    "tone_when_emphasized": "competitive, service-oriented, health-focused, struggle-prone"
+  },
+  "7": {
+    "name": "Yuvati/Kalatra Bhava (House of Partnership)",
+    "life_areas": ["spouse", "marriage", "business partners", "open enemies", "public dealings", "trade"],
+    "themes": ["one-to-one relationships", "marriage", "public life"],
+    "keywords": ["spouse", "partnership", "marriage", "public", "trade"],
+    "tone_when_emphasized": "partnership-focused, relationship-defined, publicly visible"
+  },
+  "8": {
+    "name": "Randhra/Ayur Bhava (House of Transformation)",
+    "life_areas": ["death and rebirth", "longevity", "occult", "in-laws' wealth", "inheritance", "shared resources", "sudden events", "deep research", "scandals"],
+    "themes": ["hidden things", "transformation through crisis", "secrets"],
+    "keywords": ["transformation", "occult", "death", "inheritance", "secrets"],
+    "tone_when_emphasized": "intense, research-oriented, prone to sudden changes, mystical"
+  },
+  "9": {
+    "name": "Dharma Bhava (House of Higher Purpose)",
+    "life_areas": ["father", "guru", "religion", "dharma", "long journeys", "higher education", "fortune (bhagya)", "pilgrimage"],
+    "themes": ["wisdom and meaning", "spiritual teachers", "long-term luck"],
+    "keywords": ["dharma", "father", "guru", "fortune", "philosophy"],
+    "tone_when_emphasized": "philosophical, lucky, teacher/student oriented, religious"
+  },
+  "10": {
+    "name": "Karma Bhava (House of Career)",
+    "life_areas": ["career", "public reputation", "achievements", "authority figures", "father (some systems)", "social status"],
+    "themes": ["what you achieve in the world", "public image", "professional life"],
+    "keywords": ["career", "fame", "authority", "achievement", "reputation"],
+    "tone_when_emphasized": "ambitious, public-facing, career-focused, authoritative"
+  },
+  "11": {
+    "name": "Labha Bhava (House of Gains)",
+    "life_areas": ["income", "gains", "friends", "elder siblings", "social network", "wishes fulfilled", "hopes"],
+    "themes": ["fulfillment of desires", "community", "income from work"],
+    "keywords": ["gains", "friends", "wishes", "income", "network"],
+    "tone_when_emphasized": "social, ambitious for gains, networked, wish-fulfillment focused"
+  },
+  "12": {
+    "name": "Vyaya/Moksha Bhava (House of Liberation)",
+    "life_areas": ["losses", "expenses", "foreign lands", "isolation", "spirituality", "moksha (liberation)", "secret affairs", "subconscious", "bed pleasures", "hospitals", "prisons"],
+    "themes": ["letting go", "spiritual liberation", "foreign connections", "hidden things"],
+    "keywords": ["loss", "moksha", "foreign", "isolation", "subconscious"],
+    "tone_when_emphasized": "spiritual, introspective, foreign-connected, prone to loss but also liberation"
+  }
+}

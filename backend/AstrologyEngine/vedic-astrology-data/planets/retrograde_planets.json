@@ -1,0 +1,98 @@
+{
+  "_schema": {
+    "description": "Retrograde (vakri) planets in Vedic astrology indicate karmic patterns from past lives, internalized energy, or unfinished business. They make the planet's energy turn inward.",
+    "usage": "Add retrograde modifiers to base planet interpretations. Note: Sun and Moon never retrograde in Vedic; Rahu/Ketu always retrograde."
+  },
+  "mars_retrograde": {
+    "themes": ["suppressed anger", "internalized aggression", "past life warrior karma"],
+    "psychological_meaning": [
+      "anger turned inward instead of outward",
+      "may bottle up energy until explosion",
+      "courage exists but is questioned internally",
+      "past life unresolved fights",
+      "feels powerless externally even when capable"
+    ],
+    "relationship_pattern": "Passive-aggressive tendencies, may not assert needs",
+    "career_pattern": "May undermine own ambitions, restart careers",
+    "spiritual_lesson": "Learning to channel energy outward in healthy ways",
+    "remedies": "Hanuman Chalisa, Mars mantras, physical exercise to release"
+  },
+  "mercury_retrograde": {
+    "themes": ["unique communication", "introspective intellect", "second-thinking patterns"],
+    "psychological_meaning": [
+      "thinks differently than peers",
+      "often misunderstood when speaking",
+      "deeply analytical and self-questioning",
+      "may have learning style that doesn't fit norms",
+      "excellent at editing, revising, reviewing"
+    ],
+    "relationship_pattern": "Communication may take time to develop in relationships",
+    "career_pattern": "Better at editing/reviewing than first drafts; technical/research work suits",
+    "spiritual_lesson": "Trust inner voice over external validation",
+    "remedies": "Mercury mantras, study scriptures, journal writing"
+  },
+  "jupiter_retrograde": {
+    "themes": ["inner wisdom", "questioned faith", "non-traditional teacher"],
+    "psychological_meaning": [
+      "wisdom comes from within, not external gurus",
+      "may reject traditional religion",
+      "deep philosophical questioning",
+      "past life student/teacher karma",
+      "may struggle with feeling 'lucky'"
+    ],
+    "relationship_pattern": "Spouse may not match traditional expectations; values matter more than appearance",
+    "career_pattern": "May reject conventional success markers; finds own path",
+    "spiritual_lesson": "True wisdom comes from inner experience, not adopted beliefs",
+    "remedies": "Guru mantras, scripture self-study, charity to teachers"
+  },
+  "saturn_retrograde": {
+    "themes": ["internalized discipline", "self-criticism", "past karma demanding attention"],
+    "psychological_meaning": [
+      "extremely self-critical",
+      "feels older than peers from childhood",
+      "carries heavy responsibility internally",
+      "past life duties unfinished",
+      "may avoid responsibility externally but feels burdened internally"
+    ],
+    "relationship_pattern": "Slow to commit, fears emotional duty",
+    "career_pattern": "Long delays before breakthroughs; karmic work themes",
+    "spiritual_lesson": "Self-acceptance over self-flagellation",
+    "remedies": "Shani mantras, service to elderly/poor, Saturday fasting"
+  },
+  "venus_retrograde": {
+    "themes": ["love patterns from past", "unique relationships", "questioned values"],
+    "psychological_meaning": [
+      "questions what love really means",
+      "attracted to unusual partners or arrangements",
+      "past life love karma resurfacing",
+      "may struggle with self-worth in love",
+      "creative gifts come from within"
+    ],
+    "relationship_pattern": "Relationships restart, ex-lovers return; unconventional bonds",
+    "career_pattern": "Reviving/restoring beauty (art restoration, antiques, vintage)",
+    "spiritual_lesson": "Love must be redefined personally, not socially",
+    "remedies": "Shukra mantras, Friday gifts to women, art creation"
+  },
+  "rahu_retrograde": {
+    "themes": ["always retrograde - cosmic illusion", "obsessive worldly desires", "past life unfulfilled cravings"],
+    "psychological_meaning": [
+      "intense unfulfillable cravings",
+      "feels something is always missing",
+      "past life desires manifesting as obsessions",
+      "fascination with foreign, unconventional",
+      "self-deception possible"
+    ],
+    "remedies": "Durga mantras, donate to outcasts, Saturn-related charities"
+  },
+  "ketu_retrograde": {
+    "themes": ["always retrograde - past life mastery", "spiritual longing", "detachment from world"],
+    "psychological_meaning": [
+      "carries past life skills as natural abilities",
+      "feels detached from worldly success",
+      "spiritual longing intensifies",
+      "previous mastery now turned inward",
+      "isolation feels natural"
+    ],
+    "remedies": "Ganesha worship, meditation, spiritual study"
+  }
+}

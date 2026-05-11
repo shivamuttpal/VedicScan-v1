@@ -1,0 +1,256 @@
+{
+  "_schema": {
+    "description": "Yogas are special planetary combinations that produce specific life outcomes. They override individual planet readings when present.",
+    "usage": "Detect these patterns in chart - they greatly enhance or reduce planetary effects.",
+    "categories": ["raja_yoga (royal/success)", "dhana_yoga (wealth)", "panch_mahapurusha (mahatma yogas)", "dosha (afflictions)", "spiritual_yoga"]
+  },
+  "ruchaka_yoga": {
+    "category": "panch_mahapurusha",
+    "formation": "Mars in own sign (Aries/Scorpio) or exaltation (Capricorn) in angular house (1, 4, 7, 10)",
+    "themes": ["warrior nature", "leadership", "physical strength", "victorious life"],
+    "predictions": [
+      "natural leader and warrior",
+      "strong physique and courage",
+      "success in military, sports, surgery, real estate",
+      "respected for boldness",
+      "victorious over enemies"
+    ],
+    "tone": "powerful, bold, victorious"
+  },
+  "bhadra_yoga": {
+    "category": "panch_mahapurusha",
+    "formation": "Mercury in own sign (Gemini/Virgo) in angular house (1, 4, 7, 10)",
+    "themes": ["intelligence", "communication", "business success", "youthfulness"],
+    "predictions": [
+      "highly intelligent and articulate",
+      "successful business or writing",
+      "youthful appearance throughout life",
+      "skilled communicator",
+      "good education and fame"
+    ],
+    "tone": "intelligent, communicative, youthful"
+  },
+  "hamsa_yoga": {
+    "category": "panch_mahapurusha",
+    "formation": "Jupiter in own sign (Sagittarius/Pisces) or exaltation (Cancer) in angular house (1, 4, 7, 10)",
+    "themes": ["wisdom", "spirituality", "respect", "guru nature"],
+    "predictions": [
+      "wise and respected",
+      "spiritual or religious leader",
+      "noble character",
+      "wealth and good fortune",
+      "honored in society"
+    ],
+    "tone": "wise, noble, respected"
+  },
+  "malavya_yoga": {
+    "category": "panch_mahapurusha",
+    "formation": "Venus in own sign (Taurus/Libra) or exaltation (Pisces) in angular house (1, 4, 7, 10)",
+    "themes": ["beauty", "luxury", "creativity", "happy marriage"],
+    "predictions": [
+      "physically attractive",
+      "wealthy and luxurious life",
+      "happy marriage with beautiful spouse",
+      "artistic/creative talents",
+      "good vehicles and comforts"
+    ],
+    "tone": "beautiful, luxurious, romantic"
+  },
+  "shasha_yoga": {
+    "category": "panch_mahapurusha",
+    "formation": "Saturn in own sign (Capricorn/Aquarius) or exaltation (Libra) in angular house (1, 4, 7, 10)",
+    "themes": ["discipline", "lasting power", "service leadership", "political/government work"],
+    "predictions": [
+      "long-lasting career and reputation",
+      "rises through hard work to high position",
+      "leadership of common people",
+      "political or government success",
+      "dignified, serious character"
+    ],
+    "tone": "disciplined, enduring, authoritative"
+  },
+  "gajakesari_yoga": {
+    "category": "raja_yoga",
+    "formation": "Jupiter and Moon in angular relationship (1st, 4th, 7th, 10th from each other)",
+    "themes": ["popularity", "wisdom", "wealth"],
+    "predictions": [
+      "popular and well-loved",
+      "wise mother or maternal blessings",
+      "wealthy and respected",
+      "good education and intuition",
+      "successful in many fields"
+    ],
+    "tone": "popular, wise, blessed"
+  },
+  "neecha_bhanga_raja_yoga": {
+    "category": "raja_yoga",
+    "formation": "Debilitated planet has its debilitation 'cancelled' by certain conditions (e.g., lord of debilitation sign in angle)",
+    "themes": ["rise from struggle", "weakness becomes strength", "comeback story"],
+    "predictions": [
+      "starts with disadvantage but rises to greatness",
+      "weakness becomes signature strength",
+      "from rags to riches potential",
+      "humble beginnings, royal ending"
+    ],
+    "tone": "redemptive, transformative, inspiring"
+  },
+  "vipreet_raja_yoga": {
+    "category": "raja_yoga",
+    "formation": "Lords of dusthana houses (6, 8, 12) exchange or sit in each other's houses",
+    "themes": ["success through difficulty", "obstacles become gateways"],
+    "predictions": [
+      "tremendous success through facing struggles",
+      "rises during others' downfall",
+      "research, occult, hidden professions thrive",
+      "victorious in legal/competitive battles"
+    ],
+    "tone": "phoenix-like, hidden power"
+  },
+  "kemadruma_yoga": {
+    "category": "dosha",
+    "formation": "Moon has no planet in 2nd or 12th from it (except Sun, Rahu, Ketu)",
+    "themes": ["loneliness", "emotional struggles", "isolation"],
+    "predictions": [
+      "deep emotional isolation",
+      "financial struggles in life",
+      "feels unsupported emotionally",
+      "loneliness despite achievements"
+    ],
+    "tone": "lonely, struggling - but can be remedied",
+    "remedies": "Moon mantras, Monday fasting, pearl gemstone, support for mother"
+  },
+  "manglik_dosha": {
+    "category": "dosha",
+    "formation": "Mars in houses 1, 4, 7, 8, or 12 from Ascendant or Moon",
+    "themes": ["marriage complications", "fiery relationships"],
+    "predictions": [
+      "delays in marriage",
+      "conflicts in married life",
+      "harm to spouse possible if severe",
+      "passionate but unstable bonds"
+    ],
+    "tone": "fiery, conflict-prone marriage",
+    "remedies": "Marrying another Manglik often cancels; Mars worship; Hanuman chalisa; Tuesday fasting"
+  },
+  "kalsarpa_yoga": {
+    "category": "dosha",
+    "formation": "All 7 traditional planets between Rahu and Ketu axis",
+    "themes": ["destined life path", "karmic intensity", "obstacles followed by sudden rise"],
+    "predictions": [
+      "feels life has predetermined path",
+      "karmic obstacles in early life",
+      "sudden rise after struggle",
+      "spiritual awakening common",
+      "obsessive desires"
+    ],
+    "tone": "karmic, intense, destined",
+    "remedies": "Naga puja, Rahu-Ketu mantras, spiritual practices"
+  },
+  "guru_chandal_yoga": {
+    "category": "dosha",
+    "formation": "Jupiter conjunct Rahu",
+    "themes": ["confused wisdom", "unconventional teaching", "moral confusion"],
+    "predictions": [
+      "may follow unconventional spiritual paths",
+      "wisdom mixed with confusion",
+      "questions traditional beliefs",
+      "potential for false gurus or being led astray"
+    ],
+    "tone": "questioning, unconventional, confused but potentially original"
+  },
+  "saraswati_yoga": {
+    "category": "raja_yoga",
+    "formation": "Jupiter, Venus, Mercury together in angle, trine, or 2nd house",
+    "themes": ["arts", "education", "wisdom", "creative fame"],
+    "predictions": [
+      "highly educated and creative",
+      "fame through writing, music, or arts",
+      "wisdom in multiple fields",
+      "blessed by Saraswati"
+    ],
+    "tone": "wise, creative, learned"
+  },
+  "lakshmi_yoga": {
+    "category": "dhana_yoga",
+    "formation": "Lord of 9th house in own/exalted sign in angle/trine with Venus or Jupiter",
+    "themes": ["wealth", "good fortune", "happiness"],
+    "predictions": [
+      "abundant wealth",
+      "graceful and fortunate life",
+      "blessed by goddess Lakshmi",
+      "good spouse and children"
+    ],
+    "tone": "fortunate, abundant, blessed"
+  },
+  "chandra_mangala_yoga": {
+    "category": "dhana_yoga",
+    "formation": "Moon and Mars conjunct",
+    "themes": ["earning power", "emotional drive for wealth"],
+    "predictions": [
+      "strong drive to earn money",
+      "business success",
+      "emotionally driven actions",
+      "may have hot temper"
+    ],
+    "tone": "ambitious, driven"
+  },
+  "parivartana_yoga": {
+    "category": "raja_yoga",
+    "formation": "Two planets exchange signs (lord of sign A in sign B, lord of sign B in sign A)",
+    "themes": ["strong connection between two life areas"],
+    "predictions": [
+      "varies by which houses exchange",
+      "two areas of life deeply linked",
+      "favorable if benefic houses, challenging if dusthanas"
+    ],
+    "tone": "interconnected, exchange of energies"
+  },
+  "viparita_raja_yoga": {
+    "category": "raja_yoga",
+    "formation": "Lord of 6th in 8th or 12th; or lord of 8th in 6th or 12th; or lord of 12th in 6th or 8th",
+    "themes": ["success through hidden means", "rises during others' losses"],
+    "predictions": [
+      "thrives in adverse conditions",
+      "success in occult, research, healthcare",
+      "becomes wealthy during recessions",
+      "hidden strengths emerge"
+    ],
+    "tone": "hidden, transformative, against-the-grain"
+  },
+  "amala_yoga": {
+    "category": "raja_yoga",
+    "formation": "Benefic planet in 10th from Moon or Lagna",
+    "themes": ["spotless reputation", "fame for good deeds"],
+    "predictions": [
+      "famous for good character",
+      "respected career",
+      "long-lasting reputation",
+      "good karma in profession"
+    ],
+    "tone": "honorable, respected"
+  },
+  "budha_aditya_yoga": {
+    "category": "raja_yoga",
+    "formation": "Sun and Mercury conjunct (when Mercury not combust)",
+    "themes": ["intelligence", "leadership intelligence"],
+    "predictions": [
+      "sharp intelligence",
+      "leadership through wisdom",
+      "good communication of authority",
+      "scholarly success"
+    ],
+    "tone": "intelligent, articulate, authoritative"
+  },
+  "shakat_yoga": {
+    "category": "dosha",
+    "formation": "Moon in 6th, 8th, or 12th from Jupiter",
+    "themes": ["fluctuating fortune", "rise and fall"],
+    "predictions": [
+      "ups and downs in life",
+      "loses what is gained",
+      "emotional turbulence",
+      "wealth comes and goes"
+    ],
+    "tone": "unstable, fluctuating - can be remedied by Jupiter strength"
+  }
+}

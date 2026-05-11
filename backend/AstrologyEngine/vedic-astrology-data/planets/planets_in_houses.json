@@ -1,0 +1,886 @@
+{
+  "_schema": {
+    "description": "Planet-in-house combinations. Each planet expresses its energy through the life area of the house it sits in. Format: 'planet_house' (e.g. 'saturn_7' = Saturn in 7th house).",
+    "usage": "When raw chart shows Saturn in 7th, look up 'saturn_7' to get themes. Combine all such placements for full interpretation.",
+    "fields": {
+      "themes": "high-level interpretation themes",
+      "emotional_meaning": "how user feels because of this placement",
+      "relationship_meaning": "impact on partnerships",
+      "career_meaning": "impact on professional life",
+      "challenges": "what to be careful of",
+      "strengths": "natural gifts from this placement"
+    }
+  },
+  "sun_1": {
+    "themes": ["strong sense of self", "natural leader", "proud demeanor"],
+    "emotional_meaning": ["confident but ego-sensitive", "needs to be seen and respected"],
+    "relationship_meaning": ["dominant in relationships", "may struggle with equality"],
+    "career_meaning": ["leadership, government, public roles"],
+    "challenges": ["pride", "domineering tendencies", "father issues"],
+    "strengths": ["self-confidence", "vitality", "natural authority"]
+  },
+  "sun_2": {
+    "themes": ["wealth through authority", "powerful speech", "family pride"],
+    "emotional_meaning": ["values respect from family", "may have conflict with father over money"],
+    "relationship_meaning": ["family status matters in partner choice"],
+    "career_meaning": ["wealth from government, gold, leadership positions"],
+    "challenges": ["harsh speech", "family ego conflicts"],
+    "strengths": ["impactful voice", "ability to earn"]
+  },
+  "sun_3": {
+    "themes": ["courage and willpower", "leadership in efforts", "elder sibling dynamic"],
+    "emotional_meaning": ["proud of own efforts", "driven by self-made achievement"],
+    "relationship_meaning": ["assertive in close relationships"],
+    "career_meaning": ["sales, writing, media leadership"],
+    "challenges": ["sibling rivalry", "ego in communication"],
+    "strengths": ["fearless", "self-motivated", "good with hands-on skills"]
+  },
+  "sun_4": {
+    "themes": ["complicated mother bond", "father influences home", "emotional pride"],
+    "emotional_meaning": ["may feel emotionally restless at home", "needs respect within family"],
+    "relationship_meaning": ["domestic authority issues"],
+    "career_meaning": ["real estate, government property work"],
+    "challenges": ["mother-child distance", "home conflicts", "lack of inner peace"],
+    "strengths": ["protective of home", "patriotic"]
+  },
+  "sun_5": {
+    "themes": ["creative leadership", "noble children", "intellectual authority"],
+    "emotional_meaning": ["takes pride in creative expression", "may struggle to feel romantically free"],
+    "relationship_meaning": ["dominant in romance", "noble children possible"],
+    "career_meaning": ["politics, government education, performing arts"],
+    "challenges": ["ego in love affairs", "delays with children"],
+    "strengths": ["creative confidence", "intelligence", "purva punya (past life merit)"]
+  },
+  "sun_6": {
+    "themes": ["victory over enemies", "service leadership", "health pride"],
+    "emotional_meaning": ["thrives in struggle", "competitive emotional drive"],
+    "relationship_meaning": ["may attract authority-conflict in partner's family"],
+    "career_meaning": ["law, medicine, military, government service"],
+    "challenges": ["high stress", "father health issues", "ego clashes with subordinates"],
+    "strengths": ["defeats opposition", "disciplined work ethic", "healing capability"]
+  },
+  "sun_7": {
+    "themes": ["dominant partner dynamic", "public visibility", "spouse with authority"],
+    "emotional_meaning": ["ego clashes in marriage", "feels marriage is a power dynamic"],
+    "relationship_meaning": ["spouse may be proud or authoritative", "marriage delays possible"],
+    "career_meaning": ["business dealings with government", "public-facing career"],
+    "challenges": ["marital ego battles", "delayed marriage", "separations"],
+    "strengths": ["powerful public presence", "leadership in partnerships"]
+  },
+  "sun_8": {
+    "themes": ["transformative struggles", "father's life difficulties", "occult interest"],
+    "emotional_meaning": ["intense inner battles", "fear of loss of identity"],
+    "relationship_meaning": ["in-laws may struggle", "intense bonds"],
+    "career_meaning": ["research, surgery, occult sciences, insurance"],
+    "challenges": ["father's health/longevity concerns", "low self-esteem possible", "scandals"],
+    "strengths": ["spiritual depth", "research ability", "transformative power"]
+  },
+  "sun_9": {
+    "themes": ["dharma-driven", "father as guru", "great fortune"],
+    "emotional_meaning": ["proud of beliefs and values", "philosophical confidence"],
+    "relationship_meaning": ["partner shares values"],
+    "career_meaning": ["teaching, law, religion, higher education"],
+    "challenges": ["dogmatism", "father conflicts about beliefs"],
+    "strengths": ["dharmic strength", "good fortune", "respected teacher"]
+  },
+  "sun_10": {
+    "themes": ["natural career success", "government work", "famous reputation"],
+    "emotional_meaning": ["self-worth tied to achievement", "needs public recognition"],
+    "relationship_meaning": ["partners value status"],
+    "career_meaning": ["one of the BEST placements - government, leadership, fame"],
+    "challenges": ["overwork", "workaholic tendencies"],
+    "strengths": ["Dig Bala (directional strength) - natural career power", "authority", "name and fame"]
+  },
+  "sun_11": {
+    "themes": ["gains through authority", "powerful friends", "income from government"],
+    "emotional_meaning": ["proud of social network", "achievement-driven goals"],
+    "relationship_meaning": ["socially connected partner"],
+    "career_meaning": ["gains from leadership, network-based earnings"],
+    "challenges": ["ego in friendships", "elder sibling distance"],
+    "strengths": ["wishes get fulfilled", "powerful network"]
+  },
+  "sun_12": {
+    "themes": ["foreign work", "spiritual king", "loss of ego through retreat"],
+    "emotional_meaning": ["feels misunderstood publicly", "private dignity"],
+    "relationship_meaning": ["distant or foreign partner possible"],
+    "career_meaning": ["foreign government, monastic leadership, hospitals"],
+    "challenges": ["father separation", "loss of public position", "self-doubt"],
+    "strengths": ["spiritual realization", "behind-the-scenes power"]
+  },
+
+  "moon_1": {
+    "themes": ["emotionally sensitive personality", "moody nature", "intuitive"],
+    "emotional_meaning": ["emotions visible to others", "mood swings", "deeply feeling"],
+    "relationship_meaning": ["nurturing presence in life"],
+    "career_meaning": ["public-facing, caring professions"],
+    "challenges": ["over-sensitivity", "moodiness affects body"],
+    "strengths": ["intuition", "emotional intelligence", "popularity"]
+  },
+  "moon_2": {
+    "themes": ["family-oriented wealth", "sweet speech", "food connection"],
+    "emotional_meaning": ["values family above all", "emotional attachment to possessions"],
+    "relationship_meaning": ["family-centered partnerships"],
+    "career_meaning": ["food, hospitality, family business"],
+    "challenges": ["overly attached to family wealth", "emotional eating"],
+    "strengths": ["nurturing speech", "money flows easily through care"]
+  },
+  "moon_3": {
+    "themes": ["emotional courage", "creative communication", "sibling bonds"],
+    "emotional_meaning": ["emotional through self-expression"],
+    "relationship_meaning": ["close sibling/peer bonds"],
+    "career_meaning": ["writing, media, creative communication"],
+    "challenges": ["emotional in efforts", "may use emotions to push through"],
+    "strengths": ["courageous heart", "creative voice"]
+  },
+  "moon_4": {
+    "themes": ["deep emotional roots", "strong mother bond", "Dig Bala - excellent placement"],
+    "emotional_meaning": ["deep inner peace", "needs home for emotional health"],
+    "relationship_meaning": ["nurturing in domestic life"],
+    "career_meaning": ["real estate, home-based, mother-related"],
+    "challenges": ["over-attachment to home", "mood depends on environment"],
+    "strengths": ["Dig Bala - directional strength", "emotional foundation", "peace at home"]
+  },
+  "moon_5": {
+    "themes": ["creative emotional expression", "loving children", "romantic heart"],
+    "emotional_meaning": ["heart-led creativity", "romantic and playful"],
+    "relationship_meaning": ["deep emotional love affairs"],
+    "career_meaning": ["arts, teaching children, performing"],
+    "challenges": ["emotional ups in love affairs"],
+    "strengths": ["intuitive intelligence", "purva punya", "loving creativity"]
+  },
+  "moon_6": {
+    "themes": ["emotional in service", "health fluctuations", "anxious nature"],
+    "emotional_meaning": ["worry-prone", "emotionally drained by work or service"],
+    "relationship_meaning": ["caretaker in relationships"],
+    "career_meaning": ["nursing, healing, daily service work"],
+    "challenges": ["mental health issues", "chronic worry", "weak mother health"],
+    "strengths": ["empathic healer", "service-oriented heart"]
+  },
+  "moon_7": {
+    "themes": ["nurturing partner", "emotional partnerships", "public emotional life"],
+    "emotional_meaning": ["defines self through relationships"],
+    "relationship_meaning": ["caring spouse, marriage central to life"],
+    "career_meaning": ["public service, partnerships, hospitality"],
+    "challenges": ["over-dependence on spouse", "mood swings affect marriage"],
+    "strengths": ["loving partner", "popular in public"]
+  },
+  "moon_8": {
+    "themes": ["emotional transformation through crisis", "Moon weakened here", "occult emotion"],
+    "emotional_meaning": ["deep emotional fears", "subconscious turmoil", "intense intuition"],
+    "relationship_meaning": ["intense, transformative bonds", "in-law complexities"],
+    "career_meaning": ["psychology, occult, research"],
+    "challenges": ["mother's longevity concerns", "depression", "scandals around emotions"],
+    "strengths": ["deep psychic ability", "transformative healing power"]
+  },
+  "moon_9": {
+    "themes": ["devotional heart", "philosophical emotions", "fortune through faith"],
+    "emotional_meaning": ["heart open to spiritual truths", "emotionally guided"],
+    "relationship_meaning": ["loving father figure", "shared philosophy with partners"],
+    "career_meaning": ["religion, teaching, spirituality, philosophy"],
+    "challenges": ["emotional attachment to beliefs"],
+    "strengths": ["divine grace", "intuitive wisdom"]
+  },
+  "moon_10": {
+    "themes": ["caring career", "public emotional life", "fame through compassion"],
+    "emotional_meaning": ["work feels emotionally meaningful"],
+    "relationship_meaning": ["caring in professional life"],
+    "career_meaning": ["nursing, social work, public service, hospitality, real estate"],
+    "challenges": ["emotional ups and downs in career"],
+    "strengths": ["public love", "emotional connection to work"]
+  },
+  "moon_11": {
+    "themes": ["emotional gains", "many friends", "wishes through care"],
+    "emotional_meaning": ["fulfilled through community"],
+    "relationship_meaning": ["nurturing friend networks"],
+    "career_meaning": ["gains through caring services, social work"],
+    "challenges": ["over-attached to social approval"],
+    "strengths": ["emotional fulfillment", "wishes manifest", "many friends"]
+  },
+  "moon_12": {
+    "themes": ["spiritual emotions", "foreign life", "isolation through feelings"],
+    "emotional_meaning": ["lives partly in inner world", "deeply intuitive but lonely"],
+    "relationship_meaning": ["distant or foreign partner", "secret emotional life"],
+    "career_meaning": ["foreign work, hospitals, monastic life, behind-scenes"],
+    "challenges": ["loneliness", "depression", "mother separation", "sleep issues"],
+    "strengths": ["spiritual sensitivity", "mystical intuition", "moksha potential"]
+  },
+
+  "mars_1": {
+    "themes": ["bold personality", "energetic body", "fighter spirit"],
+    "emotional_meaning": ["quick to react", "courageous but impulsive"],
+    "relationship_meaning": ["assertive lover", "Manglik effect - marriage complications"],
+    "career_meaning": ["leadership, military, sports, engineering"],
+    "challenges": ["accidents, head injuries", "anger management", "Manglik dosha"],
+    "strengths": ["courage", "vitality", "warrior nature"]
+  },
+  "mars_2": {
+    "themes": ["harsh speech", "wealth through effort", "family conflicts"],
+    "emotional_meaning": ["aggressive in defending values"],
+    "relationship_meaning": ["family disputes possible"],
+    "career_meaning": ["earnings through technical/physical work"],
+    "challenges": ["bitter speech", "family fights over money", "Manglik dosha"],
+    "strengths": ["earning through effort", "defends family fiercely"]
+  },
+  "mars_3": {
+    "themes": ["excellent courage placement", "victory in efforts", "younger sibling strength"],
+    "emotional_meaning": ["confident and self-reliant"],
+    "relationship_meaning": ["strong sibling bonds (or rivalry)"],
+    "career_meaning": ["entrepreneur, writer, salesperson, communicator"],
+    "challenges": ["may dominate siblings"],
+    "strengths": ["one of the BEST placements for self-effort and courage", "excellent for entrepreneurship"]
+  },
+  "mars_4": {
+    "themes": ["conflicts at home", "weak emotional foundation", "property disputes"],
+    "emotional_meaning": ["restless inner state", "mother conflict possible"],
+    "relationship_meaning": ["domestic discord"],
+    "career_meaning": ["real estate (with effort), construction"],
+    "challenges": ["lack of inner peace", "home arguments", "Manglik dosha", "mother's health"],
+    "strengths": ["fights for home", "builds property"]
+  },
+  "mars_5": {
+    "themes": ["passionate creativity", "intelligent but impatient", "children disputes"],
+    "emotional_meaning": ["intense romantic energy"],
+    "relationship_meaning": ["passionate but conflict-prone love affairs"],
+    "career_meaning": ["engineering, military teaching, sports coaching"],
+    "challenges": ["fights with children", "miscarriages possible", "impatient learning"],
+    "strengths": ["sharp intelligence", "creative drive"]
+  },
+  "mars_6": {
+    "themes": ["victorious over enemies", "exalted-like power", "competitive edge"],
+    "emotional_meaning": ["thrives on challenge"],
+    "relationship_meaning": ["may have conflict with maternal relatives"],
+    "career_meaning": ["military, police, surgery, law - excellent"],
+    "challenges": ["fevers, inflammation, accidents"],
+    "strengths": ["EXCELLENT - defeats enemies, debt, disease", "Ruchaka Yoga potential"]
+  },
+  "mars_7": {
+    "themes": ["passionate partner", "marriage conflicts", "Manglik dosha primary placement"],
+    "emotional_meaning": ["intense in love", "argumentative"],
+    "relationship_meaning": ["fiery spouse", "frequent fights or breakups"],
+    "career_meaning": ["partnership-based business with risk"],
+    "challenges": ["MAJOR Manglik dosha", "marital strife", "delayed/multiple marriages"],
+    "strengths": ["passionate connection", "protective of spouse"]
+  },
+  "mars_8": {
+    "themes": ["sudden transformations", "longevity concerns", "Manglik placement"],
+    "emotional_meaning": ["deep inner anger", "fear of sudden events"],
+    "relationship_meaning": ["in-law conflicts"],
+    "career_meaning": ["surgery, research, occult"],
+    "challenges": ["accidents, surgeries, Manglik dosha", "secret enemies"],
+    "strengths": ["transformative power", "researches deeply", "occult ability"]
+  },
+  "mars_9": {
+    "themes": ["fights for beliefs", "father conflict", "religious zeal"],
+    "emotional_meaning": ["passionate about dharma"],
+    "relationship_meaning": ["father issues likely"],
+    "career_meaning": ["military teaching, religious activism"],
+    "challenges": ["dogmatism", "long journeys with risk", "father's health"],
+    "strengths": ["dharmic warrior", "courage in beliefs"]
+  },
+  "mars_10": {
+    "themes": ["excellent career placement", "directional strength", "career through action"],
+    "emotional_meaning": ["work-driven", "feels alive through career"],
+    "relationship_meaning": ["spouse may be professionally accomplished"],
+    "career_meaning": ["BEST for career - leadership, engineering, military, surgery, sports"],
+    "challenges": ["workaholic"],
+    "strengths": ["Dig Bala - directional strength", "Ruchaka Yoga potential", "career success"]
+  },
+  "mars_11": {
+    "themes": ["gains through effort", "elder sibling support", "ambitious networks"],
+    "emotional_meaning": ["competitive about achievement"],
+    "relationship_meaning": ["strong elder sibling bond"],
+    "career_meaning": ["gains from technical work, real estate"],
+    "challenges": ["fights with friends"],
+    "strengths": ["fulfills ambitions through bold action"]
+  },
+  "mars_12": {
+    "themes": ["hidden anger", "foreign action", "secret enemies"],
+    "emotional_meaning": ["suppressed rage", "anger turned inward"],
+    "relationship_meaning": ["secret affairs possible", "distance from partner"],
+    "career_meaning": ["foreign technical work, hospitals, military"],
+    "challenges": ["expenses through fights", "imprisonment risk", "hidden conflicts"],
+    "strengths": ["fights silently for higher goals", "spiritual warrior"]
+  },
+
+  "mercury_1": {
+    "themes": ["intelligent personality", "youthful appearance", "communicator"],
+    "emotional_meaning": ["thinks more than feels"],
+    "relationship_meaning": ["intellectual partner preferred"],
+    "career_meaning": ["writing, teaching, business"],
+    "challenges": ["overthinking", "nervous energy"],
+    "strengths": ["sharp intelligence", "clever communication", "Bhadra Yoga potential"]
+  },
+  "mercury_2": {
+    "themes": ["wealth through communication", "eloquent speech", "family scholar"],
+    "emotional_meaning": ["values intellectual conversation"],
+    "relationship_meaning": ["family values learning"],
+    "career_meaning": ["business, writing, accounting, finance"],
+    "challenges": ["may exaggerate"],
+    "strengths": ["natural earner through words", "multilingual ability"]
+  },
+  "mercury_3": {
+    "themes": ["writer, communicator, skilled hands"],
+    "emotional_meaning": ["expressive and curious"],
+    "relationship_meaning": ["close to younger siblings"],
+    "career_meaning": ["journalism, writing, tech, sales"],
+    "challenges": ["scattered focus"],
+    "strengths": ["excellent communicator", "multiple skills"]
+  },
+  "mercury_4": {
+    "themes": ["intelligent mother", "education at home", "intellectual peace"],
+    "emotional_meaning": ["calm logical mind"],
+    "relationship_meaning": ["intellectual family"],
+    "career_meaning": ["education, real estate analysis"],
+    "challenges": ["overthinking at home"],
+    "strengths": ["good education", "logical home environment"]
+  },
+  "mercury_5": {
+    "themes": ["intelligent children", "clever in romance", "analytical creativity"],
+    "emotional_meaning": ["clever and witty in love"],
+    "relationship_meaning": ["intellectual love affairs"],
+    "career_meaning": ["teaching, intellectual creative work, finance"],
+    "challenges": ["over-rationalizes love"],
+    "strengths": ["sharp intelligence", "creative wit", "Saraswati Yoga potential"]
+  },
+  "mercury_6": {
+    "themes": ["service through intellect", "skilled at solving problems", "weak placement"],
+    "emotional_meaning": ["mental stress from work"],
+    "relationship_meaning": ["maternal uncle bonds"],
+    "career_meaning": ["analysis, accounting, healthcare administration, law"],
+    "challenges": ["anxiety", "nervous disorders", "skin issues"],
+    "strengths": ["problem-solver", "good at debate"]
+  },
+  "mercury_7": {
+    "themes": ["intelligent partner", "youthful spouse", "business partnerships"],
+    "emotional_meaning": ["rational in partnerships"],
+    "relationship_meaning": ["clever spouse, possibly younger"],
+    "career_meaning": ["business partnerships, trade, consulting"],
+    "challenges": ["may rationalize feelings in relationship"],
+    "strengths": ["good business partnerships", "intelligent spouse"]
+  },
+  "mercury_8": {
+    "themes": ["research mind", "occult interest", "intuitive intellect"],
+    "emotional_meaning": ["deeply analytical of hidden things"],
+    "relationship_meaning": ["in-law intellectual matters"],
+    "career_meaning": ["research, occult, insurance, investigation, astrology"],
+    "challenges": ["mental health issues possible", "anxiety", "scandals"],
+    "strengths": ["deep research ability", "intuitive intelligence"]
+  },
+  "mercury_9": {
+    "themes": ["philosophical intellect", "teacher", "intelligent father"],
+    "emotional_meaning": ["thinks in big concepts"],
+    "relationship_meaning": ["mentor relationships"],
+    "career_meaning": ["teaching, law, publishing, philosophy"],
+    "challenges": ["may be opinionated"],
+    "strengths": ["scholarly wisdom", "good fortune through knowledge"]
+  },
+  "mercury_10": {
+    "themes": ["intellectual career", "fame through writing/teaching"],
+    "emotional_meaning": ["work is mentally engaging"],
+    "relationship_meaning": ["intellectually accomplished partner"],
+    "career_meaning": ["writing, teaching, business, tech, finance"],
+    "challenges": ["overwork mentally"],
+    "strengths": ["career through intellect", "good for business"]
+  },
+  "mercury_11": {
+    "themes": ["gains through communication", "intellectual friends", "wishes through wit"],
+    "emotional_meaning": ["satisfied through ideas"],
+    "relationship_meaning": ["clever friend network"],
+    "career_meaning": ["earnings through writing, trade, tech, intellectual work"],
+    "challenges": ["scattered networking"],
+    "strengths": ["EXCELLENT for wealth", "income through intellect"]
+  },
+  "mercury_12": {
+    "themes": ["spiritual intellect", "foreign communication", "behind-scenes writer"],
+    "emotional_meaning": ["thinks in solitude"],
+    "relationship_meaning": ["foreign or hidden partner"],
+    "career_meaning": ["foreign writing/media, hospital admin, monastic study"],
+    "challenges": ["confusion", "mental fatigue", "expenses through learning"],
+    "strengths": ["spiritual scholarship", "deep introspection"]
+  },
+
+  "jupiter_1": {
+    "themes": ["wise personality", "guru nature", "noble appearance"],
+    "emotional_meaning": ["optimistic and benevolent"],
+    "relationship_meaning": ["attracts wise partners"],
+    "career_meaning": ["teaching, counseling, finance, religion"],
+    "challenges": ["may be self-righteous"],
+    "strengths": ["good fortune", "wisdom from birth", "Hamsa Yoga potential"]
+  },
+  "jupiter_2": {
+    "themes": ["wealthy speech", "scholarly family", "values wisdom"],
+    "emotional_meaning": ["proud of knowledge"],
+    "relationship_meaning": ["traditional family values"],
+    "career_meaning": ["finance, teaching, writing"],
+    "challenges": ["over-talking", "weight gain"],
+    "strengths": ["wealth", "knowledgeable speech"]
+  },
+  "jupiter_3": {
+    "themes": ["wise effort", "elder sibling support (weak)"],
+    "emotional_meaning": ["needs effort despite wisdom"],
+    "relationship_meaning": ["mentor-like sibling bonds"],
+    "career_meaning": ["writing, teaching"],
+    "challenges": ["Jupiter weak here - reduced fortune in efforts"],
+    "strengths": ["wisdom in skills"]
+  },
+  "jupiter_4": {
+    "themes": ["wise mother", "good home", "philosophical inner life", "Dig Bala"],
+    "emotional_meaning": ["deeply peaceful inner state"],
+    "relationship_meaning": ["nurturing wise family"],
+    "career_meaning": ["education, real estate"],
+    "challenges": ["over-attachment to home"],
+    "strengths": ["Dig Bala - directional strength", "blessed home", "inner wisdom"]
+  },
+  "jupiter_5": {
+    "themes": ["blessed children", "wise creativity", "intelligent guru-mind"],
+    "emotional_meaning": ["philosophical heart"],
+    "relationship_meaning": ["dharmic love affairs"],
+    "career_meaning": ["teaching, spirituality, counseling, finance"],
+    "challenges": ["delays with children sometimes"],
+    "strengths": ["EXCELLENT placement - blessed children, sharp intellect, purva punya"]
+  },
+  "jupiter_6": {
+    "themes": ["service through wisdom", "weak Jupiter", "victory through ethics"],
+    "emotional_meaning": ["sees difficulty as growth"],
+    "relationship_meaning": ["maternal uncle support"],
+    "career_meaning": ["law, medicine, counseling"],
+    "challenges": ["Jupiter trapped in dusthana", "health issues from indulgence", "diabetes risk"],
+    "strengths": ["wins through ethics", "service-oriented teacher"]
+  },
+  "jupiter_7": {
+    "themes": ["wise spouse", "blessed marriage", "philosophical partnership"],
+    "emotional_meaning": ["values spiritual partnership"],
+    "relationship_meaning": ["EXCELLENT for spouse - wise, ethical, supportive"],
+    "career_meaning": ["counseling, ethical business"],
+    "challenges": ["spouse may be older or guru-like"],
+    "strengths": ["EXCELLENT marriage indicator", "Hamsa Yoga potential"]
+  },
+  "jupiter_8": {
+    "themes": ["spiritual research", "longevity", "occult wisdom"],
+    "emotional_meaning": ["philosophical about death and mystery"],
+    "relationship_meaning": ["in-law wealth possible"],
+    "career_meaning": ["spirituality, research, astrology, insurance"],
+    "challenges": ["scandals around teaching/religion possible"],
+    "strengths": ["deep spiritual wisdom", "good longevity", "inheritance"]
+  },
+  "jupiter_9": {
+    "themes": ["natural guru", "great fortune", "blessed father"],
+    "emotional_meaning": ["deeply spiritual"],
+    "relationship_meaning": ["father as teacher"],
+    "career_meaning": ["EXCELLENT for teaching, law, religion, philosophy"],
+    "challenges": ["may be dogmatic"],
+    "strengths": ["BEST placement for Jupiter - blessed life, dharmic, fortunate"]
+  },
+  "jupiter_10": {
+    "themes": ["ethical career", "respected publicly", "guru profession"],
+    "emotional_meaning": ["meaningful work matters"],
+    "relationship_meaning": ["respected publicly"],
+    "career_meaning": ["teaching, counseling, finance, ethical leadership"],
+    "challenges": ["may sacrifice career for ethics"],
+    "strengths": ["honored career", "public respect"]
+  },
+  "jupiter_11": {
+    "themes": ["wealthy gains", "wise friends", "fulfilled wishes"],
+    "emotional_meaning": ["satisfied through community"],
+    "relationship_meaning": ["wise friend network"],
+    "career_meaning": ["EXCELLENT for wealth gains"],
+    "challenges": ["greed in gains"],
+    "strengths": ["BEST for wealth and wishes", "great social standing"]
+  },
+  "jupiter_12": {
+    "themes": ["spiritual liberation", "foreign blessings", "expenses on dharma"],
+    "emotional_meaning": ["seeks transcendence"],
+    "relationship_meaning": ["foreign or spiritual partner"],
+    "career_meaning": ["spirituality, foreign teaching, charity, ashram work"],
+    "challenges": ["losses through generosity", "over-spirituality at world's cost"],
+    "strengths": ["moksha karaka", "spiritual liberation", "foreign fortune"]
+  },
+
+  "venus_1": {
+    "themes": ["beautiful appearance", "charming personality", "love of pleasure"],
+    "emotional_meaning": ["romantic and aesthetic"],
+    "relationship_meaning": ["attractive to others"],
+    "career_meaning": ["beauty, fashion, arts"],
+    "challenges": ["indulgent"],
+    "strengths": ["charm", "beauty", "Malavya Yoga potential"]
+  },
+  "venus_2": {
+    "themes": ["wealthy family", "sweet speech", "love of food and luxury"],
+    "emotional_meaning": ["values luxury"],
+    "relationship_meaning": ["family of beauty/wealth"],
+    "career_meaning": ["luxury goods, hospitality, finance"],
+    "challenges": ["overindulgence"],
+    "strengths": ["wealth", "beautiful voice/face"]
+  },
+  "venus_3": {
+    "themes": ["artistic skills", "creative sibling bond"],
+    "emotional_meaning": ["expressive and warm"],
+    "relationship_meaning": ["close sibling bonds (especially sister)"],
+    "career_meaning": ["arts, music, design"],
+    "challenges": ["may lack effort"],
+    "strengths": ["creative communication"]
+  },
+  "venus_4": {
+    "themes": ["beautiful home", "luxurious comforts", "loving mother"],
+    "emotional_meaning": ["seeks comfort and beauty in life"],
+    "relationship_meaning": ["close to mother"],
+    "career_meaning": ["real estate, interiors, vehicles"],
+    "challenges": ["over-attached to comforts"],
+    "strengths": ["beautiful home", "vehicles", "inner peace"]
+  },
+  "venus_5": {
+    "themes": ["romantic heart", "creative talent", "love of children"],
+    "emotional_meaning": ["deeply romantic"],
+    "relationship_meaning": ["multiple love affairs possible", "deep love"],
+    "career_meaning": ["arts, music, entertainment, teaching arts"],
+    "challenges": ["scandals in love possible"],
+    "strengths": ["creative gifts", "loving children", "purva punya"]
+  },
+  "venus_6": {
+    "themes": ["love through service", "weak placement", "diabetic risk"],
+    "emotional_meaning": ["may settle for less in love"],
+    "relationship_meaning": ["may have unfulfilled love"],
+    "career_meaning": ["service in luxury/beauty fields"],
+    "challenges": ["Venus weakened", "diabetes risk", "marriage delays"],
+    "strengths": ["compassionate service"]
+  },
+  "venus_7": {
+    "themes": ["beautiful spouse", "love-based marriage", "Malavya Yoga"],
+    "emotional_meaning": ["romantic by nature"],
+    "relationship_meaning": ["EXCELLENT for marriage - beautiful, loving spouse"],
+    "career_meaning": ["partnership business, design, arts"],
+    "challenges": ["high standards for partner"],
+    "strengths": ["BEST for marriage", "Malavya Yoga potential"]
+  },
+  "venus_8": {
+    "themes": ["transformative love", "secret affairs", "in-law wealth"],
+    "emotional_meaning": ["intense passions"],
+    "relationship_meaning": ["complex, transformative relationships", "scandals possible"],
+    "career_meaning": ["occult, research, insurance"],
+    "challenges": ["sexual issues", "scandals", "diabetes risk"],
+    "strengths": ["inheritance possible", "transformative love"]
+  },
+  "venus_9": {
+    "themes": ["philosophical romance", "dharmic spouse", "love of culture"],
+    "emotional_meaning": ["values cultured beauty"],
+    "relationship_meaning": ["values-aligned partner"],
+    "career_meaning": ["arts education, cultural professions"],
+    "challenges": ["may be impractical romantic"],
+    "strengths": ["good fortune through culture, foreign love possible"]
+  },
+  "venus_10": {
+    "themes": ["career in arts/beauty", "public charm", "luxurious work"],
+    "emotional_meaning": ["work feels creatively fulfilling"],
+    "relationship_meaning": ["socially attractive partner"],
+    "career_meaning": ["arts, fashion, music, entertainment, luxury"],
+    "challenges": ["scandals possible"],
+    "strengths": ["career through beauty"]
+  },
+  "venus_11": {
+    "themes": ["wealthy gains", "many friends (often female)", "fulfilled desires"],
+    "emotional_meaning": ["satisfied through pleasure"],
+    "relationship_meaning": ["many social connections, female friends"],
+    "career_meaning": ["EXCELLENT for wealth from luxury, arts, women"],
+    "challenges": ["indulgence in gains"],
+    "strengths": ["BEST for wealth and wishes fulfilled"]
+  },
+  "venus_12": {
+    "themes": ["bed pleasures", "foreign love", "spiritual romance"],
+    "emotional_meaning": ["fantasy-prone in love"],
+    "relationship_meaning": ["secret affairs", "foreign partner", "bed comforts"],
+    "career_meaning": ["foreign arts, luxury, hotels"],
+    "challenges": ["expenses on pleasures", "moksha vs indulgence battle"],
+    "strengths": ["moksha through devotion", "exalted-like in bed pleasures"]
+  },
+
+  "saturn_1": {
+    "themes": ["serious personality", "delayed maturity", "weak body"],
+    "emotional_meaning": ["feels older than age", "burdened"],
+    "relationship_meaning": ["serious approach to bonds"],
+    "career_meaning": ["traditional careers, service"],
+    "challenges": ["depression", "low self-esteem", "delayed body development"],
+    "strengths": ["mature wisdom", "disciplined"]
+  },
+  "saturn_2": {
+    "themes": ["wealth through hard work", "harsh speech", "family difficulties"],
+    "emotional_meaning": ["financial worry", "speaks rarely"],
+    "relationship_meaning": ["family struggles"],
+    "career_meaning": ["earnings through long effort"],
+    "challenges": ["speech issues", "family poverty/struggle initially"],
+    "strengths": ["wealth through patience eventually"]
+  },
+  "saturn_3": {
+    "themes": ["disciplined effort", "elder sibling distance", "patient skills"],
+    "emotional_meaning": ["self-reliant through hard work"],
+    "relationship_meaning": ["distance from elder siblings"],
+    "career_meaning": ["technical work, persistent skills"],
+    "challenges": ["sibling separation"],
+    "strengths": ["EXCELLENT for sustained effort", "patient skill development"]
+  },
+  "saturn_4": {
+    "themes": ["weak emotional foundation", "mother difficulties", "no inner peace"],
+    "emotional_meaning": ["lack of inner peace", "lonely home"],
+    "relationship_meaning": ["cold family environment"],
+    "career_meaning": ["real estate (slow), agriculture"],
+    "challenges": ["mother's health/separation", "home struggles", "depression"],
+    "strengths": ["learns to find peace within"]
+  },
+  "saturn_5": {
+    "themes": ["delayed children", "serious creativity", "intellectual discipline"],
+    "emotional_meaning": ["restrained romantic expression"],
+    "relationship_meaning": ["delayed/few children", "older partner"],
+    "career_meaning": ["serious education, research"],
+    "challenges": ["children delays or losses", "miscarriages"],
+    "strengths": ["deep intellect", "serious creative work"]
+  },
+  "saturn_6": {
+    "themes": ["victorious over enemies", "service success", "long-term work"],
+    "emotional_meaning": ["thrives in tough environments"],
+    "relationship_meaning": ["loyal in difficulties"],
+    "career_meaning": ["EXCELLENT for service, law, medicine"],
+    "challenges": ["chronic health issues"],
+    "strengths": ["BEST for overcoming enemies/debt/disease through patience"]
+  },
+  "saturn_7": {
+    "themes": ["delayed marriage", "older/serious partner", "Dig Bala (in some traditions)"],
+    "emotional_meaning": ["serious about commitment"],
+    "relationship_meaning": ["late marriage", "loyal, older spouse"],
+    "career_meaning": ["public service work"],
+    "challenges": ["marriage delays", "emotional coldness with spouse"],
+    "strengths": ["long-lasting marriage once committed", "Shasha Yoga potential"]
+  },
+  "saturn_8": {
+    "themes": ["long life", "chronic transformations", "slow occult mastery"],
+    "emotional_meaning": ["accustomed to crisis"],
+    "relationship_meaning": ["in-law difficulties"],
+    "career_meaning": ["research, occult, insurance, mining"],
+    "challenges": ["chronic health issues", "long-term scandals", "longevity tests"],
+    "strengths": ["longevity (Ayur karaka)", "deep transformation"]
+  },
+  "saturn_9": {
+    "themes": ["delayed fortune", "father distance", "disciplined dharma"],
+    "emotional_meaning": ["earned spirituality through doubt"],
+    "relationship_meaning": ["father separation/conflict"],
+    "career_meaning": ["traditional teaching, law"],
+    "challenges": ["father issues", "obstacles in higher education"],
+    "strengths": ["disciplined dharma", "earned wisdom"]
+  },
+  "saturn_10": {
+    "themes": ["EXCELLENT career placement", "Dig Bala", "rise through effort"],
+    "emotional_meaning": ["duty-driven", "professional"],
+    "relationship_meaning": ["serious about reputation"],
+    "career_meaning": ["BEST - long-lasting career, leadership, government, oil, mining, labor"],
+    "challenges": ["slow rise"],
+    "strengths": ["Dig Bala - BEST placement for career", "Shasha Yoga potential", "lasting fame"]
+  },
+  "saturn_11": {
+    "themes": ["gains through effort", "elder sibling responsibility", "long-term goals"],
+    "emotional_meaning": ["delayed gratification"],
+    "relationship_meaning": ["older friends"],
+    "career_meaning": ["EXCELLENT for sustained gains, traditional income"],
+    "challenges": ["delayed wishes"],
+    "strengths": ["EXCELLENT for wealth and wishes - earned through patience"]
+  },
+  "saturn_12": {
+    "themes": ["foreign work", "isolation", "moksha through discipline"],
+    "emotional_meaning": ["isolated and introspective"],
+    "relationship_meaning": ["foreign/distant partner"],
+    "career_meaning": ["foreign work, hospitals, prisons, ashrams"],
+    "challenges": ["depression", "imprisonment risk", "expenses"],
+    "strengths": ["spiritual liberation", "monastic potential"]
+  },
+
+  "rahu_1": {
+    "themes": ["intense personality", "unconventional appearance", "ambitious self-image"],
+    "emotional_meaning": ["restless identity", "feels different from others"],
+    "relationship_meaning": ["foreign or unusual partner attraction"],
+    "career_meaning": ["politics, media, unconventional fields"],
+    "challenges": ["identity confusion", "obsessive self-focus", "skin/head issues"],
+    "strengths": ["meteoric rise possible", "magnetic presence"]
+  },
+  "rahu_2": {
+    "themes": ["unusual wealth sources", "foreign income", "family confusion"],
+    "emotional_meaning": ["materialistic cravings"],
+    "relationship_meaning": ["family secrets"],
+    "career_meaning": ["foreign income, speculation"],
+    "challenges": ["speech issues", "family scandals", "tongue problems"],
+    "strengths": ["unusual wealth gains"]
+  },
+  "rahu_3": {
+    "themes": ["bold efforts", "excellent placement", "writing/media success"],
+    "emotional_meaning": ["fearless ambition"],
+    "relationship_meaning": ["unusual sibling dynamics"],
+    "career_meaning": ["EXCELLENT - media, writing, tech, sales, entrepreneurship"],
+    "challenges": ["sibling conflicts"],
+    "strengths": ["one of the BEST placements for Rahu - bold success"]
+  },
+  "rahu_4": {
+    "themes": ["unstable home", "foreign mother/land", "confused emotions"],
+    "emotional_meaning": ["restless inner state", "no fixed home"],
+    "relationship_meaning": ["unusual family dynamics"],
+    "career_meaning": ["foreign real estate, vehicles"],
+    "challenges": ["mother health/distance", "domestic instability", "addictions"],
+    "strengths": ["foreign settlement"]
+  },
+  "rahu_5": {
+    "themes": ["unconventional creativity", "delayed children", "speculative mind"],
+    "emotional_meaning": ["intellectually obsessive"],
+    "relationship_meaning": ["unusual love affairs", "scandals possible"],
+    "career_meaning": ["entertainment, speculation, politics"],
+    "challenges": ["miscarriages", "love scandals", "speculation losses"],
+    "strengths": ["sharp foreign intelligence", "creative innovation"]
+  },
+  "rahu_6": {
+    "themes": ["EXCELLENT placement", "defeats enemies brilliantly", "service success"],
+    "emotional_meaning": ["thrives in competition"],
+    "relationship_meaning": ["maternal uncle support unusual"],
+    "career_meaning": ["medicine, law, technology, military"],
+    "challenges": ["mysterious health issues"],
+    "strengths": ["BEST placement for Rahu - victory over enemies, debt, disease"]
+  },
+  "rahu_7": {
+    "themes": ["unusual marriage", "foreign spouse", "karmic partner"],
+    "emotional_meaning": ["confused in relationships", "intense karmic ties"],
+    "relationship_meaning": ["foreign/unconventional spouse", "marriage with confusion", "scandals"],
+    "career_meaning": ["international business"],
+    "challenges": ["marriage scandals", "divorce risk", "deceptive partner"],
+    "strengths": ["foreign love connections", "magnetic attraction"]
+  },
+  "rahu_8": {
+    "themes": ["sudden transformations", "occult obsession", "scandals"],
+    "emotional_meaning": ["deep subconscious turmoil"],
+    "relationship_meaning": ["in-law scandals"],
+    "career_meaning": ["occult, research, insurance, foreign inheritance"],
+    "challenges": ["sudden losses", "mysterious illness", "accidents"],
+    "strengths": ["deep occult mastery", "transformative awakening"]
+  },
+  "rahu_9": {
+    "themes": ["unconventional beliefs", "foreign philosophy", "father confusion"],
+    "emotional_meaning": ["questions all traditions"],
+    "relationship_meaning": ["father issues"],
+    "career_meaning": ["foreign teaching, alternative spirituality"],
+    "challenges": ["loss of faith", "father separation", "religious confusion"],
+    "strengths": ["original philosophical insights", "foreign fortune"]
+  },
+  "rahu_10": {
+    "themes": ["EXCELLENT for fame", "unconventional career", "rise to top"],
+    "emotional_meaning": ["obsessive ambition"],
+    "relationship_meaning": ["famous partner possible"],
+    "career_meaning": ["EXCELLENT - politics, media, technology, fame, foreign career"],
+    "challenges": ["scandals destroy reputation suddenly"],
+    "strengths": ["BEST for Rahu - meteoric career rise, fame"]
+  },
+  "rahu_11": {
+    "themes": ["EXCELLENT for gains", "unusual friends", "many wishes fulfilled"],
+    "emotional_meaning": ["materialistic satisfaction"],
+    "relationship_meaning": ["foreign or unusual friends"],
+    "career_meaning": ["BEST for wealth - speculation, foreign earnings, technology"],
+    "challenges": ["never satisfied"],
+    "strengths": ["BEST placement for Rahu - immense gains, wishes manifest"]
+  },
+  "rahu_12": {
+    "themes": ["foreign settlement", "spiritual confusion", "expenses on illusion"],
+    "emotional_meaning": ["lives in fantasy"],
+    "relationship_meaning": ["secret affairs", "foreign partner"],
+    "career_meaning": ["foreign work, behind-the-scenes"],
+    "challenges": ["addictions", "imprisonment", "spiritual confusion", "huge expenses"],
+    "strengths": ["foreign settlement", "moksha through confronting illusion"]
+  },
+
+  "ketu_1": {
+    "themes": ["detached personality", "spiritual seeker", "mysterious aura"],
+    "emotional_meaning": ["feels disconnected from world", "identity confusion"],
+    "relationship_meaning": ["aloof in close bonds"],
+    "career_meaning": ["spiritual, research, healing"],
+    "challenges": ["low self-image", "headaches", "isolation"],
+    "strengths": ["spiritual depth from birth"]
+  },
+  "ketu_2": {
+    "themes": ["detachment from family wealth", "few words", "spiritual values"],
+    "emotional_meaning": ["non-attachment to possessions"],
+    "relationship_meaning": ["family separation"],
+    "career_meaning": ["spiritual teaching, monastic"],
+    "challenges": ["speech issues", "family losses", "throat problems"],
+    "strengths": ["spiritual speech (when develops)", "minimalist"]
+  },
+  "ketu_3": {
+    "themes": ["intuitive efforts", "sibling losses", "spiritual skills"],
+    "emotional_meaning": ["self-doubt despite ability"],
+    "relationship_meaning": ["sibling separation"],
+    "career_meaning": ["healing, occult writing"],
+    "challenges": ["loss of younger sibling", "lack of courage at times"],
+    "strengths": ["intuitive insights", "psychic skills"]
+  },
+  "ketu_4": {
+    "themes": ["spiritual home", "mother detachment", "moksha-oriented"],
+    "emotional_meaning": ["lonely inner state", "spiritual longing"],
+    "relationship_meaning": ["mother separation/loss"],
+    "career_meaning": ["ashrams, spiritual real estate"],
+    "challenges": ["mother health issues", "no inner peace", "home losses"],
+    "strengths": ["deep meditation potential", "moksha at home eventually"]
+  },
+  "ketu_5": {
+    "themes": ["spiritual children", "past-life intelligence", "mantra power"],
+    "emotional_meaning": ["intuitive intellect"],
+    "relationship_meaning": ["children losses possible", "spiritual love"],
+    "career_meaning": ["mantra teaching, spiritual education"],
+    "challenges": ["miscarriages", "delayed children", "loss in speculation"],
+    "strengths": ["EXCELLENT past-life merit", "mantra siddhi", "intuitive intelligence"]
+  },
+  "ketu_6": {
+    "themes": ["EXCELLENT placement", "spiritual victory", "occult healing"],
+    "emotional_meaning": ["transcends struggle"],
+    "relationship_meaning": ["spiritual service to others"],
+    "career_meaning": ["healing, occult, medicine"],
+    "challenges": ["chronic mysterious illness"],
+    "strengths": ["BEST for Ketu - defeats enemies/debt/disease through spirituality"]
+  },
+  "ketu_7": {
+    "themes": ["karmic spouse", "spiritual partnership", "marriage detachment"],
+    "emotional_meaning": ["detached in relationships"],
+    "relationship_meaning": ["spiritual or distant spouse", "karmic ending bonds"],
+    "career_meaning": ["spiritual business, healing partnerships"],
+    "challenges": ["delayed/broken marriage", "in-law losses"],
+    "strengths": ["spiritually meaningful relationships", "karmic completion"]
+  },
+  "ketu_8": {
+    "themes": ["occult mastery", "longevity through detachment", "psychic insights"],
+    "emotional_meaning": ["fearless about mystery"],
+    "relationship_meaning": ["in-law detachment"],
+    "career_meaning": ["occult, astrology, healing, research"],
+    "challenges": ["sudden accidents", "longevity tests"],
+    "strengths": ["DEEP occult/psychic abilities", "kundalini awakening"]
+  },
+  "ketu_9": {
+    "themes": ["spiritual father", "moksha-oriented dharma", "guru blessings"],
+    "emotional_meaning": ["spiritually thirsty"],
+    "relationship_meaning": ["father separation/spiritual"],
+    "career_meaning": ["spirituality, foreign teaching"],
+    "challenges": ["father issues", "religious confusion"],
+    "strengths": ["EXCELLENT for moksha", "spiritual fortune", "guru blessings"]
+  },
+  "ketu_10": {
+    "themes": ["unconventional career", "spiritual leadership", "sudden career shifts"],
+    "emotional_meaning": ["detached from worldly success"],
+    "relationship_meaning": ["spouse who supports spirituality"],
+    "career_meaning": ["spiritual leadership, healing, research, charity"],
+    "challenges": ["sudden career losses", "lack of recognition"],
+    "strengths": ["spiritual fame", "service-based career"]
+  },
+  "ketu_11": {
+    "themes": ["spiritual gains", "few but meaningful friends", "moksha-oriented wishes"],
+    "emotional_meaning": ["satisfied with less"],
+    "relationship_meaning": ["spiritual friends"],
+    "career_meaning": ["gains from spiritual/occult/foreign work"],
+    "challenges": ["losses in business", "elder sibling distance"],
+    "strengths": ["spiritual community gains"]
+  },
+  "ketu_12": {
+    "themes": ["MOKSHA - liberation", "foreign spiritual life", "renunciation"],
+    "emotional_meaning": ["yearns for liberation"],
+    "relationship_meaning": ["spiritual or absent partner"],
+    "career_meaning": ["spiritual, monastic, foreign ashram"],
+    "challenges": ["isolation", "expenses on spirituality"],
+    "strengths": ["BEST for Ketu - moksha karaka in moksha house", "spiritual liberation"]
+  }
+}

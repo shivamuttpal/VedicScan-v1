@@ -1,18 +1,21 @@
 /**
- * OpenAI Assistants API Service
+ * OpenAI Assistants API Service — Production Grade (Token Optimized)
  * 
- * Wraps all OpenAI interactions:
- * - Thread management (create, add messages)
- * - Assistant runs (with polling)
- * - Response extraction
+ * Integrates the AstrologyEngine pipeline:
+ *   Chart Data → Interpretation Engine → Theme Aggregator → Prompt Builder → LLM → Response Cleaner
  * 
- * Uses the Assistants API which maintains conversation state
- * server-side via Threads, eliminating the need to resend
- * full chat history on every request.
+ * TOKEN OPTIMIZATION STRATEGY:
+ *   - First message: Full chart context injected once into thread. User question sent separately.
+ *   - Follow-ups: Only question-relevant themes in system prompt. User sends just the question.
+ *   - maxCompletionTokens scaled per question type (daily=250, career=400, deep=500).
+ *   - Thread truncation keeps only last N messages to cap context window.
  */
 
 import OpenAI from 'openai';
 import config from '../../../config';
+
+// Import the AstrologyEngine orchestrator
+const { buildMaharshiPrompt, cleanLLMResponse } = require('../../../../AstrologyEngine/chat_orchestrator');
 
 // Result returned after running the assistant
 export interface AssistantRunResult {
@@ -57,19 +60,16 @@ class OpenAIService {
 
   /**
    * Run the assistant on a thread and wait for completion.
-   * Uses createAndPoll for simplicity — blocks until the run completes.
-   * 
-   * @param threadId - The OpenAI thread ID
-   * @param maxCompletionTokens - Cap on output tokens (controls cost)
-   * @param maxContextMessages - Truncation: keep only last N messages in thread
    */
   async runAssistant(
     threadId: string,
-    maxCompletionTokens: number = 800,
+    systemInstructions: string,
+    maxCompletionTokens: number = 400,
     maxContextMessages: number = 10
   ): Promise<AssistantRunResult> {
     const run = await this.client.beta.threads.runs.createAndPoll(threadId, {
       assistant_id: this.assistantId,
+      instructions: systemInstructions,
       max_completion_tokens: maxCompletionTokens,
       truncation_strategy: {
         type: 'last_messages',
@@ -100,10 +100,9 @@ class OpenAIService {
     }
 
     if (!responseText) {
-      responseText = 'I apologize, but I could not generate a response at this time. Please try again. 🙏';
+      responseText = 'I am so sorry, I seem to have lost my connection for a moment. Could you please ask again? 🙏';
     }
 
-    // Extract token usage from the run
     const usage = run.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
 
     return {
@@ -116,46 +115,70 @@ class OpenAIService {
   }
 
   /**
-   * Full chat flow: add message to thread and run assistant
+   * Full chat flow — Production Pipeline (Token Optimized)
    * 
-   * @param threadId - Existing OpenAI thread ID (or null to create new)
-   * @param userMessage - The user's question
-   * @param systemContext - Optional chart/profile context (added only on first message)
-   * @param isFirstMessage - Whether this is the first message in the conversation
-   * @param maxCompletionTokens - Token cap for response
-   * @param maxContextMessages - How many past messages to include
+   * FIRST MESSAGE flow:
+   *   1. Build full chart context via AstrologyEngine
+   *   2. Inject context + seed reply into thread (this stays in thread memory)
+   *   3. Add user's actual question as separate message
+   *   4. Run with compressed system prompt
+   * 
+   * FOLLOW-UP MESSAGE flow:
+   *   1. Build only question-relevant themes
+   *   2. Add user question (with lightweight context hints)
+   *   3. Run with compressed system prompt
+   *   4. Thread already has full context from message 1
    */
   async chat(
     threadId: string | null,
     userMessage: string,
-    systemContext: string | null,
+    chartData: any | null,
+    conversationId: string,
     isFirstMessage: boolean,
-    maxCompletionTokens: number = 800,
+    planMaxCompletionTokens: number = 800,
     maxContextMessages: number = 10
   ): Promise<AssistantRunResult> {
-    // Create thread if needed
     const actualThreadId = threadId || await this.createThread();
 
-    // Add chart context as the first message (only once per conversation)
-    if (isFirstMessage && systemContext) {
+    const hasChart = chartData && typeof chartData === 'object' && Object.keys(chartData).length > 0;
+
+    // ─── Build prompt via AstrologyEngine ───
+    const prompt = buildMaharshiPrompt({
+      userQuestion: userMessage,
+      chartData: hasChart ? chartData : {},
+      conversationId,
+      isFirstMessage,
+    });
+
+    // Use the SMALLER of plan limit and question-type suggestion
+    const maxCompletionTokens = Math.min(planMaxCompletionTokens, prompt.suggestedMaxTokens || 400);
+
+    if (isFirstMessage && hasChart && prompt.initialContext) {
+      // FIRST MESSAGE: Inject the full chart context into thread once.
+      // This context persists in the thread — no need to re-send on follow-ups.
+      await this.addMessage(actualThreadId, prompt.initialContext, 'user');
       await this.addMessage(
         actualThreadId,
-        `[BIRTH CHART CONTEXT - Use this data for all astrological analysis in this conversation]\n\n${systemContext}`,
-        'user'
-      );
-      // Add a brief acknowledgment so context isn't treated as a question
-      await this.addMessage(
-        actualThreadId,
-        'I have received the birth chart data. I will use this information for all astrological analysis. Please go ahead and ask your question.',
+        'Namaste. I have studied your chart carefully. Please, ask me anything.',
         'assistant'
       );
     }
 
-    // Add the actual user question
-    await this.addMessage(actualThreadId, userMessage, 'user');
+    // Add the user's actual question (prompt.user is already optimized per message type)
+    await this.addMessage(actualThreadId, prompt.user, 'user');
 
     // Run the assistant
-    return this.runAssistant(actualThreadId, maxCompletionTokens, maxContextMessages);
+    const result = await this.runAssistant(
+      actualThreadId,
+      prompt.system,
+      maxCompletionTokens,
+      maxContextMessages
+    );
+
+    // ─── Clean the response ───
+    result.response = cleanLLMResponse(result.response);
+
+    return result;
   }
 
   /**

@@ -1,0 +1,205 @@
+{
+  "description": "Interpretation of Mars, Mercury, Jupiter, Venus, and Saturn in each of the 12 signs. Includes exaltation, debilitation, own sign, and dignity status.",
+  "mars_in_signs": {
+    "aries": {
+      "status": "own_sign",
+      "themes": ["raw energy", "natural warrior", "leadership through action"],
+      "emotional_meaning": ["assertive", "quick-tempered", "direct expression of anger"],
+      "career_meaning": ["military", "sports", "engineering", "entrepreneurship"],
+      "relationship_meaning": ["passionate", "dominant", "needs autonomy"],
+      "strengths": ["courage", "initiative", "fearlessness"],
+      "challenges": ["impulsiveness", "aggression", "accidents"],
+      "tone": "fiery, bold, commanding"
+    },
+    "taurus": {
+      "status": "enemy",
+      "themes": ["slow burning anger", "stubborn determination", "fight for material security"],
+      "emotional_meaning": ["suppressed anger that erupts", "possessive emotions"],
+      "career_meaning": ["banking", "real estate", "agriculture", "physical labor"],
+      "relationship_meaning": ["possessive", "sensually driven", "patient but jealous"],
+      "strengths": ["endurance", "practical strength", "loyalty"],
+      "challenges": ["stubborn rage", "materialism", "rigid"],
+      "tone": "grounded, sensual, stubborn"
+    },
+    "gemini": {
+      "status": "enemy",
+      "themes": ["verbal aggression", "intellectual combat", "restless energy"],
+      "emotional_meaning": ["argumentative", "mental anxiety", "scattered drive"],
+      "career_meaning": ["debate", "journalism", "technical writing", "sales"],
+      "relationship_meaning": ["fights through words", "intellectually competitive"],
+      "strengths": ["sharp mind", "quick reflexes", "verbal skill"],
+      "challenges": ["argumentative", "nervous tension", "scattered"],
+      "tone": "sharp, restless, debating"
+    },
+    "cancer": {
+      "status": "debilitated",
+      "themes": ["emotional anger", "moody aggression", "protective of family"],
+      "emotional_meaning": ["passive aggression", "emotional outbursts", "weak willpower"],
+      "career_meaning": ["culinary arts", "real estate", "psychological work"],
+      "relationship_meaning": ["emotionally manipulative when angry", "protective"],
+      "strengths": ["protective instinct", "emotional courage"],
+      "challenges": ["moodiness", "indirect aggression", "low energy", "neecha bhanga possible"],
+      "tone": "moody, defensive, emotional"
+    },
+    "leo": {
+      "status": "friendly",
+      "themes": ["royal courage", "leadership warrior", "performative strength"],
+      "emotional_meaning": ["proud anger", "dramatic expression", "noble assertion"],
+      "career_meaning": ["leadership roles", "performing arts", "government"],
+      "relationship_meaning": ["protective lover", "needs respect", "dramatic passion"],
+      "strengths": ["leadership", "courage", "magnanimity"],
+      "challenges": ["ego-driven anger", "domineering", "arrogant"],
+      "tone": "royal, brave, dramatic"
+    },
+    "virgo": {
+      "status": "neutral",
+      "themes": ["precise action", "detailed work energy", "service through effort"],
+      "emotional_meaning": ["irritation over details", "critical anger", "anxious drive"],
+      "career_meaning": ["surgery", "engineering", "technical analysis", "healthcare"],
+      "relationship_meaning": ["critical partner", "service-oriented love"],
+      "strengths": ["precision", "discipline", "skilled craftsmanship"],
+      "challenges": ["nit-picky", "anxious", "overworked"],
+      "tone": "precise, irritable, methodical"
+    },
+    "libra": {
+      "status": "enemy",
+      "themes": ["diplomatic warrior", "balanced action", "fighting for fairness"],
+      "emotional_meaning": ["passive aggression", "indirect anger", "avoids conflict"],
+      "career_meaning": ["law", "diplomacy", "partnership business", "arts"],
+      "relationship_meaning": ["passionate yet diplomatic", "needs harmony"],
+      "strengths": ["fairness", "social courage", "tactical mind"],
+      "challenges": ["indecisive action", "suppressed anger", "manglik in 7th"],
+      "tone": "diplomatic, charming, indirect"
+    },
+    "scorpio": {
+      "status": "own_sign",
+      "themes": ["intense warrior", "deep transformation", "occult power"],
+      "emotional_meaning": ["controlled intensity", "vengeful", "secretive anger"],
+      "career_meaning": ["surgery", "research", "occult", "military intelligence"],
+      "relationship_meaning": ["intensely passionate", "jealous", "transformative bonds"],
+      "strengths": ["depth", "research ability", "psychic intuition", "regeneration"],
+      "challenges": ["vindictive", "obsessive", "controlling"],
+      "tone": "intense, secretive, magnetic"
+    },
+    "sagittarius": {
+      "status": "friendly",
+      "themes": ["philosophical warrior", "righteous action", "dharmic fight"],
+      "emotional_meaning": ["moral indignation", "righteous anger", "expansive energy"],
+      "career_meaning": ["law enforcement", "teaching", "religious leadership", "sports"],
+      "relationship_meaning": ["honest in conflict", "freedom-loving"],
+      "strengths": ["honor", "wisdom in action", "spiritual courage"],
+      "challenges": ["preachy", "self-righteous", "restless"],
+      "tone": "noble, righteous, expansive"
+    },
+    "capricorn": {
+      "status": "exalted",
+      "themes": ["disciplined warrior", "strategic action", "ambitious drive"],
+      "emotional_meaning": ["controlled aggression", "calculated anger", "patient revenge"],
+      "career_meaning": ["executive leadership", "engineering", "government", "long-term ventures"],
+      "relationship_meaning": ["committed", "duty-bound", "controlled passion"],
+      "strengths": ["discipline", "endurance", "strategic mind", "ruchaka_yoga"],
+      "challenges": ["ruthless ambition", "cold", "workaholic"],
+      "tone": "disciplined, ambitious, strategic"
+    },
+    "aquarius": {
+      "status": "enemy",
+      "themes": ["unconventional fighter", "revolutionary energy", "intellectual battle"],
+      "emotional_meaning": ["detached anger", "social rebellion", "ideological drive"],
+      "career_meaning": ["technology", "social activism", "innovation", "engineering"],
+      "relationship_meaning": ["independent", "emotionally detached", "friendship-based"],
+      "strengths": ["originality", "humanitarian action", "innovation"],
+      "challenges": ["rebellious", "emotionally cold", "unpredictable"],
+      "tone": "rebellious, detached, innovative"
+    },
+    "pisces": {
+      "status": "friendly",
+      "themes": ["compassionate warrior", "emotional action", "spiritual battle"],
+      "emotional_meaning": ["empathetic anger", "self-sacrificing", "emotional volatility"],
+      "career_meaning": ["healing arts", "spirituality", "charity work", "arts"],
+      "relationship_meaning": ["romantic passion", "self-sacrificing love", "dreamy"],
+      "strengths": ["compassion", "intuitive action", "spiritual courage"],
+      "challenges": ["escapism", "addictive tendencies", "self-pity"],
+      "tone": "dreamy, compassionate, scattered"
+    }
+  },
+  "mercury_in_signs": {
+    "aries": {"status": "neutral", "themes": ["quick thinking", "bold communication", "impulsive decisions"], "tone": "sharp, direct, fast"},
+    "taurus": {"status": "friendly", "themes": ["practical thinking", "deliberate speech", "values-based logic"], "tone": "measured, grounded, slow"},
+    "gemini": {"status": "own_sign", "themes": ["brilliant intellect", "versatile communication", "writer/speaker"], "tone": "witty, articulate, curious"},
+    "cancer": {"status": "neutral", "themes": ["emotional thinking", "intuitive logic", "memory-based learning"], "tone": "emotional, reflective"},
+    "leo": {"status": "neutral", "themes": ["confident speech", "dramatic communication", "creative thought"], "tone": "expressive, proud, theatrical"},
+    "virgo": {"status": "exalted_and_own", "themes": ["analytical brilliance", "detail-oriented", "critical mind", "bhadra_yoga"], "tone": "precise, intelligent, sharp"},
+    "libra": {"status": "friendly", "themes": ["diplomatic speech", "balanced thinking", "social intelligence"], "tone": "charming, balanced, refined"},
+    "scorpio": {"status": "neutral", "themes": ["investigative mind", "secretive communication", "research ability"], "tone": "deep, probing, sharp"},
+    "sagittarius": {"status": "enemy", "themes": ["philosophical thinking", "broad concepts", "lacks detail"], "tone": "expansive, opinionated, preachy"},
+    "capricorn": {"status": "friendly", "themes": ["serious mind", "calculated speech", "business intellect"], "tone": "serious, calculated, dry"},
+    "aquarius": {"status": "friendly", "themes": ["innovative thinking", "unconventional communication", "scientific mind"], "tone": "original, detached, futuristic"},
+    "pisces": {"status": "debilitated", "themes": ["intuitive but unclear thinking", "imaginative speech", "confusion"], "tone": "dreamy, vague, poetic", "challenges": ["communication issues", "decision difficulty"]}
+  },
+  "jupiter_in_signs": {
+    "aries": {"status": "friendly", "themes": ["pioneering wisdom", "courageous teacher", "leadership through dharma"], "tone": "bold, righteous, leadership-focused"},
+    "taurus": {"status": "enemy", "themes": ["material wisdom", "wealth focus", "practical guru"], "tone": "grounded, slow growth, materialistic philosophy"},
+    "gemini": {"status": "enemy", "themes": ["scattered wisdom", "intellectual learning", "communication of knowledge"], "tone": "curious, talkative, mental"},
+    "cancer": {"status": "exalted", "themes": ["emotional wisdom", "nurturing teacher", "deep faith", "best placement"], "tone": "nurturing, wise, compassionate", "strengths": ["great wealth potential", "spiritual depth", "loving family"]},
+    "leo": {"status": "friendly", "themes": ["royal wisdom", "dignified teaching", "noble dharma"], "tone": "dignified, generous, leader-teacher"},
+    "virgo": {"status": "enemy", "themes": ["analytical wisdom", "service philosophy", "critical of dogma"], "tone": "practical, service-oriented, detailed"},
+    "libra": {"status": "neutral", "themes": ["balanced wisdom", "diplomatic teaching", "wisdom through relationships"], "tone": "harmonious, fair, social"},
+    "scorpio": {"status": "neutral", "themes": ["occult wisdom", "transformative teaching", "deep research"], "tone": "intense, mystical, investigative"},
+    "sagittarius": {"status": "own_sign", "themes": ["pure dharmic wisdom", "natural teacher", "spiritual leader", "hamsa_yoga_potential"], "tone": "philosophical, expansive, righteous", "strengths": ["highest spiritual potential", "natural guru", "great fortune"]},
+    "capricorn": {"status": "debilitated", "themes": ["restricted wisdom", "materialistic philosophy", "duty-bound teacher"], "tone": "serious, restricted, calculating", "challenges": ["spiritual doubt", "materialism over dharma"]},
+    "aquarius": {"status": "friendly", "themes": ["humanitarian wisdom", "innovative teaching", "social philosophy"], "tone": "humanitarian, unconventional, intellectual"},
+    "pisces": {"status": "own_sign", "themes": ["spiritual wisdom", "mystical teaching", "compassionate guru", "hamsa_yoga_potential"], "tone": "spiritual, compassionate, intuitive", "strengths": ["highest spiritual realization", "natural healer"]}
+  },
+  "venus_in_signs": {
+    "aries": {"status": "enemy", "themes": ["passionate love", "impulsive romance", "bold attraction"], "tone": "fiery, impatient, direct in love"},
+    "taurus": {"status": "own_sign", "themes": ["sensual love", "luxurious tastes", "loyal romance", "malavya_yoga_potential"], "tone": "sensual, indulgent, devoted"},
+    "gemini": {"status": "friendly", "themes": ["intellectual love", "flirtatious romance", "communicative affection"], "tone": "playful, witty, social"},
+    "cancer": {"status": "neutral", "themes": ["nurturing love", "emotional bonding", "family-focused romance"], "tone": "tender, emotional, protective"},
+    "leo": {"status": "enemy", "themes": ["dramatic love", "proud romance", "generous affection"], "tone": "dramatic, generous, demanding"},
+    "virgo": {"status": "debilitated", "themes": ["critical love", "practical romance", "service in love"], "tone": "analytical, perfectionist, modest", "challenges": ["dissatisfaction in relationships", "perfectionism in love"]},
+    "libra": {"status": "own_sign", "themes": ["harmonious love", "refined taste", "social grace", "malavya_yoga_potential"], "tone": "refined, balanced, charming"},
+    "scorpio": {"status": "neutral", "themes": ["intense passion", "deep love", "jealous romance"], "tone": "intense, possessive, magnetic"},
+    "sagittarius": {"status": "neutral", "themes": ["adventurous love", "philosophical romance", "freedom-loving"], "tone": "expansive, honest, idealistic"},
+    "capricorn": {"status": "neutral", "themes": ["committed love", "practical romance", "duty-bound affection"], "tone": "serious, traditional, mature"},
+    "aquarius": {"status": "neutral", "themes": ["unconventional love", "friendship-based romance", "detached affection"], "tone": "independent, unique, cool"},
+    "pisces": {"status": "exalted", "themes": ["divine love", "romantic ideal", "selfless devotion"], "tone": "romantic, spiritual, compassionate", "strengths": ["highest love expression", "artistic genius", "spiritual partnership"]}
+  },
+  "saturn_in_signs": {
+    "aries": {"status": "debilitated", "themes": ["restricted action", "fear of leadership", "anger control issues"], "tone": "frustrated, restricted, blocked", "challenges": ["self-doubt", "blocked initiative", "anger management"]},
+    "taurus": {"status": "friendly", "themes": ["slow material gain", "disciplined wealth-building", "stable career"], "tone": "patient, accumulative, steady"},
+    "gemini": {"status": "friendly", "themes": ["serious intellect", "disciplined learning", "structured communication"], "tone": "calculated, intellectual, slow speech"},
+    "cancer": {"status": "enemy", "themes": ["emotional restriction", "cold home life", "mother distance"], "tone": "emotionally heavy, isolated, sad", "challenges": ["depression", "family difficulties", "emotional coldness"]},
+    "leo": {"status": "enemy", "themes": ["restricted ego", "delayed recognition", "humbled authority"], "tone": "controlled, dignified-but-restricted", "challenges": ["confidence issues", "father struggles", "delayed success"]},
+    "virgo": {"status": "neutral", "themes": ["disciplined service", "detailed work", "perfectionist labor"], "tone": "methodical, precise, hardworking"},
+    "libra": {"status": "exalted", "themes": ["fair judgment", "disciplined relationships", "structured harmony", "shasha_yoga_potential"], "tone": "just, balanced, mature", "strengths": ["judicial wisdom", "lasting partnerships", "social justice"]},
+    "scorpio": {"status": "neutral", "themes": ["intense discipline", "occult research", "deep transformation"], "tone": "controlled intensity, secretive"},
+    "sagittarius": {"status": "neutral", "themes": ["disciplined philosophy", "serious teacher", "structured dharma"], "tone": "philosophical, mature, traditional"},
+    "capricorn": {"status": "own_sign", "themes": ["pure discipline", "ambitious mastery", "executive power", "shasha_yoga_potential"], "tone": "ambitious, disciplined, authoritative", "strengths": ["great worldly success", "leadership", "endurance"]},
+    "aquarius": {"status": "own_sign", "themes": ["humanitarian discipline", "innovative structure", "social reform", "shasha_yoga_potential"], "tone": "humanitarian, unconventional, structured", "strengths": ["social reformer", "scientific discipline", "service to masses"]},
+    "pisces": {"status": "neutral", "themes": ["spiritual discipline", "compassionate restriction", "renunciation"], "tone": "spiritual, sacrificing, dissolving"}
+  },
+  "interpretation_notes": {
+    "dignity_hierarchy": ["exalted (uchcha)", "own_sign (swakshetra)", "friendly (mitra)", "neutral (sama)", "enemy (shatru)", "debilitated (neecha)"],
+    "exaltation_quick_reference": {
+      "sun": "Aries 10°",
+      "moon": "Taurus 3°",
+      "mars": "Capricorn 28°",
+      "mercury": "Virgo 15°",
+      "jupiter": "Cancer 5°",
+      "venus": "Pisces 27°",
+      "saturn": "Libra 20°",
+      "rahu": "Taurus or Gemini (debated)",
+      "ketu": "Scorpio or Sagittarius (debated)"
+    },
+    "debilitation_quick_reference": {
+      "sun": "Libra",
+      "moon": "Scorpio",
+      "mars": "Cancer",
+      "mercury": "Pisces",
+      "jupiter": "Capricorn",
+      "venus": "Virgo",
+      "saturn": "Aries"
+    },
+    "neecha_bhanga_rules": "Debilitation cancels if: 1) Lord of debilitation sign is in kendra from Moon/Ascendant, 2) Planet exalted in same sign aspects, 3) Exchange with friend planet. Result becomes Raja Yoga."
+  }
+}

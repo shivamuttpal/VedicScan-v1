@@ -1,0 +1,255 @@
+{
+  "_schema": {
+    "description": "Mahadashas are the planetary ruling periods in Vimshottari Dasha system (total 120 years). At any time, ONE planet rules the person's life. This is the single most important predictive factor in Vedic astrology.",
+    "usage": "When a user asks 'how is this year' or 'what is happening in my life', interpret based on current Mahadasha + Antardasha.",
+    "total_years": 120,
+    "order": ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"]
+  },
+  "sun": {
+    "duration_years": 6,
+    "themes": ["self-realization", "ego development", "authority", "father themes", "leadership"],
+    "emotional_patterns": [
+      "intense focus on identity and self-worth",
+      "ego clashes with authority figures",
+      "feels need to prove oneself",
+      "may feel scrutinized or judged",
+      "pride and self-respect rise to surface"
+    ],
+    "relationship_patterns": [
+      "may feel emotionally distant or dominant in relationships",
+      "father or authority figure plays significant role",
+      "self-focus can strain partnerships"
+    ],
+    "career_patterns": [
+      "potential for leadership roles, government work, recognition",
+      "exposure to powerful people",
+      "natural authority emerges"
+    ],
+    "spiritual_themes": ["soul awakening", "burning away ego illusions", "alignment with higher self"],
+    "health_themes": ["heart, eyes, bones", "fevers and inflammation"],
+    "tone": "intense, identity-focused, sometimes harsh but clarifying",
+    "general_advice": "A short but powerful period of identity development. Use it to build self-respect without arrogance."
+  },
+  "moon": {
+    "duration_years": 10,
+    "themes": ["emotional growth", "mother themes", "comfort", "fluctuation", "public connection"],
+    "emotional_patterns": [
+      "emotional sensitivity heightened",
+      "mood swings and inner turbulence",
+      "deeper emotional intelligence develops",
+      "needs emotional safety more than ever",
+      "intuition strengthens"
+    ],
+    "relationship_patterns": [
+      "marriage often occurs during Moon dasha",
+      "emotional bonds deepen or break",
+      "mother and family central",
+      "nurturing tendencies grow"
+    ],
+    "career_patterns": [
+      "fluctuating career, multiple changes",
+      "public-facing work favored",
+      "fields involving care, water, hospitality, real estate"
+    ],
+    "spiritual_themes": ["devotional path", "emotional purification", "mother-goddess worship"],
+    "health_themes": ["mental health needs care", "stomach", "fluids in body"],
+    "tone": "gentle, fluctuating, nurturing",
+    "general_advice": "A decade of emotional unfolding. Family and feelings dominate. Marriage, motherhood, public success possible."
+  },
+  "mars": {
+    "duration_years": 7,
+    "themes": ["action", "courage", "conflict", "real estate", "siblings", "energy"],
+    "emotional_patterns": [
+      "anger and frustration surface easily",
+      "courage to take risks increases",
+      "impatience with slow progress",
+      "physical and sexual energy high",
+      "competitive drive intensifies"
+    ],
+    "relationship_patterns": [
+      "passionate but conflict-prone relationships",
+      "may break old bonds",
+      "tendency to dominate or argue",
+      "sibling matters prominent"
+    ],
+    "career_patterns": [
+      "advancement through bold action",
+      "military, police, engineering, surgery, sports favored",
+      "property purchases common",
+      "risk-taking in business"
+    ],
+    "spiritual_themes": ["warrior path", "Hanuman/Subramanya worship", "burning karma through action"],
+    "health_themes": ["accidents, cuts, surgery", "blood-related issues", "inflammation"],
+    "tone": "fiery, urgent, decisive",
+    "general_advice": "Action takes precedence. Anger must be managed. Bold moves bring results but also conflict."
+  },
+  "rahu": {
+    "duration_years": 18,
+    "themes": ["worldly desire", "foreign things", "illusion", "obsession", "sudden rise and fall", "ambition"],
+    "emotional_patterns": [
+      "strong worldly cravings and ambitions",
+      "feeling of dissatisfaction even with success",
+      "confusion about what one truly wants",
+      "obsessive thinking patterns",
+      "fear and anxiety surface from the subconscious",
+      "fascination with the unconventional"
+    ],
+    "relationship_patterns": [
+      "attraction to foreign, unconventional, or socially different partners",
+      "intense karmic connections that confuse",
+      "may have affairs or unconventional arrangements",
+      "addictive relational patterns"
+    ],
+    "career_patterns": [
+      "sudden rise possible - meteoric success",
+      "foreign work or migration common",
+      "technology, media, politics, manipulation-based fields",
+      "money through unusual means",
+      "risk of equally sudden falls"
+    ],
+    "spiritual_themes": ["confronting illusion (maya)", "shadow work", "tantric path", "Durga worship"],
+    "health_themes": ["mysterious illnesses", "skin issues", "anxiety, addictions", "poisoning"],
+    "tone": "intense, hungry, confusing, transformative",
+    "general_advice": "The longest dasha and the most disorienting. Worldly success is possible but inner peace requires confronting illusions. Be alert to scams, addictions, and obsessions."
+  },
+  "jupiter": {
+    "duration_years": 16,
+    "themes": ["wisdom", "expansion", "children", "wealth", "spirituality", "teaching", "marriage"],
+    "emotional_patterns": [
+      "sense of optimism and meaning grows",
+      "philosophical maturity develops",
+      "more forgiving and generous",
+      "spiritual awakening common",
+      "feels guided and protected"
+    ],
+    "relationship_patterns": [
+      "marriage often happens here",
+      "children born",
+      "elders and gurus play important role",
+      "relationships deepen with meaning"
+    ],
+    "career_patterns": [
+      "growth in teaching, law, finance, counseling, spirituality",
+      "wealth accumulation possible",
+      "honors and recognition",
+      "stable advancement"
+    ],
+    "spiritual_themes": ["dharmic awakening", "guru appears", "scripture study", "pilgrimage"],
+    "health_themes": ["liver, weight gain, diabetes risk", "generally good health"],
+    "tone": "expansive, wise, abundant, optimistic",
+    "general_advice": "Considered the most fortunate dasha. Doors open. Wisdom grows. Use this period to learn, teach, marry, build wealth, and deepen spiritual practice."
+  },
+  "saturn": {
+    "duration_years": 19,
+    "themes": ["discipline", "restriction", "delay", "karma", "long-term effort", "service", "maturity"],
+    "emotional_patterns": [
+      "emotional heaviness and isolation",
+      "feeling of slowness and obstacle",
+      "depression possible",
+      "fears confront us directly",
+      "loneliness teaches independence",
+      "patience becomes a survival skill",
+      "maturity through struggle"
+    ],
+    "relationship_patterns": [
+      "delays in marriage or relationship commitments",
+      "older or serious partners",
+      "long-term loyal bonds form",
+      "separation, distance, or duty-based relationships common",
+      "emotional restraint dominates"
+    ],
+    "career_patterns": [
+      "slow but steady professional growth",
+      "responsibility increases gradually",
+      "service-oriented work",
+      "government, oil, mining, labor-based fields",
+      "rewards come through sustained effort, not luck"
+    ],
+    "spiritual_themes": ["renunciation", "karma yoga", "Shani worship", "facing one's shadow", "monastic tendencies"],
+    "health_themes": ["bones, joints, knees, teeth", "chronic conditions", "nervous system"],
+    "tone": "serious, heavy, slow, transformative",
+    "general_advice": "The longest test of the soul. Nothing comes easy but everything earned is deeply lasting. Discipline, patience, and acceptance are the keys. Avoid shortcuts."
+  },
+  "mercury": {
+    "duration_years": 17,
+    "themes": ["intellect", "communication", "business", "writing", "learning", "youthful energy"],
+    "emotional_patterns": [
+      "mental restlessness",
+      "intellectualization of emotions",
+      "curiosity and learning surge",
+      "playful, youthful inner state",
+      "anxiety from overthinking"
+    ],
+    "relationship_patterns": [
+      "intellectual partnerships preferred",
+      "may have multiple relationships",
+      "friendships flourish",
+      "siblings and cousins significant"
+    ],
+    "career_patterns": [
+      "writing, teaching, business, tech, media, accounting flourish",
+      "education and qualifications acquired",
+      "good for entrepreneurship",
+      "multiple income streams possible"
+    ],
+    "spiritual_themes": ["study of scriptures", "Vishnu worship", "intellectual spirituality", "mantra"],
+    "health_themes": ["nervous system, skin, voice", "anxiety disorders"],
+    "tone": "lively, intelligent, communicative",
+    "general_advice": "A versatile and youthful period. Learn, write, network, build businesses. Avoid scattering energy across too many things."
+  },
+  "ketu": {
+    "duration_years": 7,
+    "themes": ["detachment", "moksha", "spiritual seeking", "isolation", "letting go", "past life karma"],
+    "emotional_patterns": [
+      "feeling of detachment from worldly matters",
+      "spiritual longing increases",
+      "sense of disillusionment with what once mattered",
+      "introversion and isolation",
+      "intuitive flashes and psychic experiences",
+      "depression possible from sudden meaninglessness"
+    ],
+    "relationship_patterns": [
+      "sudden ends to relationships",
+      "feeling emotionally cut off",
+      "preference for solitude",
+      "karmic completions"
+    ],
+    "career_patterns": [
+      "loss of interest in current work",
+      "sudden changes or quitting common",
+      "drawn to research, occult, healing, monastic paths",
+      "behind-the-scenes work",
+      "financial irregularities"
+    ],
+    "spiritual_themes": ["awakening to moksha (liberation)", "Ganesha and Shiva worship", "renunciation", "past life karma surfacing"],
+    "health_themes": ["mysterious illnesses", "sudden conditions", "spine, nerves"],
+    "tone": "detached, mystical, isolating, awakening",
+    "general_advice": "A period of letting go. Worldly losses are spiritual gains. Don't grip the past. Spiritual practice yields the deepest results during this time."
+  },
+  "venus": {
+    "duration_years": 20,
+    "themes": ["love", "luxury", "beauty", "comforts", "creativity", "marriage", "vehicles", "wealth"],
+    "emotional_patterns": [
+      "emotional warmth and openness",
+      "desire for pleasure and beauty",
+      "sensuality awakens",
+      "feels romantically and creatively alive",
+      "indulgence in comforts"
+    ],
+    "relationship_patterns": [
+      "marriage and romance flourish",
+      "beautiful partner attracted",
+      "luxurious lifestyle with partner",
+      "may have multiple romantic interests"
+    ],
+    "career_patterns": [
+      "arts, music, fashion, design, beauty industry, entertainment, luxury goods",
+      "financial gains through women, art, vehicles",
+      "diplomatic and creative roles"
+    ],
+    "spiritual_themes": ["bhakti through beauty and devotion", "Lakshmi worship", "tantric path of pleasure"],
+    "health_themes": ["reproductive organs, kidneys, throat", "diabetes risk from indulgence"],
+    "tone": "romantic, luxurious, creative, abundant",
+    "general_advice": "The longest dasha and full of worldly pleasures. Wealth, love, and beauty flow. Be careful not to lose yourself in indulgence."
+  }
+}

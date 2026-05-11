@@ -1,0 +1,493 @@
+{
+  "_schema": {
+    "description": "27 Nakshatras (lunar mansions) - represent deeper personality nuances and karmic patterns. The Moon's nakshatra at birth (Janma Nakshatra) is most important.",
+    "usage": "Use to add depth to personality interpretation. Each spans 13°20' of the zodiac.",
+    "ruled_by": "Each nakshatra has a planetary ruler that controls Vimshottari Dasha periods."
+  },
+  "ashwini": {
+    "number": 1,
+    "range": "Aries 0° - 13°20'",
+    "ruler": "Ketu",
+    "deity": "Ashwini Kumaras (divine healers)",
+    "symbol": "Horse's head",
+    "themes": ["healing", "swift action", "pioneering"],
+    "personality": [
+      "energetic and pioneering",
+      "natural healer",
+      "quick to start things",
+      "youthful and adventurous",
+      "impatient but enthusiastic"
+    ],
+    "career_areas": ["medicine", "healing arts", "sports", "transportation"],
+    "challenges": ["impatience", "starts but doesn't finish"],
+    "keywords": ["swift", "healer", "pioneer", "youthful"]
+  },
+  "bharani": {
+    "number": 2,
+    "range": "Aries 13°20' - 26°40'",
+    "ruler": "Venus",
+    "deity": "Yama (god of death and dharma)",
+    "symbol": "Yoni (womb)",
+    "themes": ["transformation", "feminine power", "moral burden"],
+    "personality": [
+      "carries heavy responsibilities",
+      "intense creative/sexual energy",
+      "transformative experiences",
+      "judges right and wrong sharply",
+      "endures much"
+    ],
+    "career_areas": ["arts", "law", "midwifery", "transformation work"],
+    "challenges": ["heavy karma", "moral intensity", "sexual issues"],
+    "keywords": ["transformative", "burden-bearer", "creative", "intense"]
+  },
+  "krittika": {
+    "number": 3,
+    "range": "Aries 26°40' - Taurus 10°",
+    "ruler": "Sun",
+    "deity": "Agni (fire)",
+    "symbol": "Razor or flame",
+    "themes": ["cutting through illusion", "fierce truth", "purification"],
+    "personality": [
+      "sharp, cutting intellect",
+      "speaks truth bluntly",
+      "burning ambition",
+      "protective warrior",
+      "may be critical"
+    ],
+    "career_areas": ["military", "surgery", "criticism", "culinary arts"],
+    "challenges": ["harsh speech", "burning others with truth"],
+    "keywords": ["sharp", "fierce", "purifying", "protective"]
+  },
+  "rohini": {
+    "number": 4,
+    "range": "Taurus 10° - 23°20'",
+    "ruler": "Moon",
+    "deity": "Brahma (creator)",
+    "symbol": "Cart or chariot",
+    "themes": ["beauty", "abundance", "creativity", "Moon's favorite"],
+    "personality": [
+      "magnetically attractive",
+      "creative and artistic",
+      "loves comfort and beauty",
+      "sensual and grounded",
+      "fertile in mind and body"
+    ],
+    "career_areas": ["arts", "fashion", "agriculture", "hospitality"],
+    "challenges": ["possessive", "materialistic", "indulgent"],
+    "keywords": ["beautiful", "abundant", "creative", "sensual"]
+  },
+  "mrigashira": {
+    "number": 5,
+    "range": "Taurus 23°20' - Gemini 6°40'",
+    "ruler": "Mars",
+    "deity": "Soma (moon nectar)",
+    "symbol": "Deer's head",
+    "themes": ["searching", "curiosity", "gentle exploration"],
+    "personality": [
+      "perpetually searching",
+      "curious and gentle",
+      "intellectually restless",
+      "loves travel and learning",
+      "sensitive and shy"
+    ],
+    "career_areas": ["research", "writing", "travel", "music"],
+    "challenges": ["never satisfied", "wanderlust"],
+    "keywords": ["searching", "gentle", "curious", "restless"]
+  },
+  "ardra": {
+    "number": 6,
+    "range": "Gemini 6°40' - 20°",
+    "ruler": "Rahu",
+    "deity": "Rudra (storm god)",
+    "symbol": "Teardrop",
+    "themes": ["storm", "destruction for renewal", "tears"],
+    "personality": [
+      "stormy emotions",
+      "destructive then renewing",
+      "sharp intellect",
+      "intense and brooding",
+      "transforms through pain"
+    ],
+    "career_areas": ["research", "tech", "destruction/renewal work", "psychology"],
+    "challenges": ["depression", "destructive tendencies", "anger"],
+    "keywords": ["stormy", "destructive", "transformative", "intense"]
+  },
+  "punarvasu": {
+    "number": 7,
+    "range": "Gemini 20° - Cancer 3°20'",
+    "ruler": "Jupiter",
+    "deity": "Aditi (mother of gods)",
+    "symbol": "Quiver of arrows",
+    "themes": ["return", "renewal", "wisdom through cycles"],
+    "personality": [
+      "philosophical mind",
+      "returns to old paths with new wisdom",
+      "loves home and family",
+      "wisdom-oriented",
+      "forgiving"
+    ],
+    "career_areas": ["teaching", "spirituality", "writing", "real estate"],
+    "challenges": ["repeats patterns", "stays attached to past"],
+    "keywords": ["renewing", "wise", "forgiving", "philosophical"]
+  },
+  "pushya": {
+    "number": 8,
+    "range": "Cancer 3°20' - 16°40'",
+    "ruler": "Saturn",
+    "deity": "Brihaspati (Jupiter, teacher of gods)",
+    "symbol": "Cow's udder (nourishment)",
+    "themes": ["nourishment", "auspiciousness", "most blessed nakshatra"],
+    "personality": [
+      "deeply nurturing and caring",
+      "responsible and dutiful",
+      "wise mentor",
+      "spiritually inclined",
+      "tendency to over-give"
+    ],
+    "career_areas": ["counseling", "teaching", "spiritual work", "food industry"],
+    "challenges": ["over-responsible", "self-neglect", "stagnation"],
+    "keywords": ["nurturing", "auspicious", "wise", "dutiful"]
+  },
+  "ashlesha": {
+    "number": 9,
+    "range": "Cancer 16°40' - 30°",
+    "ruler": "Mercury",
+    "deity": "Nagas (serpent gods)",
+    "symbol": "Coiled serpent",
+    "themes": ["hidden wisdom", "manipulation", "kundalini", "deception"],
+    "personality": [
+      "psychically intuitive",
+      "secretive and observant",
+      "wise but can manipulate",
+      "deep but mysterious",
+      "complicated emotions"
+    ],
+    "career_areas": ["occult", "research", "psychology", "politics"],
+    "challenges": ["manipulation", "hidden agendas", "deception"],
+    "keywords": ["serpentine", "secretive", "psychic", "complex"]
+  },
+  "magha": {
+    "number": 10,
+    "range": "Leo 0° - 13°20'",
+    "ruler": "Ketu",
+    "deity": "Pitris (ancestors)",
+    "symbol": "Royal throne",
+    "themes": ["lineage", "honor", "royalty", "ancestral connection"],
+    "personality": [
+      "regal and dignified",
+      "proud of lineage",
+      "natural authority",
+      "honors traditions",
+      "ancestral karma central"
+    ],
+    "career_areas": ["leadership", "politics", "heritage work", "history"],
+    "challenges": ["pride", "ancestral burdens", "ego"],
+    "keywords": ["royal", "ancestral", "dignified", "traditional"]
+  },
+  "purva_phalguni": {
+    "number": 11,
+    "range": "Leo 13°20' - 26°40'",
+    "ruler": "Venus",
+    "deity": "Bhaga (god of marital bliss and wealth)",
+    "symbol": "Front legs of cot (relaxation)",
+    "themes": ["pleasure", "creativity", "romance", "luxury"],
+    "personality": [
+      "playful and romantic",
+      "loves leisure and pleasure",
+      "creative and artistic",
+      "charming and warm",
+      "social and friendly"
+    ],
+    "career_areas": ["entertainment", "arts", "luxury", "hospitality"],
+    "challenges": ["laziness", "indulgence", "infidelity"],
+    "keywords": ["playful", "romantic", "creative", "indulgent"]
+  },
+  "uttara_phalguni": {
+    "number": 12,
+    "range": "Leo 26°40' - Virgo 10°",
+    "ruler": "Sun",
+    "deity": "Aryaman (god of contracts and friendship)",
+    "symbol": "Back legs of cot (rest after work)",
+    "themes": ["partnership", "contracts", "service", "kindness"],
+    "personality": [
+      "kind and helpful",
+      "great in partnerships",
+      "loyal friend",
+      "balanced creativity and discipline",
+      "service-oriented"
+    ],
+    "career_areas": ["counseling", "service", "contracts", "marriage work"],
+    "challenges": ["over-giving", "loneliness"],
+    "keywords": ["kind", "loyal", "service-oriented", "balanced"]
+  },
+  "hasta": {
+    "number": 13,
+    "range": "Virgo 10° - 23°20'",
+    "ruler": "Moon",
+    "deity": "Savitar (sun god)",
+    "symbol": "Hand",
+    "themes": ["skilled hands", "craft", "service", "humor"],
+    "personality": [
+      "skilled in handwork",
+      "witty and clever",
+      "service-oriented",
+      "playful trickster",
+      "detail-oriented"
+    ],
+    "career_areas": ["craft", "healing hands", "writing", "tech"],
+    "challenges": ["nervousness", "trickery"],
+    "keywords": ["skilled", "witty", "crafty", "clever"]
+  },
+  "chitra": {
+    "number": 14,
+    "range": "Virgo 23°20' - Libra 6°40'",
+    "ruler": "Mars",
+    "deity": "Vishvakarma (divine architect)",
+    "symbol": "Pearl or jewel",
+    "themes": ["design", "beauty", "illusion of perfection"],
+    "personality": [
+      "beautiful and magnetic",
+      "designer and architect mind",
+      "loves beauty",
+      "may be vain",
+      "creates illusions"
+    ],
+    "career_areas": ["design", "architecture", "fashion", "magic/illusion"],
+    "challenges": ["vanity", "deception through beauty"],
+    "keywords": ["beautiful", "designing", "illusory", "magnetic"]
+  },
+  "swati": {
+    "number": 15,
+    "range": "Libra 6°40' - 20°",
+    "ruler": "Rahu",
+    "deity": "Vayu (wind god)",
+    "symbol": "Coral or young sprout",
+    "themes": ["independence", "movement", "flexibility"],
+    "personality": [
+      "independent and free-spirited",
+      "scattered like wind",
+      "good in business and trade",
+      "social and friendly",
+      "self-made"
+    ],
+    "career_areas": ["business", "trade", "travel", "diplomacy"],
+    "challenges": ["scattered", "indecisive", "rootless"],
+    "keywords": ["independent", "windy", "flexible", "self-reliant"]
+  },
+  "vishakha": {
+    "number": 16,
+    "range": "Libra 20° - Scorpio 3°20'",
+    "ruler": "Jupiter",
+    "deity": "Indra-Agni (two-faced god of triumph)",
+    "symbol": "Triumphal arch",
+    "themes": ["ambition", "goal-orientation", "purposeful action"],
+    "personality": [
+      "deeply ambitious",
+      "goal-focused",
+      "purposeful actions",
+      "may be obsessive",
+      "achievement-oriented"
+    ],
+    "career_areas": ["politics", "leadership", "competitive fields"],
+    "challenges": ["obsession", "ruthless ambition"],
+    "keywords": ["ambitious", "purposeful", "achieving", "obsessive"]
+  },
+  "anuradha": {
+    "number": 17,
+    "range": "Scorpio 3°20' - 16°40'",
+    "ruler": "Saturn",
+    "deity": "Mitra (god of friendship)",
+    "symbol": "Lotus or staff",
+    "themes": ["friendship", "devotion", "international success"],
+    "personality": [
+      "devoted to friendships",
+      "succeeds with foreign people",
+      "diplomatic and loyal",
+      "deeply emotional under surface",
+      "spiritual through devotion"
+    ],
+    "career_areas": ["international work", "diplomacy", "spirituality"],
+    "challenges": ["emotional depression", "betrayal sensitivity"],
+    "keywords": ["devoted", "friendly", "international", "spiritual"]
+  },
+  "jyeshtha": {
+    "number": 18,
+    "range": "Scorpio 16°40' - 30°",
+    "ruler": "Mercury",
+    "deity": "Indra (king of gods)",
+    "symbol": "Talisman or earring",
+    "themes": ["eldership", "responsibility", "secret power"],
+    "personality": [
+      "eldest sibling energy",
+      "carries heavy burdens",
+      "secretive but powerful",
+      "protective leader",
+      "tends to be lonely at top"
+    ],
+    "career_areas": ["leadership", "occult", "military"],
+    "challenges": ["loneliness", "burden of responsibility"],
+    "keywords": ["eldest", "burdened", "powerful", "secretive"]
+  },
+  "mula": {
+    "number": 19,
+    "range": "Sagittarius 0° - 13°20'",
+    "ruler": "Ketu",
+    "deity": "Nirriti (goddess of destruction/dissolution)",
+    "symbol": "Bundle of roots",
+    "themes": ["root cause", "destruction for truth", "spiritual seeking"],
+    "personality": [
+      "seeks root truth of everything",
+      "spiritually intense",
+      "investigates deeply",
+      "destructive then constructive",
+      "philosophical"
+    ],
+    "career_areas": ["research", "investigation", "spirituality", "herbalism"],
+    "challenges": ["upheaval", "loss in early life", "destructive patterns"],
+    "keywords": ["root-seeking", "destroying", "spiritual", "investigative"]
+  },
+  "purva_ashadha": {
+    "number": 20,
+    "range": "Sagittarius 13°20' - 26°40'",
+    "ruler": "Venus",
+    "deity": "Apas (waters)",
+    "symbol": "Elephant tusk or fan",
+    "themes": ["invincibility", "early victory", "purification"],
+    "personality": [
+      "fierce optimism",
+      "wins early in life",
+      "philosophical mind",
+      "popular and influential",
+      "stubborn beliefs"
+    ],
+    "career_areas": ["debate", "law", "politics", "writing"],
+    "challenges": ["dogmatism", "overconfidence"],
+    "keywords": ["invincible", "victorious", "philosophical", "influential"]
+  },
+  "uttara_ashadha": {
+    "number": 21,
+    "range": "Sagittarius 26°40' - Capricorn 10°",
+    "ruler": "Sun",
+    "deity": "Vishvadevas (universal gods)",
+    "symbol": "Elephant tusk or planks of bed",
+    "themes": ["final victory", "lasting achievement", "righteousness"],
+    "personality": [
+      "long-term achiever",
+      "righteous and ethical",
+      "leads through example",
+      "patient builder of lasting things",
+      "dharmic warrior"
+    ],
+    "career_areas": ["leadership", "law", "spirituality", "founding institutions"],
+    "challenges": ["over-serious", "rigid morality"],
+    "keywords": ["lasting", "righteous", "dharmic", "patient"]
+  },
+  "shravana": {
+    "number": 22,
+    "range": "Capricorn 10° - 23°20'",
+    "ruler": "Moon",
+    "deity": "Vishnu (preserver)",
+    "symbol": "Ear or three footsteps",
+    "themes": ["listening", "learning", "preservation of knowledge"],
+    "personality": [
+      "excellent listener",
+      "absorbs knowledge deeply",
+      "traditional and conservative",
+      "preserves family/cultural wisdom",
+      "gentle and respectful"
+    ],
+    "career_areas": ["education", "writing", "counseling", "media"],
+    "challenges": ["gossipy", "stuck in tradition"],
+    "keywords": ["listening", "learning", "preserving", "traditional"]
+  },
+  "dhanishta": {
+    "number": 23,
+    "range": "Capricorn 23°20' - Aquarius 6°40'",
+    "ruler": "Mars",
+    "deity": "Eight Vasus (gods of light)",
+    "symbol": "Drum or flute",
+    "themes": ["wealth", "music", "rhythm of life", "celebrity"],
+    "personality": [
+      "wealthy and ambitious",
+      "musical or rhythmic",
+      "may be famous",
+      "social and outgoing",
+      "materialistic edge"
+    ],
+    "career_areas": ["music", "wealth management", "entertainment"],
+    "challenges": ["greed", "loneliness at top"],
+    "keywords": ["wealthy", "musical", "famous", "rhythmic"]
+  },
+  "shatabhisha": {
+    "number": 24,
+    "range": "Aquarius 6°40' - 20°",
+    "ruler": "Rahu",
+    "deity": "Varuna (god of cosmic waters)",
+    "symbol": "Empty circle or 100 healers",
+    "themes": ["healing", "mystery", "secrecy", "100 doctors"],
+    "personality": [
+      "healing capacity",
+      "deeply secretive",
+      "scientific or mystical mind",
+      "loner",
+      "humanitarian undercurrent"
+    ],
+    "career_areas": ["medicine", "astrology", "research", "tech"],
+    "challenges": ["isolation", "secrecy", "addictions"],
+    "keywords": ["healing", "secretive", "mystical", "humanitarian"]
+  },
+  "purva_bhadrapada": {
+    "number": 25,
+    "range": "Aquarius 20° - Pisces 3°20'",
+    "ruler": "Jupiter",
+    "deity": "Aja Ekapada (one-footed goat - storm/fire deity)",
+    "symbol": "Sword or front of funeral cot",
+    "themes": ["fiery transformation", "spiritual intensity", "cremation/end"],
+    "personality": [
+      "intense and otherworldly",
+      "fiery spiritual seeker",
+      "obsessive nature",
+      "may be eccentric",
+      "burns through karma"
+    ],
+    "career_areas": ["occult", "spirituality", "research", "transformation work"],
+    "challenges": ["anxiety", "obsession", "eccentricity"],
+    "keywords": ["fiery", "intense", "transformative", "spiritual"]
+  },
+  "uttara_bhadrapada": {
+    "number": 26,
+    "range": "Pisces 3°20' - 16°40'",
+    "ruler": "Saturn",
+    "deity": "Ahir Budhnya (serpent of the deep)",
+    "symbol": "Twin or back of funeral cot",
+    "themes": ["deep wisdom", "kundalini", "introspection"],
+    "personality": [
+      "deeply wise and introspective",
+      "patient and disciplined",
+      "spiritual mastery potential",
+      "calm exterior, profound interior",
+      "compassionate"
+    ],
+    "career_areas": ["spirituality", "writing", "research", "monastic work"],
+    "challenges": ["depression", "isolation"],
+    "keywords": ["deep", "wise", "patient", "compassionate"]
+  },
+  "revati": {
+    "number": 27,
+    "range": "Pisces 16°40' - 30°",
+    "ruler": "Mercury",
+    "deity": "Pushan (nourisher and protector of travelers)",
+    "symbol": "Fish or drum",
+    "themes": ["completion", "compassion", "safe journey", "moksha"],
+    "personality": [
+      "deeply compassionate",
+      "spiritual completion",
+      "protective of those weaker",
+      "gentle and giving",
+      "may be naive"
+    ],
+    "career_areas": ["spirituality", "healing", "animal welfare", "charity"],
+    "challenges": ["over-giving", "naive trust", "moksha-bound suffering"],
+    "keywords": ["compassionate", "completing", "spiritual", "protective"]
+  }
+}

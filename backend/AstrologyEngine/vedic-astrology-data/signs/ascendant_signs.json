@@ -1,0 +1,186 @@
+{
+  "_schema": {
+    "description": "Ascendant (Lagna) interpretations - represents the rising sign at birth. Defines personality, physical body, life approach, and how others perceive the person.",
+    "usage": "Use to describe outward personality, life direction, and how the person interfaces with the world."
+  },
+  "aries": {
+    "themes": ["leader by default", "fast-paced life", "fights their own battles"],
+    "personality_patterns": [
+      "comes across as bold, direct, energetic",
+      "moves and speaks quickly",
+      "takes action before thinking",
+      "natural competitive instinct"
+    ],
+    "physical_appearance": ["athletic build", "ruddy complexion", "marks or scars on head/face common"],
+    "life_approach": ["leads from the front", "pioneers new paths", "burns bright but can burn out"],
+    "relationship_style": ["pursues openly", "needs partner who respects their independence"],
+    "career_approach": ["entrepreneurial", "leadership roles", "sports, military, surgery"],
+    "tone": "energetic, direct, courageous",
+    "ruling_planet": "Mars"
+  },
+  "taurus": {
+    "themes": ["builds slowly and surely", "comfort and beauty matter", "values security"],
+    "personality_patterns": [
+      "calm exterior, slow to anger",
+      "deeply sensual and appreciative of pleasure",
+      "stubborn but reliable",
+      "speaks in measured, soft tones"
+    ],
+    "physical_appearance": ["solid build", "thick neck", "attractive features", "expressive eyes"],
+    "life_approach": ["accumulates wealth and resources patiently", "values stability over change"],
+    "relationship_style": ["slow to commit, deeply loyal once decided"],
+    "career_approach": ["finance, arts, hospitality, music, agriculture"],
+    "tone": "warm, steady, sensual",
+    "ruling_planet": "Venus"
+  },
+  "gemini": {
+    "themes": ["mind as primary tool", "communicator", "multitasker"],
+    "personality_patterns": [
+      "quick-witted and verbally agile",
+      "curious about everything",
+      "moves between many interests",
+      "youthful appearance and demeanor"
+    ],
+    "physical_appearance": ["slim build", "expressive hands", "youthful face", "active eyes"],
+    "life_approach": ["learns constantly", "adaptable", "may struggle with depth or commitment"],
+    "relationship_style": ["intellectual partnership", "needs mental stimulation"],
+    "career_approach": ["writing, media, teaching, sales, tech, languages"],
+    "tone": "lively, intelligent, witty",
+    "ruling_planet": "Mercury"
+  },
+  "cancer": {
+    "themes": ["sensitive ruler of own world", "family-centered", "intuitive navigator"],
+    "personality_patterns": [
+      "moody but deeply caring",
+      "protective of loved ones",
+      "remembers everything emotional",
+      "approaches life through feeling, not logic"
+    ],
+    "physical_appearance": ["round face", "fair complexion", "expressive eyes", "softer build"],
+    "life_approach": ["builds emotional home wherever they go", "values lineage and memory"],
+    "relationship_style": ["nurturing, sometimes smothering", "needs emotional safety"],
+    "career_approach": ["caregiving, real estate, food, hospitality, healing"],
+    "tone": "tender, intuitive, protective",
+    "ruling_planet": "Moon"
+  },
+  "leo": {
+    "themes": ["natural royalty", "performs life on a stage", "needs admiration"],
+    "personality_patterns": [
+      "confident and warm presence",
+      "generous to those they love",
+      "proud and dignified",
+      "dramatic in expression"
+    ],
+    "physical_appearance": ["strong frame", "thick hair", "regal posture", "commanding presence"],
+    "life_approach": ["seeks recognition and creative expression", "leads by inspiring"],
+    "relationship_style": ["loves grandly", "needs to feel admired by partner"],
+    "career_approach": ["performance, politics, leadership, creative direction"],
+    "tone": "regal, warm, expressive",
+    "ruling_planet": "Sun"
+  },
+  "virgo": {
+    "themes": ["service-oriented", "perfectionist", "humble despite competence"],
+    "personality_patterns": [
+      "modest, precise, observant",
+      "notices details others miss",
+      "self-critical inner world",
+      "speaks carefully and gently"
+    ],
+    "physical_appearance": ["slim build", "clear features", "youthful look", "neat appearance"],
+    "life_approach": ["improves through effort and discipline", "serves a higher purpose"],
+    "relationship_style": ["shows love through helping", "uncomfortable with messy emotions"],
+    "career_approach": ["healthcare, analysis, writing, editing, accounting"],
+    "tone": "careful, modest, helpful",
+    "ruling_planet": "Mercury"
+  },
+  "libra": {
+    "themes": ["harmonizer", "diplomat", "lives through relationships"],
+    "personality_patterns": [
+      "charming and well-mannered",
+      "avoids conflict",
+      "weighs every decision",
+      "naturally attractive and balanced"
+    ],
+    "physical_appearance": ["balanced features", "graceful movement", "pleasant face", "attractive smile"],
+    "life_approach": ["seeks fairness and beauty", "defines self through partnerships"],
+    "relationship_style": ["partnership is central to life", "diplomatic in conflict"],
+    "career_approach": ["law, design, diplomacy, beauty, counseling"],
+    "tone": "graceful, diplomatic, refined",
+    "ruling_planet": "Venus"
+  },
+  "scorpio": {
+    "themes": ["intense and magnetic", "secretive depth", "transformer"],
+    "personality_patterns": [
+      "piercing gaze, magnetic presence",
+      "guarded about inner life",
+      "loyal to the end or completely cut off",
+      "drawn to depth, mystery, hidden truth"
+    ],
+    "physical_appearance": ["intense eyes", "strong build", "magnetic presence", "often has a 'piercing' look"],
+    "life_approach": ["transforms through crisis", "investigates what others avoid"],
+    "relationship_style": ["intense bonding", "possessive when insecure"],
+    "career_approach": ["psychology, occult, research, surgery, investigation"],
+    "tone": "intense, magnetic, deep",
+    "ruling_planet": "Mars (with Ketu co-ruler in some traditions)"
+  },
+  "sagittarius": {
+    "themes": ["philosopher-adventurer", "freedom-seeker", "teacher at heart"],
+    "personality_patterns": [
+      "optimistic and outspoken",
+      "loves travel, learning, debate",
+      "honest sometimes to a fault",
+      "moral and ethical worldview"
+    ],
+    "physical_appearance": ["tall build", "noble features", "broad forehead", "warm smile"],
+    "life_approach": ["seeks meaning and wisdom", "follows higher purpose"],
+    "relationship_style": ["honest, adventurous", "fears being trapped"],
+    "career_approach": ["teaching, law, publishing, travel, spirituality"],
+    "tone": "expansive, philosophical, optimistic",
+    "ruling_planet": "Jupiter"
+  },
+  "capricorn": {
+    "themes": ["ambitious climber", "serious from young age", "duty-bound"],
+    "personality_patterns": [
+      "reserved and dignified",
+      "responsible beyond their years",
+      "patient long-term planner",
+      "dry humor, hidden depth"
+    ],
+    "physical_appearance": ["lean build", "strong bone structure", "serious expression", "ages well"],
+    "life_approach": ["climbs slowly to lasting success", "values legacy and tradition"],
+    "relationship_style": ["takes commitment seriously", "shows love through provision"],
+    "career_approach": ["business, government, management, traditional careers"],
+    "tone": "measured, mature, dignified",
+    "ruling_planet": "Saturn"
+  },
+  "aquarius": {
+    "themes": ["unconventional thinker", "humanitarian", "outsider by choice"],
+    "personality_patterns": [
+      "friendly but emotionally cool",
+      "thinks ahead of their time",
+      "values freedom and individuality",
+      "may seem eccentric to others"
+    ],
+    "physical_appearance": ["tall and lean", "distinctive features", "intellectual look", "calm presence"],
+    "life_approach": ["serves humanity, breaks conventions", "follows ideas over feelings"],
+    "relationship_style": ["friendship-based love", "needs independence within partnership"],
+    "career_approach": ["technology, social causes, science, innovation, astrology"],
+    "tone": "calm, intellectual, original",
+    "ruling_planet": "Saturn (with Rahu co-ruler in some traditions)"
+  },
+  "pisces": {
+    "themes": ["mystic dreamer", "compassionate soul", "boundary-less heart"],
+    "personality_patterns": [
+      "gentle, dreamy presence",
+      "highly intuitive and empathic",
+      "may seem otherworldly or unfocused",
+      "absorbs surrounding energies"
+    ],
+    "physical_appearance": ["soft features", "expressive eyes", "fluid movement", "ethereal look"],
+    "life_approach": ["follows inner currents", "serves through compassion or art"],
+    "relationship_style": ["loves unconditionally", "may lose self in partner"],
+    "career_approach": ["art, music, healing, spirituality, behind-the-scenes work"],
+    "tone": "soft, dreamy, compassionate",
+    "ruling_planet": "Jupiter"
+  }
+}

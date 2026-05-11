@@ -1,12 +1,10 @@
 /**
- * Chat Controller — Real OpenAI Integration
+ * Chat Controller — Production Grade with AstrologyEngine Pipeline
  * 
- * Handles:
- * 1. Message intake with word validation (pre-checked by middleware)
- * 2. OpenAI Thread management (create or resume)
- * 3. Assistant execution with chart context injection
- * 4. Usage tracking (questions + tokens)
- * 5. Chat session persistence in MongoDB
+ * Pipeline:
+ *   User Question → AstrologyEngine (interpret → themes → prompt) → OpenAI → Response Cleaner → Chat Response
+ * 
+ * The LLM never does astrology. It only does human storytelling.
  */
 
 import { Response } from 'express';
@@ -17,11 +15,15 @@ import { openaiService } from '../services/openai.service';
 import { PlanLimits } from '../../../config/plans';
 import crypto from 'crypto';
 
+// Import memory layer for cleanup
+const { clearMemory } = require('../../../../AstrologyEngine/conversation_memory');
+
 export const chatController = {
   /**
    * POST /api/chat/message
    * 
    * Accepts: { message, conversationId?, userProfile? }
+   *   - userProfile should contain chart data as a structured object (not raw string)
    * Returns: { conversationId, response, usage }
    */
   async handleMessage(req: AuthRequest, res: Response) {
@@ -43,7 +45,6 @@ export const chatController = {
       let isFirstMessage = false;
 
       if (userUsage) {
-        // Check if we have an existing thread for this conversation
         threadId = userUsage.threadMap?.get(finalConvId) || null;
       }
 
@@ -66,7 +67,26 @@ export const chatController = {
       // Add user message to MongoDB
       chat.messages.push({ role: 'user', content: message });
 
-      // ─── Call OpenAI ───
+      // ─── Parse chart data for the AstrologyEngine ───
+      // userProfile can be:
+      //   - A JSON string containing chart data
+      //   - An object with chart fields
+      //   - A string with profile info (legacy — will use as-is for context)
+      let chartData: any = null;
+      if (userProfile) {
+        if (typeof userProfile === 'string') {
+          try {
+            chartData = JSON.parse(userProfile);
+          } catch {
+            // Legacy string format — try to extract what we can
+            chartData = null;
+          }
+        } else if (typeof userProfile === 'object') {
+          chartData = userProfile;
+        }
+      }
+
+      // ─── Call OpenAI via AstrologyEngine Pipeline ───
       let botResponse: string;
       let promptTokens = 0;
       let completionTokens = 0;
@@ -79,7 +99,8 @@ export const chatController = {
           const result = await openaiService.chat(
             threadId,
             message,
-            userProfile || null,
+            chartData,
+            finalConvId,
             isFirstMessage,
             maxTokens,
             maxContext
@@ -95,7 +116,7 @@ export const chatController = {
           }
         } catch (aiError: any) {
           console.error('OpenAI API error:', aiError?.message || aiError);
-          botResponse = 'I apologize, but I\'m having trouble connecting to my knowledge base right now. Please try again in a moment. 🙏';
+          botResponse = 'I am so sorry, but I am finding it a little difficult to connect with the cosmos right now. Could you please give me just a moment and try again? 🙏';
         }
       } else {
         // Fallback mock response when OpenAI is not configured
@@ -175,13 +196,15 @@ export const chatController = {
 
   /**
    * DELETE /api/chat/history/:id
-   * Deletes a specific conversation
+   * Deletes a specific conversation and its memory
    */
   async deleteHistory(req: AuthRequest, res: Response) {
     try {
       const { id } = req.params;
       const userId = req.user!.userId;
       await ChatSession.findOneAndDelete({ conversationId: id, userId });
+      // Also clear in-memory conversation context
+      clearMemory(id);
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: 'Failed to delete history' });

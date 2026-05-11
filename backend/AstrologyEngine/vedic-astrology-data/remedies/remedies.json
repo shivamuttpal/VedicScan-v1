@@ -1,0 +1,202 @@
+{
+  "description": "Traditional Vedic remedies (upayas) for strengthening or pacifying planets. Used when planets are weak, afflicted, or causing challenges in life.",
+  "general_principles": {
+    "when_to_strengthen": "Weak planet that is a benefic, well-placed but lacking strength, or significator of important life area",
+    "when_to_pacify": "Malefic planet causing trouble, debilitated planet, planet in 6/8/12 houses afflicted",
+    "important_caution": "Gemstones should only be worn after proper astrological consultation - wrong gemstone can cause harm. Mantras and donations are universally safe.",
+    "principle": "Karma (action) is the highest remedy. Spiritual practice, ethical behavior, and service multiply all other remedies."
+  },
+  "remedies_by_planet": {
+    "sun": {
+      "deity": "Lord Surya, Lord Ram, Lord Vishnu",
+      "mantra": "Om Hraam Hreem Hroum Sah Suryaya Namah",
+      "beej_mantra": "Om Suryaya Namah",
+      "gayatri": "Om Bhaskaraya Vidmahe Mahadyutikaraya Dhimahi Tanno Aditya Prachodayat",
+      "chanting_count": "7000 times for complete benefit",
+      "gemstone": "Ruby (Manik) - 3-5 carats in gold, worn on ring finger of right hand",
+      "alternate_stones": "Red Garnet, Red Spinel, Sunstone",
+      "metal": "Gold, Copper",
+      "color": "Red, Orange, Gold",
+      "day": "Sunday",
+      "time": "Sunrise",
+      "donations": "Wheat, jaggery, copper, red cloth, ruby - give to elderly father figures or temples on Sunday",
+      "fasting": "Sunday fast, eating only once before sunset",
+      "yantra": "Surya Yantra",
+      "actions": ["respect father", "respect elders and authority", "wake at sunrise", "offer water to Sun (Arghya)", "develop confidence and leadership"],
+      "spiritual_practice": "Surya Namaskar daily, sun gazing at sunrise/sunset",
+      "themes_addressed": ["father issues", "confidence", "career authority", "health/vitality", "ego balance"]
+    },
+    "moon": {
+      "deity": "Goddess Parvati, Lord Shiva, Goddess Annapurna",
+      "mantra": "Om Shraam Shreem Shraum Sah Chandraya Namah",
+      "beej_mantra": "Om Somaya Namah",
+      "gayatri": "Om Padmadhwajaya Vidmahe Hemarupaya Dhimahi Tanno Soma Prachodayat",
+      "chanting_count": "11000 times",
+      "gemstone": "Pearl (Moti) - 3-7 carats in silver, worn on little finger of right hand",
+      "alternate_stones": "Moonstone, White Coral",
+      "metal": "Silver",
+      "color": "White, Cream, Silver",
+      "day": "Monday",
+      "donations": "Rice, milk, white sugar, white cloth, silver - give to mother figures and women on Monday",
+      "fasting": "Monday fast",
+      "yantra": "Chandra Yantra",
+      "actions": ["respect mother", "drink water from silver vessel", "meditation by moonlight", "develop emotional balance"],
+      "spiritual_practice": "Worship Shiva, recite Mahamrityunjaya Mantra",
+      "themes_addressed": ["emotional instability", "mother issues", "mental peace", "feminine energy", "intuition"]
+    },
+    "mars": {
+      "deity": "Lord Hanuman, Lord Kartikeya, Lord Subramanya",
+      "mantra": "Om Kraam Kreem Kroum Sah Bhaumaya Namah",
+      "beej_mantra": "Om Angarakaya Namah",
+      "gayatri": "Om Veeradhwajaya Vidmahe Vighnahastaya Dhimahi Tanno Bhauma Prachodayat",
+      "chanting_count": "10000 times",
+      "gemstone": "Red Coral (Moonga) - 5-10 carats in copper or silver, worn on ring finger",
+      "alternate_stones": "Carnelian, Red Jasper",
+      "metal": "Copper",
+      "color": "Red",
+      "day": "Tuesday",
+      "donations": "Red lentils (masoor), red cloth, copper, jaggery, weapons (symbolic) - give on Tuesday",
+      "fasting": "Tuesday fast",
+      "yantra": "Mangal Yantra",
+      "actions": ["recite Hanuman Chalisa daily", "respect brothers", "control anger", "physical exercise", "courage cultivation"],
+      "spiritual_practice": "Daily Hanuman Chalisa, visit Hanuman temple on Tuesdays",
+      "themes_addressed": ["anger issues", "manglik dosha", "courage", "siblings", "blood-related health", "accidents prevention"]
+    },
+    "mercury": {
+      "deity": "Lord Vishnu, Lord Ganesha",
+      "mantra": "Om Braam Breem Broum Sah Budhaya Namah",
+      "beej_mantra": "Om Budhaya Namah",
+      "gayatri": "Om Gajadhwajaya Vidmahe Sukhahastaya Dhimahi Tanno Budha Prachodayat",
+      "chanting_count": "9000 times",
+      "gemstone": "Emerald (Panna) - 3-7 carats in gold, worn on little finger",
+      "alternate_stones": "Green Tourmaline, Peridot",
+      "metal": "Gold, Brass",
+      "color": "Green",
+      "day": "Wednesday",
+      "donations": "Green moong dal, green cloth, books, stationery, emerald - give to young people and students on Wednesday",
+      "fasting": "Wednesday fast",
+      "yantra": "Budha Yantra",
+      "actions": ["recite Vishnu Sahasranama", "respect young people and sisters", "give books to students", "study sacred texts"],
+      "spiritual_practice": "Vishnu/Ganesha worship, study spiritual texts",
+      "themes_addressed": ["communication issues", "studies", "decision making", "nervous system", "skin problems"]
+    },
+    "jupiter": {
+      "deity": "Lord Brihaspati, Lord Vishnu, Sri Sai Baba",
+      "mantra": "Om Graam Greem Groum Sah Gurave Namah",
+      "beej_mantra": "Om Brihaspataye Namah",
+      "gayatri": "Om Vrishabhadhwajaya Vidmahe Krunihastaya Dhimahi Tanno Guru Prachodayat",
+      "chanting_count": "19000 times",
+      "gemstone": "Yellow Sapphire (Pukhraj) - 5-7 carats in gold, worn on index finger",
+      "alternate_stones": "Yellow Topaz, Citrine",
+      "metal": "Gold",
+      "color": "Yellow, Gold",
+      "day": "Thursday",
+      "donations": "Yellow lentils (chana dal), turmeric, yellow cloth, gold, religious books - give to teachers, priests, and elders on Thursday",
+      "fasting": "Thursday fast, especially for women seeking marriage",
+      "yantra": "Guru Yantra",
+      "actions": ["respect teachers and gurus", "study spiritual texts", "give to dharmic causes", "wear yellow on Thursdays", "saffron tilak on forehead"],
+      "spiritual_practice": "Recite Vishnu Sahasranama, Guru worship, dharmic giving",
+      "themes_addressed": ["wisdom", "wealth", "children", "marriage for women", "spiritual growth", "liver/health"]
+    },
+    "venus": {
+      "deity": "Goddess Lakshmi, Goddess Saraswati, Goddess Durga",
+      "mantra": "Om Draam Dreem Droum Sah Shukraya Namah",
+      "beej_mantra": "Om Shukraya Namah",
+      "gayatri": "Om Ashwadhwajaya Vidmahe Dhanurhastaya Dhimahi Tanno Shukra Prachodayat",
+      "chanting_count": "16000 times",
+      "gemstone": "Diamond (Heera) - white sapphire as substitute, worn on middle finger",
+      "alternate_stones": "White Sapphire, Zircon, Quartz",
+      "metal": "Silver, Platinum",
+      "color": "White, Pink, Light Blue",
+      "day": "Friday",
+      "donations": "White flowers, perfumes, white cloth, silver, rice, sugar - give to women and young girls on Friday",
+      "fasting": "Friday fast - especially Santoshi Maa fast",
+      "yantra": "Shukra Yantra",
+      "actions": ["respect women", "appreciate beauty and arts", "maintain harmonious relationships", "Lakshmi worship"],
+      "spiritual_practice": "Sri Suktam, Lakshmi worship on Friday evenings",
+      "themes_addressed": ["relationships", "marriage", "luxury", "vehicles", "arts", "wealth", "reproductive health"]
+    },
+    "saturn": {
+      "deity": "Lord Shiva, Lord Hanuman, Shani Dev",
+      "mantra": "Om Praam Preem Proum Sah Shanaye Namah",
+      "beej_mantra": "Om Shanicharaya Namah",
+      "gayatri": "Om Kakadhwajaya Vidmahe Khadgahastaya Dhimahi Tanno Manda Prachodayat",
+      "chanting_count": "23000 times",
+      "gemstone": "Blue Sapphire (Neelam) - 5-7 carats in silver or platinum, worn on middle finger - WEAR WITH CAUTION, test first",
+      "alternate_stones": "Amethyst, Lapis Lazuli, Black Tourmaline",
+      "metal": "Iron, Steel, Silver",
+      "color": "Black, Dark Blue",
+      "day": "Saturday",
+      "donations": "Black sesame seeds (til), black cloth, iron, mustard oil, shoes, umbrella - give to elderly, laborers, disabled, and poor on Saturday",
+      "fasting": "Saturday fast",
+      "yantra": "Shani Yantra",
+      "actions": ["serve elderly and poor", "donate to laborers", "be patient and disciplined", "hard work and duty", "visit Shani temple on Saturdays", "feed crows"],
+      "spiritual_practice": "Hanuman Chalisa, Shani Stotra, Mahamrityunjaya mantra during Sade Sati",
+      "themes_addressed": ["Sade Sati", "career delays", "chronic issues", "depression", "joint pains", "longevity", "discipline"]
+    },
+    "rahu": {
+      "deity": "Goddess Durga, Lord Bhairava, Saraswati",
+      "mantra": "Om Bhraam Bhreem Bhroum Sah Rahave Namah",
+      "beej_mantra": "Om Rahave Namah",
+      "gayatri": "Om Naakadhwajaya Vidmahe Padmahastaya Dhimahi Tanno Rahu Prachodayat",
+      "chanting_count": "18000 times",
+      "gemstone": "Hessonite Garnet (Gomed) - 5-7 carats in silver, worn on middle finger",
+      "metal": "Silver, Lead",
+      "color": "Smoky, Brown",
+      "day": "Saturday (also affects Wednesday)",
+      "donations": "Sesame seeds, blankets, mustard oil, copper, brown cloth - give to lepers and outcasts on Saturday",
+      "yantra": "Rahu Yantra",
+      "actions": ["respect grandparents", "feed dogs", "Durga Saptashati recitation", "avoid alcohol and intoxicants", "control obsessive desires"],
+      "spiritual_practice": "Durga worship, Bhairava worship, Saraswati for studies",
+      "themes_addressed": ["sudden problems", "addictions", "confusion", "foreign affairs", "kalsarpa dosha", "phobias"]
+    },
+    "ketu": {
+      "deity": "Lord Ganesha, Lord Bhairava, Lord Hanuman",
+      "mantra": "Om Sraam Sreem Sroum Sah Ketave Namah",
+      "beej_mantra": "Om Ketave Namah",
+      "gayatri": "Om Ashwadhwajaya Vidmahe Shoolahastaya Dhimahi Tanno Ketu Prachodayat",
+      "chanting_count": "17000 times",
+      "gemstone": "Cat's Eye (Lehsunia) - 5-7 carats in silver, worn on middle finger",
+      "metal": "Silver, Mixed",
+      "color": "Multi-colored, Grey",
+      "day": "Tuesday",
+      "donations": "Multi-colored cloth, blankets, sesame seeds, weapons (symbolic) - give to ascetics and orphans",
+      "yantra": "Ketu Yantra",
+      "actions": ["worship Ganesha before any work", "feed dogs", "spiritual practices", "Hanuman Chalisa", "avoid attachment"],
+      "spiritual_practice": "Ganesha worship for obstacles, Bhairava for protection",
+      "themes_addressed": ["spiritual seeking", "sudden losses", "confusion", "moksha tendency", "skin issues", "mysterious problems"]
+    }
+  },
+  "specialized_remedies": {
+    "kalsarpa_dosha": {
+      "puja": "Kalsarpa shanti at Trimbakeshwar or Kalahasti",
+      "remedy": "Worship Nag Devata, donate to snake charmers, recite Maha Mrityunjaya",
+      "duration": "Continuous practice through Rahu-Ketu mahadasha"
+    },
+    "manglik_dosha": {
+      "remedies": ["Mangal shanti puja", "Hanuman Chalisa daily", "Red coral after consultation", "Marriage with another Manglik person", "Feeding birds"],
+      "scripture_remedy": "Recite Sundarkand on Tuesdays"
+    },
+    "sade_sati": {
+      "remedies": [
+        "Hanuman Chalisa daily without fail",
+        "Mahamrityunjaya Mantra 108 times daily",
+        "Donate black sesame, mustard oil, iron on Saturdays",
+        "Visit Shani temple every Saturday",
+        "Serve elderly, laborers, and disabled",
+        "Read Shani Chalisa",
+        "Avoid alcohol, non-vegetarian food on Saturdays",
+        "Maintain ethical conduct strictly"
+      ]
+    },
+    "pitru_dosha": {
+      "definition": "Ancestral karma indicated by Sun-Rahu, Sun-Ketu, or Sun in 8th/12th",
+      "remedies": ["Shraddha ceremony", "Tarpana", "Pind daan at Gaya", "Feed Brahmins and crows", "Service to elderly parents"]
+    }
+  },
+  "human_advice_tone": {
+    "presenting_remedies": "Present remedies as spiritual support and karmic balancing, not magic cures. Emphasize sincere intent over mechanical practice.",
+    "important_disclaimer": "Always say: 'These are traditional supportive practices. The most important remedy is sincere action, ethical living, and inner work. Gemstones especially should only be worn after consultation with a qualified astrologer.'",
+    "psychological_framing": "Remedies work partly through psychological commitment - the discipline of doing them creates positive change beyond the mystical aspect."
+  }
+}

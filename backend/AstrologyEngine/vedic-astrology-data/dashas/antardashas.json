@@ -1,0 +1,190 @@
+{
+  "_schema": {
+    "description": "Antardasha (sub-period) modifies the Mahadasha. When in Saturn Mahadasha + Venus Antardasha, both energies blend. This file gives core themes for the second-level planet's flavor.",
+    "usage": "Combine main dasha themes with antardasha modifier. Format: 'mahadasha_antardasha' (e.g. 'saturn_venus') gives combined interpretation.",
+    "note": "The Antardasha planet adds its flavor to the Mahadasha planet's main theme. Result depends on house lordship, conjunctions, and aspects in actual chart."
+  },
+  "modifier_themes": {
+    "sun_antardasha": {
+      "adds": "ego, authority, father, government themes",
+      "tone_modifier": "more visible, more identity-focused",
+      "good_for": "leadership, government work, recognition",
+      "challenges": "ego clashes, father issues, pride"
+    },
+    "moon_antardasha": {
+      "adds": "emotion, mother, public connection, fluctuation",
+      "tone_modifier": "more emotional, more public",
+      "good_for": "emotional growth, marriage, public roles, real estate",
+      "challenges": "mood swings, mother concerns, mental fluctuation"
+    },
+    "mars_antardasha": {
+      "adds": "action, anger, courage, conflict",
+      "tone_modifier": "more aggressive, faster pace",
+      "good_for": "bold moves, real estate, surgeries, sports",
+      "challenges": "accidents, fights, surgeries, anger"
+    },
+    "rahu_antardasha": {
+      "adds": "obsession, foreign, illusion, sudden events",
+      "tone_modifier": "more intense, more confused, more ambitious",
+      "good_for": "foreign travel/work, ambitious projects, unconventional gains",
+      "challenges": "scandals, addictions, confusion, sudden losses"
+    },
+    "jupiter_antardasha": {
+      "adds": "wisdom, expansion, spirituality, children",
+      "tone_modifier": "more optimistic, more meaningful",
+      "good_for": "marriage, children, teaching, finance, spirituality",
+      "challenges": "weight gain, overconfidence, missed opportunities"
+    },
+    "saturn_antardasha": {
+      "adds": "discipline, delay, responsibility, slowness",
+      "tone_modifier": "more serious, slower pace",
+      "good_for": "long-term work, service, foreign work, real estate",
+      "challenges": "depression, delays, isolation, joint pain"
+    },
+    "mercury_antardasha": {
+      "adds": "intellect, communication, business, learning",
+      "tone_modifier": "more verbal, more analytical",
+      "good_for": "writing, teaching, business deals, networking",
+      "challenges": "anxiety, nervous issues, scattered focus"
+    },
+    "ketu_antardasha": {
+      "adds": "detachment, spiritual seeking, sudden ends",
+      "tone_modifier": "more isolating, more spiritual",
+      "good_for": "spiritual practice, research, occult, letting go",
+      "challenges": "sudden losses, isolation, confusion, mysterious illnesses"
+    },
+    "venus_antardasha": {
+      "adds": "love, beauty, luxury, romance, art",
+      "tone_modifier": "more romantic, more pleasure-seeking",
+      "good_for": "marriage, romance, arts, vehicles, luxury",
+      "challenges": "indulgence, affairs, diabetes, scandals"
+    }
+  },
+  "common_combinations": {
+    "saturn_saturn": {
+      "themes": ["intense Saturn experience", "Sade Sati-like quality", "deep restructuring"],
+      "duration_typical": "3 years (within 19-year Saturn dasha)",
+      "predictions": [
+        "feels lonely and slow",
+        "career responsibilities heavy",
+        "tests of patience",
+        "deep maturity emerges"
+      ],
+      "tone": "heavy, transformative through hardship"
+    },
+    "saturn_mercury": {
+      "themes": ["disciplined intellect", "writing or research", "business through patience"],
+      "predictions": [
+        "good for writing, study, long-term projects",
+        "slow but steady business growth",
+        "anxiety needs management"
+      ],
+      "tone": "studious, methodical"
+    },
+    "saturn_venus": {
+      "themes": ["restrained pleasure", "delayed marriage but lasting", "service through arts"],
+      "predictions": [
+        "marriage often happens here (especially Saturn-Venus from 7th house)",
+        "luxury through hard work",
+        "mature romantic understanding",
+        "art that has depth and discipline"
+      ],
+      "tone": "mature romance, lasting luxury"
+    },
+    "rahu_jupiter": {
+      "themes": ["confused wisdom", "foreign teaching", "unconventional spirituality"],
+      "predictions": [
+        "may question all beliefs",
+        "attracted to foreign or unconventional gurus",
+        "expansion through risk"
+      ],
+      "tone": "philosophical confusion, expansion"
+    },
+    "rahu_saturn": {
+      "themes": ["heavy ambition", "long karma", "obsessive long-term goals"],
+      "predictions": [
+        "intense work pressure",
+        "foreign discipline",
+        "depression possible",
+        "slow ambitions manifest"
+      ],
+      "tone": "heavy, ambitious, demanding"
+    },
+    "jupiter_saturn": {
+      "themes": ["wise discipline", "structured wisdom", "responsibility with optimism"],
+      "predictions": [
+        "good for building lasting institutions",
+        "career growth through wisdom",
+        "spiritual maturity"
+      ],
+      "tone": "wise, structured, building"
+    },
+    "venus_jupiter": {
+      "themes": ["love AND wisdom", "luxurious blessings", "marriage and children"],
+      "predictions": [
+        "EXCELLENT for marriage",
+        "wealth and family blessings",
+        "creative recognition",
+        "happy period overall"
+      ],
+      "tone": "blessed, romantic, abundant"
+    },
+    "venus_saturn": {
+      "themes": ["mature love", "marriage with older/responsible partner", "discipline in pleasure"],
+      "predictions": [
+        "stable long-lasting marriage",
+        "love finds responsibility",
+        "wealth slowly builds",
+        "art that matters"
+      ],
+      "tone": "mature, lasting, structured pleasure"
+    },
+    "moon_venus": {
+      "themes": ["emotional love", "romantic emotions", "marriage possible"],
+      "predictions": [
+        "marriage often occurs",
+        "emotional pleasure",
+        "creative flow",
+        "popular socially"
+      ],
+      "tone": "romantic, emotional, beautiful"
+    },
+    "mars_saturn": {
+      "themes": ["frustration", "blocked action", "discipline of fire"],
+      "predictions": [
+        "feels stuck despite effort",
+        "anger meets obstacles",
+        "real estate or technical work slow but possible",
+        "accidents possible"
+      ],
+      "tone": "frustrated, restrained fire"
+    },
+    "sun_rahu": {
+      "themes": ["sudden authority", "ego confusion", "political ambition"],
+      "predictions": [
+        "may rise suddenly in power",
+        "father issues possible",
+        "scandals if not careful",
+        "ambition obsessive"
+      ],
+      "tone": "intense ambition, sudden rise"
+    },
+    "ketu_jupiter": {
+      "themes": ["spiritual wisdom", "renunciation of teaching", "moksha-oriented"],
+      "predictions": [
+        "deep spiritual awakening",
+        "leaves conventional paths",
+        "philosophical maturity",
+        "may withdraw from world"
+      ],
+      "tone": "spiritually mature, transcendent"
+    }
+  },
+  "interpretation_rule": {
+    "rule_1": "The Antardasha lord modifies the Mahadasha lord's themes through HOUSE LORDSHIP. Check what houses each planet rules in the actual chart.",
+    "rule_2": "If both planets are friends in Vedic astrology (e.g., Sun-Mars-Jupiter friendships), period is smoother.",
+    "rule_3": "If enemies (e.g., Sun-Saturn, Moon-Rahu), period is more challenging.",
+    "rule_4": "Aspects between the two planets in the actual chart matter more than generic interpretations.",
+    "rule_5": "The strength of each planet (digbala, exaltation, debilitation) determines how its themes play out."
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "_schema": {
+    "description": "Aspects (Drishti) - how planets cast influence on other houses/planets. Vedic uses full aspects only (not partial like Western).",
+    "usage": "When a planet aspects a house/planet, it adds its energy to that location."
+  },
+  "aspect_rules": {
+    "all_planets": "Every planet aspects the 7th house from itself (full aspect)",
+    "mars_special": "Mars also aspects 4th and 8th houses from itself",
+    "jupiter_special": "Jupiter also aspects 5th and 9th houses from itself",
+    "saturn_special": "Saturn also aspects 3rd and 10th houses from itself",
+    "rahu_ketu_special": "Some traditions: Rahu and Ketu aspect 5th, 7th, 9th from themselves"
+  },
+  "sun_aspecting": {
+    "themes": ["adds ego, authority, visibility, father energy"],
+    "on_planet": "Empowers but may overshadow that planet; ego-driven actions",
+    "on_house": "Brings authority, public attention, government themes to that life area",
+    "tone": "illuminating, sometimes harsh"
+  },
+  "moon_aspecting": {
+    "themes": ["adds emotion, public, fluctuation, mother energy"],
+    "on_planet": "Softens and emotionalizes that planet's expression",
+    "on_house": "Brings emotional themes, public connection, fluctuation",
+    "tone": "nurturing, fluctuating"
+  },
+  "mars_aspecting": {
+    "themes": ["adds aggression, action, conflict, energy"],
+    "on_planet": "Energizes but can damage; brings urgency and conflict",
+    "on_house": "Brings disputes, action, courage, accidents to that area",
+    "tone": "fiery, aggressive",
+    "special_note": "Mars's special 4th and 8th aspects are powerful - 4th = home conflicts, 8th = sudden events"
+  },
+  "mercury_aspecting": {
+    "themes": ["adds intellect, communication, business"],
+    "on_planet": "Intellectualizes that planet's expression",
+    "on_house": "Brings analytical thinking, communication, trade to that area",
+    "tone": "communicative, analytical"
+  },
+  "jupiter_aspecting": {
+    "themes": ["adds wisdom, expansion, blessing", "MOST BENEFIC ASPECT"],
+    "on_planet": "Blesses, purifies, expands the planet's positive expression",
+    "on_house": "Greatly benefits the life area aspected",
+    "tone": "blessing, expansive, wise",
+    "special_note": "Jupiter's special 5th and 9th aspects are highly auspicious - 5th = creativity/children blessing, 9th = fortune/dharma blessing"
+  },
+  "venus_aspecting": {
+    "themes": ["adds love, luxury, beauty, harmony"],
+    "on_planet": "Beautifies, harmonizes, brings pleasure to that planet's domain",
+    "on_house": "Brings romance, comforts, arts to that life area",
+    "tone": "romantic, harmonious"
+  },
+  "saturn_aspecting": {
+    "themes": ["adds discipline, delay, restriction, maturity"],
+    "on_planet": "Restricts, slows, matures that planet's expression",
+    "on_house": "Brings delays, responsibility, hard work, possibly suffering to that area",
+    "tone": "restrictive, maturing",
+    "special_note": "Saturn's special 3rd and 10th aspects - 3rd = blocks courage/efforts, 10th = career delays"
+  },
+  "rahu_aspecting": {
+    "themes": ["adds obsession, foreign, illusion, sudden intensity"],
+    "on_planet": "Magnifies and distorts that planet's themes",
+    "on_house": "Brings obsessive, foreign, or unconventional themes to that area",
+    "tone": "intensifying, confusing"
+  },
+  "ketu_aspecting": {
+    "themes": ["adds detachment, spirituality, sudden loss"],
+    "on_planet": "Detaches person from that planet's themes - makes it harder to enjoy",
+    "on_house": "Brings spiritual detachment or sudden losses to that area",
+    "tone": "detaching, spiritualizing"
+  },
+  "common_aspect_interpretations": {
+    "saturn_aspects_moon": {
+      "themes": ["emotional depression", "cold emotional life", "delayed emotional maturity"],
+      "predictions": ["may feel lonely or unloved", "mother may be distant or strict", "emotional pessimism"]
+    },
+    "jupiter_aspects_moon": {
+      "themes": ["emotional wisdom", "happy emotional life", "Gajakesari Yoga"],
+      "predictions": ["optimistic mindset", "popular and loved", "wisdom from mother"]
+    },
+    "mars_aspects_moon": {
+      "themes": ["emotional aggression", "anger issues", "Chandra-Mangal Yoga (wealth)"],
+      "predictions": ["temper flares", "drive to earn", "passionate emotions"]
+    },
+    "rahu_aspects_moon": {
+      "themes": ["emotional confusion", "addiction risk", "fluctuating mental state"],
+      "predictions": ["anxiety", "mental health attention needed", "foreign emotional connections"]
+    },
+    "saturn_aspects_sun": {
+      "themes": ["father issues", "delayed authority", "humbled ego"],
+      "predictions": ["father may be strict or distant", "authority comes slowly", "self-doubt"]
+    },
+    "jupiter_aspects_sun": {
+      "themes": ["noble character", "ethical authority", "good father"],
+      "predictions": ["respected character", "wise leadership", "good father bond"]
+    },
+    "saturn_aspects_venus": {
+      "themes": ["restrained pleasure", "delayed marriage", "mature partner"],
+      "predictions": ["marriage later in life", "stable partnership", "art with discipline"]
+    },
+    "mars_aspects_venus": {
+      "themes": ["passionate love", "fiery romance", "scandal potential"],
+      "predictions": ["intense romantic life", "may have arguments with spouse", "creative passion"]
+    },
+    "rahu_aspects_venus": {
+      "themes": ["foreign love", "unconventional relationships", "sensual obsession"],
+      "predictions": ["attraction to foreign or unusual partners", "addictive relationships", "scandals"]
+    },
+    "jupiter_aspects_lagna": {
+      "themes": ["blessed personality", "good fortune", "wisdom from birth"],
+      "predictions": ["healthy life", "noble character", "respected"]
+    },
+    "saturn_aspects_lagna": {
+      "themes": ["serious personality", "delayed maturity", "responsible from young age"],
+      "predictions": ["feels old before age", "burdened life", "disciplined"]
+    },
+    "mars_aspects_7th": {
+      "themes": ["conflict in marriage", "Manglik effect"],
+      "predictions": ["spouse may be aggressive", "marital fights", "delayed marriage"]
+    },
+    "jupiter_aspects_7th": {
+      "themes": ["blessed marriage", "wise spouse", "Hamsa-like blessing"],
+      "predictions": ["good spouse", "happy marriage", "ethical partner"]
+    }
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "description": "Major Vedic transits (gochara) that significantly affect life themes. Include Saturn Sade Sati, Jupiter transit, Rahu-Ketu transit, and Saturn Ashtama/Dhaiya.",
+  "saturn_transits": {
+    "sade_sati": {
+      "duration": "approximately 7.5 years",
+      "definition": "Saturn transiting through the 12th, 1st, and 2nd house from natal Moon",
+      "phases": {
+        "first_phase": {
+          "name": "Rising / Aaroh (Saturn in 12th from Moon)",
+          "duration": "2.5 years",
+          "themes": ["losses begin", "isolation", "expenses increase", "foreign matters", "spiritual awakening starts"],
+          "emotional_patterns": ["feeling of being misunderstood", "loneliness", "sleep disturbances", "subconscious processing"],
+          "life_areas_affected": ["expenses", "father health concerns", "foreign travel possibility", "withdrawal from social life"],
+          "tone": "introspective, isolating, preparation phase"
+        },
+        "second_phase": {
+          "name": "Peak / Janma Sade Sati (Saturn over Moon)",
+          "duration": "2.5 years",
+          "themes": ["maximum intensity", "identity restructuring", "health challenges", "emotional heaviness"],
+          "emotional_patterns": ["depression possible", "feeling stuck", "heavy responsibility", "soul-level transformation"],
+          "life_areas_affected": ["self", "body and mind", "major life decisions", "all life departments under pressure"],
+          "tone": "heavy, transformative, deeply restructuring"
+        },
+        "third_phase": {
+          "name": "Setting / Avaroh (Saturn in 2nd from Moon)",
+          "duration": "2.5 years",
+          "themes": ["financial pressure", "family stress", "speech issues", "gradual stabilization"],
+          "emotional_patterns": ["worry about resources", "family responsibilities heavy", "but wisdom emerging"],
+          "life_areas_affected": ["finances", "family", "speech", "accumulated wealth tested"],
+          "tone": "stabilizing, integrating lessons, gradual relief"
+        }
+      },
+      "general_meaning": "A 7.5 year period of life restructuring, karma fulfillment, and soul maturation. Considered difficult but ultimately transformative and necessary for soul growth.",
+      "common_experiences": ["career changes", "relationship endings or deepening", "health awareness", "spiritual awakening", "loss and rebirth", "deep introspection"],
+      "what_helps": ["Saturn remedies", "service to elderly", "discipline", "patience", "spiritual practice", "accepting responsibility"],
+      "what_hurts": ["resistance to change", "blame", "shortcuts", "denial", "complaining"],
+      "human_translation": "You are in a long phase of deep life restructuring. The universe is teaching you patience, maturity, and what truly matters. Things feel heavy not as punishment but because old structures are being cleared for something more authentic."
+    },
+    "ashtama_shani": {
+      "definition": "Saturn transiting the 8th house from natal Moon",
+      "duration": "2.5 years",
+      "themes": ["sudden changes", "hidden challenges", "transformations", "spouse/in-law issues", "health concerns"],
+      "tone": "transformative, hidden, intense",
+      "advice": "Time for inner work, occult study, deep transformation. Avoid major risks."
+    },
+    "kantaka_shani": {
+      "definition": "Saturn transiting the 4th house from natal Moon",
+      "duration": "2.5 years",
+      "themes": ["home/family challenges", "mother health", "property issues", "emotional foundation tested"],
+      "tone": "domestic challenges, emotional foundation work"
+    }
+  },
+  "jupiter_transits": {
+    "duration_per_sign": "approximately 1 year",
+    "full_cycle": "12 years",
+    "benefic_houses_from_moon": {
+      "second_house": {"themes": ["wealth growth", "family expansion", "good food"], "tone": "expansive, prosperous"},
+      "fifth_house": {"themes": ["children blessings", "creative success", "romantic luck", "speculation gains"], "tone": "joyful, creative, fortunate"},
+      "seventh_house": {"themes": ["marriage", "partnership growth", "business expansion"], "tone": "harmonious, expansive in relationships"},
+      "ninth_house": {"themes": ["higher learning", "spiritual growth", "father's grace", "good fortune"], "tone": "blessed, wise, fortunate"},
+      "eleventh_house": {"themes": ["income growth", "fulfillment of desires", "elder sibling blessings"], "tone": "abundant, fulfilling"}
+    },
+    "challenging_houses_from_moon": {
+      "third_house": "minor challenges, sibling issues",
+      "sixth_house": "health concerns, debt, enemy issues, but also work growth",
+      "eighth_house": "hidden challenges, transformations, but spiritual deepening",
+      "twelfth_house": "expenses, foreign travel, spiritual growth, isolation"
+    },
+    "guru_chandala_yoga_transit": "When Jupiter transits over natal Rahu or vice versa: confusion in dharma, value crisis, spiritual testing",
+    "human_translation": "Jupiter brings expansion, growth, and grace wherever it transits. It opens new opportunities, spiritual insights, and blessings - especially in 5th, 7th, 9th, 11th houses from your Moon."
+  },
+  "rahu_ketu_transit": {
+    "duration_per_sign": "approximately 18 months",
+    "full_cycle": "18 years",
+    "always_retrograde": true,
+    "general_meaning": "Rahu-Ketu transit shows where karmic obsessions and detachments are activated for 1.5 years at a time. Houses receiving Rahu show new desires and challenges; houses receiving Ketu show areas of detachment and spiritual lessons.",
+    "rahu_transit_themes": {
+      "first_house": ["identity shift", "new self-expression", "head/health attention"],
+      "fourth_house": ["home changes", "mother issues", "foreign settlement possible"],
+      "seventh_house": ["unconventional partnerships", "spouse-related changes", "business expansion"],
+      "tenth_house": ["career obsession", "sudden recognition", "ambitious phase"]
+    },
+    "ketu_transit_themes": {
+      "general": "Where Ketu transits, detachment and unexpected losses or spiritual lessons occur",
+      "first_house": ["identity dissolution", "spiritual awakening", "withdrawal"],
+      "seventh_house": ["relationship detachment", "partnership endings or spiritual marriage"]
+    }
+  },
+  "general_transit_rules": {
+    "moolatrikona_sign": "Planets transiting their moolatrikona sign give best results",
+    "exalted_transit": "Always beneficial; bring success in that life area",
+    "debilitated_transit": "Challenges in that life area; need remedies",
+    "retrograde_transit": "Intensified energy; revisiting past issues; introspective phase",
+    "combust_transit": "Weakened planetary influence; ego conflicts with that planet's energy"
+  },
+  "dasha_transit_interaction": {
+    "principle": "Transits trigger what is promised in the natal chart and current dasha",
+    "key_rule": "A transit alone cannot give a result that is not promised by the natal chart and dasha. They are timers, not creators.",
+    "example": "If dasha lord is transiting a favorable house, that period gives best results during that transit window."
+  },
+  "tone_interpretations": {
+    "during_difficult_transit": "Reassuring but honest: 'This is a difficult phase but it's serving your growth. The universe is preparing you for something better.'",
+    "during_favorable_transit": "Encouraging: 'You're in a window of grace. Make use of this expansive energy for important moves.'",
+    "during_mixed_transit": "Balanced: 'There are blessings and challenges happening simultaneously. Focus on the opportunities while being mindful of the lessons.'"
+  }
+}

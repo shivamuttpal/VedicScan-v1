@@ -1,0 +1,208 @@
+{
+  "description": "Synthesis rules for combining multiple chart factors into coherent interpretations for major life questions. This is the logic the Interpretation Engine uses to merge planetary data into human themes.",
+  "marriage_synthesis": {
+    "primary_factors": [
+      {"factor": "7th house lord placement and dignity", "weight": "highest"},
+      {"factor": "Venus position and aspects (for men)", "weight": "highest"},
+      {"factor": "Jupiter position (for women - karaka of husband)", "weight": "highest"},
+      {"factor": "7th house occupants", "weight": "high"},
+      {"factor": "Navamsa chart (D9) 7th house and lord", "weight": "very high"},
+      {"factor": "Manglik dosha status", "weight": "moderate"},
+      {"factor": "Current dasha and bhukti", "weight": "high for timing"}
+    ],
+    "synthesis_rules": {
+      "harmonious_marriage_indicators": [
+        "7th lord well-placed in trikona (1,5,9) or kendra (1,4,7,10) houses",
+        "Venus strong, not afflicted (for men)",
+        "Jupiter strong (for women)",
+        "Benefic aspects on 7th house",
+        "7th lord in own/exalted/friendly sign",
+        "Navamsa 7th well-placed"
+      ],
+      "challenging_marriage_indicators": [
+        "7th lord in 6/8/12 houses",
+        "Venus/Jupiter combust or debilitated",
+        "Malefic occupation of 7th house (Mars, Saturn, Rahu, Ketu)",
+        "7th lord in retrograde and afflicted",
+        "Manglik dosha unmitigated",
+        "Multiple malefic aspects on 7th"
+      ],
+      "delayed_marriage_indicators": [
+        "Saturn in 7th house",
+        "Saturn aspecting 7th house or its lord",
+        "7th lord retrograde",
+        "Weak Venus/Jupiter",
+        "Mars in 1, 4, 7, 8, 12 (Manglik)"
+      ],
+      "timing_marriage": "Look for: Venus/Jupiter dasha or bhukti, 7th lord period, Rahu in 7th period (for unconventional marriage), transit of Jupiter over 7th house or natal Venus/Moon"
+    },
+    "human_interpretation_layer": {
+      "good_combination": "Your chart shows the potential for a deeply harmonious partnership. There's a natural ability to maintain love and connection. The right person is being drawn toward you through karmic threads.",
+      "challenging_combination": "Marriage and partnerships are a significant area of soul learning for you. This doesn't mean unhappy relationships - it means each relationship will teach you something profound about love, boundaries, and self-worth.",
+      "delayed_timing": "Marriage may come later than expected, which is actually a blessing - your soul needs time to develop emotional maturity first. When it comes, it will be more stable and meaningful."
+    }
+  },
+  "career_synthesis": {
+    "primary_factors": [
+      {"factor": "10th house lord and occupants", "weight": "highest"},
+      {"factor": "Sun position (authority and identity)", "weight": "high"},
+      {"factor": "Saturn position (work and discipline)", "weight": "high"},
+      {"factor": "Atmakaraka and Amatyakaraka", "weight": "very high"},
+      {"factor": "2nd, 6th, 11th house health", "weight": "high"},
+      {"factor": "Dasamsa chart (D10)", "weight": "very high"},
+      {"factor": "Current dasha and 10th lord interaction", "weight": "high for timing"}
+    ],
+    "career_field_indicators": {
+      "sun_strong_10th": "Government, leadership, executive roles, politics",
+      "moon_strong_10th": "Public service, food/hospitality, hospitality, water-related, mother-related work",
+      "mars_strong_10th": "Military, engineering, sports, surgery, real estate, business",
+      "mercury_strong_10th": "Communication, writing, media, business, IT, teaching",
+      "jupiter_strong_10th": "Teaching, law, finance, religious work, counseling",
+      "venus_strong_10th": "Arts, entertainment, fashion, luxury goods, beauty, relationships work",
+      "saturn_strong_10th": "Long-term business, government service, manual labor, oil/mining, leadership in old age",
+      "rahu_strong_10th": "Foreign work, technology, unconventional fields, sudden rise",
+      "ketu_strong_10th": "Spiritual work, research, healing, mysterious fields, IT (in modern times)"
+    },
+    "career_success_indicators": [
+      "10th lord exalted or in own sign",
+      "10th lord in kendra/trikona",
+      "Multiple planets aspecting 10th house",
+      "Strong Sun and Saturn together",
+      "Dharma-Karma adhipati yoga (9th and 10th lord conjunction)"
+    ],
+    "career_struggle_indicators": [
+      "10th lord in 6/8/12",
+      "Debilitated 10th lord",
+      "Malefic combinations in 10th",
+      "Weak Sun and Saturn",
+      "Lord of 10th in dustana houses"
+    ],
+    "human_interpretation_layer": {
+      "strong_career": "There's significant career potential in your chart. Your work life is meant to express your authentic gifts and bring substantial recognition.",
+      "service_oriented_career": "Your soul finds meaning through serving others. Traditional success may matter less to you than meaningful work.",
+      "delayed_success": "Career success comes later in life but it builds something lasting. Don't worry about early comparisons - your foundation is being laid.",
+      "multiple_careers": "Your path is multifaceted. You're meant to evolve through different work, each phase teaching something new."
+    }
+  },
+  "health_synthesis": {
+    "important_disclaimer": "Astrology shows tendencies and karmic patterns, never replaces medical consultation. Always recommend qualified medical professionals for actual concerns.",
+    "primary_factors": [
+      {"factor": "1st house and its lord (overall vitality)", "weight": "highest"},
+      {"factor": "6th house (disease tendencies)", "weight": "highest"},
+      {"factor": "8th house (chronic and serious issues)", "weight": "high"},
+      {"factor": "Moon (mental health)", "weight": "very high"},
+      {"factor": "Sun (vitality)", "weight": "high"},
+      {"factor": "Mars (blood, accidents)", "weight": "high"},
+      {"factor": "Saturn (chronic, joints, longevity)", "weight": "high"}
+    ],
+    "planet_body_mapping": {
+      "sun": "Heart, eyes (right), bones, spine, vitality",
+      "moon": "Mind, emotions, fluids, breast, stomach, lungs (left)",
+      "mars": "Blood, muscles, bone marrow, head, hot conditions, accidents",
+      "mercury": "Nervous system, skin, voice, hands, intestines",
+      "jupiter": "Liver, fat, diabetes, kidneys",
+      "venus": "Reproductive system, kidneys, eyes (left), face, beauty",
+      "saturn": "Bones, joints, teeth, nerves, knees, chronic conditions",
+      "rahu": "Mental confusion, addictions, mysterious illness, allergies",
+      "ketu": "Skin, parasites, mysterious losses, spiritual diseases"
+    },
+    "human_interpretation_layer": {
+      "general_health_strong": "Your chart shows good underlying vitality. Maintain it with regular exercise, ayurvedic principles suited to your dosha.",
+      "health_attention_needed": "There are some areas your chart suggests paying mindful attention to. This is preventive wisdom, not prediction. Regular checkups are advised.",
+      "mental_health_emphasis": "Your emotional and mental wellbeing is especially important for you. Meditation, therapy, and emotional expression practices serve you well."
+    }
+  },
+  "wealth_synthesis": {
+    "primary_factors": [
+      {"factor": "2nd house (accumulated wealth)", "weight": "highest"},
+      {"factor": "11th house (income)", "weight": "highest"},
+      {"factor": "Jupiter (wealth karaka)", "weight": "very high"},
+      {"factor": "Venus (luxury and pleasure)", "weight": "high"},
+      {"factor": "9th house (luck and fortune)", "weight": "high"},
+      {"factor": "5th house (windfalls and speculation)", "weight": "high"},
+      {"factor": "Dhana yogas in chart", "weight": "very high"}
+    ],
+    "wealth_indicators": [
+      "Lord of 2nd in 11th or vice versa (classical Dhana Yoga)",
+      "Jupiter in kendra/trikona",
+      "Multiple planets in 11th house",
+      "Strong 9th lord",
+      "Exalted/own sign planets in wealth houses",
+      "Gajakesari, Lakshmi, Dhana yogas present"
+    ],
+    "wealth_challenges_indicators": [
+      "Lord of 2nd or 11th in 6/8/12",
+      "Debilitated Jupiter or Venus",
+      "Rahu/Ketu afflicting wealth houses without bhanga",
+      "12th house strong without 2nd/11th balance (expenses exceed income)"
+    ],
+    "human_interpretation_layer": {
+      "wealthy_chart": "There's strong wealth potential in your chart. Use it not just for luxury but to bring meaning - charitable wealth multiplies.",
+      "moderate_wealth": "Your chart shows steady, earned prosperity. Wealth comes through right effort and integrity over time.",
+      "wealth_struggles": "Material abundance may require more effort. Focus on building skills, ethical work, and detachment from outcomes - paradoxically this brings prosperity.",
+      "wealth_through_unusual_means": "Your wealth comes through unconventional paths - foreign sources, technology, or unique skills."
+    }
+  },
+  "spiritual_synthesis": {
+    "primary_factors": [
+      {"factor": "9th house (dharma)", "weight": "highest"},
+      {"factor": "12th house (moksha, liberation)", "weight": "highest"},
+      {"factor": "Jupiter (guru, wisdom)", "weight": "highest"},
+      {"factor": "Ketu (renunciation)", "weight": "very high"},
+      {"factor": "Saturn (discipline, austerity)", "weight": "high"},
+      {"factor": "5th house from Atmakaraka (Ishta Devata)", "weight": "very high in Jaimini"}
+    ],
+    "spiritual_path_indicators": {
+      "jupiter_strong": "Path of knowledge and wisdom (Jnana Yoga)",
+      "venus_strong": "Path of devotion and love (Bhakti Yoga)",
+      "mars_strong": "Path of action and service (Karma Yoga)",
+      "saturn_strong": "Path of discipline and austerity (Raja Yoga / Tapas)",
+      "moon_strong": "Path of devotional surrender",
+      "ketu_strong": "Direct path of liberation, often unconventional, mystical",
+      "rahu_with_jupiter": "Path of unconventional spirituality, sometimes confusion before clarity"
+    },
+    "moksha_indicators": [
+      "Strong 12th house",
+      "Ketu well-placed",
+      "Jupiter in 12th",
+      "Moon in Pisces or 12th",
+      "Nakshatras like Pushya, Revati, Mula"
+    ],
+    "human_interpretation_layer": {
+      "strong_spiritual_chart": "Your soul has come into this life with deep spiritual purpose. Spiritual practice isn't optional for you - it's your nourishment.",
+      "balanced_dharma_artha": "You're meant to live in the world while remaining spiritually connected. The householder path of dharma.",
+      "renunciation_tendency": "Your soul carries strong renunciate energies. Even in worldly life, simplicity and spiritual practice will be central."
+    }
+  },
+  "relationship_synthesis": {
+    "beyond_marriage": "Relationship patterns are not just about marriage but about how the person bonds with everyone.",
+    "factors": [
+      "5th house (romance), 7th house (partnership), 8th house (intimacy and shared resources)",
+      "Venus (love capacity), Moon (emotional needs), Mars (passion and conflict)",
+      "Aspects between these planets and houses"
+    ],
+    "patterns": {
+      "rahu_in_5_or_7": "Karmic relationships, attraction to unconventional partners",
+      "ketu_in_5_or_7": "Past-life bonds being resolved, sense of completion or detachment in love",
+      "saturn_in_7": "Lessons in patience, possibly older or serious partner, delayed but stable relationships",
+      "mars_in_7": "Passionate but volatile partnerships, need to control anger in relationships",
+      "venus_jupiter_aspect": "Idealistic in love, beautiful relationships, but possibly disappointed by reality",
+      "moon_saturn_aspect": "Emotional reserve, may attract partners who reflect emotional themes from childhood"
+    }
+  },
+  "synthesis_algorithm_pseudocode": {
+    "description": "How the interpretation engine should combine factors",
+    "steps": [
+      "1. For each life area (marriage, career, health, etc.), identify the 5-7 primary factors from the chart",
+      "2. Calculate dignity and strength of each factor",
+      "3. Identify supporting and afflicting influences",
+      "4. Determine overall theme (favorable, mixed, challenging)",
+      "5. Layer in current dasha/bhukti effects",
+      "6. Layer in major transits (especially Saturn, Jupiter, Rahu-Ketu)",
+      "7. Translate technical findings into human emotional themes",
+      "8. Generate compassionate, actionable insights",
+      "9. Suggest remedies if challenges are significant"
+    ],
+    "weighting_principle": "Natal chart promises > Dasha highlights it > Transit triggers it. A transit cannot create what is not in the chart."
+  }
+}

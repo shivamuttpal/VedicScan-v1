@@ -1,0 +1,143 @@
+{
+  "description": "Sun represents soul, ego, identity, father, authority, vitality, life purpose. Sun is exalted in Aries (10°), debilitated in Libra (10°), own sign Leo.",
+  "sun_in_signs": {
+    "aries": {
+      "status": "exalted",
+      "identity_patterns": ["natural leader", "pioneering spirit", "strong willpower", "courageous self-expression"],
+      "ego_patterns": ["assertive sense of self", "needs to lead", "competitive identity", "impulsive self-assertion"],
+      "career_patterns": ["thrives in leadership", "military, sports, entrepreneurship", "self-employment suits", "needs autonomy"],
+      "relationship_patterns": ["dominant in relationships", "needs admiration", "direct in expressing love"],
+      "strengths": ["courage", "initiative", "leadership", "confidence", "pioneering ability"],
+      "challenges": ["arrogance", "impatience", "anger issues", "domineering nature"],
+      "tone": "confident, bold, fiery",
+      "keywords": ["leader", "warrior", "pioneer", "exalted_sun", "raja_yoga_potential"]
+    },
+    "taurus": {
+      "status": "friendly",
+      "identity_patterns": ["steady sense of self", "values-driven identity", "patient and determined", "materialistic self-worth"],
+      "ego_patterns": ["pride in possessions", "stubborn self-image", "sensual identity"],
+      "career_patterns": ["finance, art, luxury goods", "stable long-term careers", "voice or music professions"],
+      "relationship_patterns": ["loyal partner", "values security", "expresses love through provision"],
+      "strengths": ["determination", "reliability", "artistic sense", "financial wisdom"],
+      "challenges": ["stubbornness", "possessiveness", "resistance to change"],
+      "tone": "grounded, sensual, patient",
+      "keywords": ["stable", "artistic", "wealth_focused", "sensual"]
+    },
+    "gemini": {
+      "status": "friendly",
+      "identity_patterns": ["intellectual identity", "communicative self", "multifaceted personality", "curious nature"],
+      "ego_patterns": ["pride in knowledge", "needs mental stimulation", "scattered self-expression"],
+      "career_patterns": ["writing, media, teaching", "sales and communication", "multiple career interests"],
+      "relationship_patterns": ["needs mental connection", "communicative partner", "values intellectual equality"],
+      "strengths": ["intelligence", "adaptability", "communication", "wit"],
+      "challenges": ["restlessness", "superficiality", "indecision", "scattered focus"],
+      "tone": "curious, witty, mental",
+      "keywords": ["communicator", "intellectual", "versatile", "media_person"]
+    },
+    "cancer": {
+      "status": "friendly",
+      "identity_patterns": ["emotional sense of self", "nurturing identity", "family-oriented ego", "moody self-expression"],
+      "ego_patterns": ["identifies with family/home", "emotional pride", "needs to nurture"],
+      "career_patterns": ["hospitality, food, real estate", "caregiving professions", "family business"],
+      "relationship_patterns": ["emotionally invested", "nurturing partner", "needs emotional security"],
+      "strengths": ["empathy", "intuition", "nurturing ability", "loyalty"],
+      "challenges": ["emotional dependence", "moodiness", "over-attachment to past"],
+      "tone": "emotional, nurturing, sensitive",
+      "keywords": ["nurturer", "emotional", "family_focused", "intuitive"]
+    },
+    "leo": {
+      "status": "own_sign",
+      "identity_patterns": ["royal sense of self", "natural authority", "creative self-expression", "magnetic personality"],
+      "ego_patterns": ["needs recognition", "proud and dignified", "leader by nature", "performer's ego"],
+      "career_patterns": ["government, entertainment, leadership", "self-employed authority figures", "creative arts"],
+      "relationship_patterns": ["generous lover", "needs admiration", "loyal and protective"],
+      "strengths": ["leadership", "charisma", "generosity", "creativity", "self-confidence"],
+      "challenges": ["arrogance", "need for constant attention", "dramatic ego", "pride"],
+      "tone": "regal, confident, radiant",
+      "keywords": ["king", "leader", "performer", "own_sign_sun", "raja_lakshana"]
+    },
+    "virgo": {
+      "status": "neutral",
+      "identity_patterns": ["analytical sense of self", "service-oriented identity", "perfectionist ego", "humble self-image"],
+      "ego_patterns": ["pride in competence", "critical self-view", "modest authority"],
+      "career_patterns": ["healthcare, analysis, service", "writing and editing", "detail-oriented work"],
+      "relationship_patterns": ["practical love", "critical of partners", "shows care through service"],
+      "strengths": ["intelligence", "attention to detail", "service mindset", "discrimination"],
+      "challenges": ["over-critical", "self-doubt", "anxiety", "perfectionism"],
+      "tone": "analytical, modest, precise",
+      "keywords": ["analyst", "perfectionist", "servant_leader", "discriminating"]
+    },
+    "libra": {
+      "status": "debilitated",
+      "identity_patterns": ["identity through others", "diplomatic self", "people-pleasing tendencies", "weak self-assertion"],
+      "ego_patterns": ["seeks validation externally", "indecisive self-image", "compromises identity"],
+      "career_patterns": ["law, diplomacy, partnership business", "arts and design", "consulting work"],
+      "relationship_patterns": ["loses self in partnerships", "diplomatic partner", "seeks balance"],
+      "strengths": ["diplomacy", "fairness", "social skills", "aesthetic sense"],
+      "challenges": ["lack of self-confidence", "people-pleasing", "indecisive", "father issues common"],
+      "tone": "diplomatic, uncertain, balanced",
+      "keywords": ["debilitated_sun", "diplomat", "people_pleaser", "neecha_bhanga_possible"]
+    },
+    "scorpio": {
+      "status": "friendly",
+      "identity_patterns": ["intense sense of self", "transformative identity", "secretive ego", "powerful presence"],
+      "ego_patterns": ["controlled self-expression", "deep self-awareness", "magnetic and mysterious"],
+      "career_patterns": ["research, investigation, occult", "surgery and healing", "psychology"],
+      "relationship_patterns": ["intense in love", "jealous and possessive", "deep emotional bonds"],
+      "strengths": ["depth", "research ability", "transformation power", "intuition"],
+      "challenges": ["secretive", "vindictive", "obsessive", "power struggles"],
+      "tone": "intense, mysterious, powerful",
+      "keywords": ["transformer", "investigator", "mystic", "intense_authority"]
+    },
+    "sagittarius": {
+      "status": "friendly",
+      "identity_patterns": ["philosophical sense of self", "expansive identity", "righteous ego", "teacher persona"],
+      "ego_patterns": ["pride in wisdom", "moralistic self-view", "freedom-loving"],
+      "career_patterns": ["teaching, law, religion", "publishing, travel", "spiritual guidance"],
+      "relationship_patterns": ["needs freedom in love", "philosophical partner", "honest and direct"],
+      "strengths": ["wisdom", "optimism", "honesty", "spiritual orientation"],
+      "challenges": ["self-righteous", "preachy", "restless", "blunt"],
+      "tone": "philosophical, optimistic, expansive",
+      "keywords": ["teacher", "philosopher", "dharmic_leader", "guru_archetype"]
+    },
+    "capricorn": {
+      "status": "enemy",
+      "identity_patterns": ["ambitious sense of self", "disciplined identity", "duty-bound ego", "serious self-image"],
+      "ego_patterns": ["pride in achievement", "status-conscious", "controlled self-expression"],
+      "career_patterns": ["business, government, traditional careers", "long climb to success", "executive roles"],
+      "relationship_patterns": ["practical love", "duty-bound partner", "emotionally reserved"],
+      "strengths": ["discipline", "ambition", "responsibility", "patience"],
+      "challenges": ["coldness", "rigidity", "workaholic tendencies", "depression risk"],
+      "tone": "serious, ambitious, restrained",
+      "keywords": ["achiever", "executive", "disciplined", "late_bloomer"]
+    },
+    "aquarius": {
+      "status": "enemy",
+      "identity_patterns": ["unconventional identity", "humanitarian ego", "intellectual self", "rebellious nature"],
+      "ego_patterns": ["pride in uniqueness", "detached self-expression", "group-oriented identity"],
+      "career_patterns": ["technology, science, social work", "innovation and research", "humanitarian causes"],
+      "relationship_patterns": ["friendship-based love", "emotionally detached", "values independence"],
+      "strengths": ["originality", "humanitarianism", "intellect", "independence"],
+      "challenges": ["emotional detachment", "rebellion", "eccentricity", "father distance"],
+      "tone": "detached, original, humanitarian",
+      "keywords": ["rebel", "humanitarian", "innovator", "unconventional"]
+    },
+    "pisces": {
+      "status": "friendly",
+      "identity_patterns": ["compassionate sense of self", "spiritual identity", "imaginative ego", "sensitive self-image"],
+      "ego_patterns": ["dissolves into others", "spiritual pride", "creative self-expression"],
+      "career_patterns": ["arts, spirituality, healing", "music and film", "charitable work"],
+      "relationship_patterns": ["romantic and idealistic", "self-sacrificing", "spiritual connection sought"],
+      "strengths": ["compassion", "intuition", "creativity", "spiritual depth"],
+      "challenges": ["escapism", "lack of boundaries", "self-pity", "addictive tendencies"],
+      "tone": "dreamy, compassionate, spiritual",
+      "keywords": ["dreamer", "mystic", "artist", "spiritual_soul"]
+    }
+  },
+  "interpretation_notes": {
+    "general_role": "Sun shows the soul's core identity, the father figure, authority, vitality, and how the person expresses their essential self.",
+    "weak_sun_indicators": ["debilitated in Libra", "combust planets near Sun", "Sun in 6/8/12 houses afflicted", "Sun aspected by Saturn/Rahu malefically"],
+    "strong_sun_results": ["leadership ability", "good health", "respect from authorities", "strong father connection", "spiritual confidence"],
+    "weak_sun_results": ["low self-esteem", "father issues", "authority problems", "ego issues", "health weakness"]
+  }
+}
