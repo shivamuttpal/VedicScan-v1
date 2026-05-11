@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView, Alert,
+  KeyboardAvoidingView, Platform, ScrollView, Alert, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
@@ -10,6 +10,8 @@ import { VedicCard } from '../../components/VedicCard';
 import api from '../../config/api';
 import PhoneInput from 'react-native-phone-number-input';
 import { statusCodes } from '@react-native-google-signin/google-signin';
+
+const LOGO = require('../../../assets/logo.jpeg');
 
 const SignupScreen = ({ navigation }) => {
   const { saveSession, googleLogin } = useAuth();
@@ -91,7 +93,7 @@ const SignupScreen = ({ navigation }) => {
           
           <View style={styles.header}>
             <View style={styles.omCircle}>
-              <Text style={styles.omText}>🔱</Text>
+              <Image source={LOGO} style={styles.logoImg} />
             </View>
             <Text style={styles.brand}>
               Vedic<Text style={styles.brandAccent}>Scan</Text>
@@ -228,11 +230,12 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, paddingHorizontal: spacing.xl, paddingVertical: spacing.xxl, alignItems: 'center' },
   header: { alignItems: 'center', marginBottom: spacing.xl },
   omCircle: {
-    width: 64, height: 64, borderRadius: 16,
-    backgroundColor: '#A03B2B', justifyContent: 'center', alignItems: 'center',
-    marginBottom: spacing.sm, ...shadow.gold
+    width: 64, height: 64, borderRadius: 12,
+    backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center',
+    marginBottom: spacing.sm, ...shadow.gold, overflow: 'hidden',
+    borderWidth: 2, borderColor: '#FFFFFF',
   },
-  omText: { fontSize: 32, color: C.saffronSoft },
+  logoImg: { width: 54, height: 54, resizeMode: 'contain' },
   brand: { fontSize: fontSize.h2, fontWeight: '700', color: C.maroon },
   brandAccent: { color: C.saffron },
   subtitle: { fontSize: fontSize.sm, color: C.textMid, marginTop: 4 },

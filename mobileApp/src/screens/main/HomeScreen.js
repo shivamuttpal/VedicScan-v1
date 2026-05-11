@@ -1,17 +1,21 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   StyleSheet,
   ScrollView,
   RefreshControl,
-  Dimensions,
   Platform,
   Animated,
+  Modal,
+  Dimensions,
   Image,
 } from 'react-native';
-import { useRef } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+
+const { width } = Dimensions.get('window');
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
@@ -19,7 +23,9 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../config/api';
 import { SIGNS } from '../../data/signs';
 
-const { width } = Dimensions.get('window');
+const LOGO = require('../../../assets/logo.jpeg');
+const BANNER = require('../../../assets/bannerbackground5.webp');
+
 
 // ── Helper: Determine Rashi based on DOB (Sun sign ranges) ──
 const determineRashi = (dateStr) => {
@@ -43,30 +49,17 @@ const determineRashi = (dateStr) => {
   return 'Mesh';
 };
 
-// ── Helper: format today's date as "Wednesday, 22 April" ──
+// ── Helper: format today's date as "THURSDAY 7 MAY" ──
 const formatDate = () => {
   const d = new Date();
-  return d.toLocaleDateString('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const weekday = d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+  const day = d.getDate();
+  const month = d.toLocaleDateString('en-US', { month: 'long' }).toUpperCase();
+  return `${weekday} ${day} ${month}`;
 };
 
 // ── Feature list items (list-style, not grid) ──
 const FEATURES = [
-  {
-    id: 'chat',
-    icon: '✨',
-    title: 'Maharshi AI',
-    badge: 'AI Powered',
-    badgeColor: '#1A7D4E',
-    badgeBg: '#D4EFDF',
-    desc: 'Chat with your personal Vedic AI astrologer',
-    route: 'Chat',
-    iconBg: '#FFF3E0',
-    iconColor: '#C8660A',
-  },
   {
     id: 'baby',
     icon: '👶',
@@ -87,26 +80,33 @@ const FEATURES = [
     badgeColor: '#7B1A38',
     badgeBg: '#F2D8E0',
     desc: 'Ashtakoot compatibility & gun milan analysis',
-    route: 'Compatibility',
+    route: 'CompatibilityTab',
     iconBg: '#F2D8E0',
     iconColor: '#7B1A38',
   },
-  {
-    id: 'insights',
-    icon: '📊',
-    title: 'My Kundali',
-    badge: 'Charts',
-    badgeColor: '#6C3FA0',
-    badgeBg: '#EDE3F7',
-    desc: 'Planetary chart, Dasha timeline & insights',
-    route: 'Insights',
-    iconBg: '#EDE3F7',
-    iconColor: '#6C3FA0',
-  },
+  // { id: 'insights', icon: '📊', title: 'My Kundali', route: 'Insights' }, // hidden
 ];
 
-// ── User's active Rashi (comes from profile) ──
-const USER_RASHI = SIGNS[0]; // Mesh/Aries for demo
+const DRAWER_SECTIONS = [
+  {
+    title: 'FEATURES',
+    items: [
+      { icon: 'heart-outline', label: 'Kundali Matching', route: 'CompatibilityTab', color: '#7B1A38', iconBg: '#F2D8E0' },
+      // { icon: 'bar-chart-outline', label: 'My Kundali', route: 'Insights', color: '#6C3FA0', iconBg: '#EDE3F7' }, // hidden
+      { icon: 'happy-outline', label: 'Baby Naming', route: 'BabyNaming', color: '#0B7060', iconBg: '#D0F0EA' },
+      // { icon: 'compass-outline', label: 'Daily Rashifal', route: 'Rashifal', color: '#C8660A', iconBg: '#FFF7ED' }, // hidden
+      { icon: 'chatbubble-ellipses-outline', label: 'Ask Maharishi AI', route: 'Chat', color: '#7B1A38', iconBg: '#F2D8E0' },
+    ],
+  },
+  {
+    title: 'ACCOUNT',
+    items: [
+      { icon: 'star-outline', label: 'Unlock Premium', route: 'Pricing', color: '#B8860B', iconBg: '#FFF3C4', badge: 'PRO' },
+      { icon: 'card-outline', label: 'My Subscription', route: 'Subscription', color: '#2C6FAC', iconBg: '#D6E8F7' },
+      { icon: 'person-outline', label: 'Profile & Settings', route: 'ProfileTab', color: '#2C1E12', iconBg: '#F0E8DE' },
+    ],
+  },
+];
 
 const HomeScreen = ({ navigation }) => {
   const { user, hasProfile, isAuthenticated, refreshProfileStatus } = useAuth();
@@ -115,24 +115,28 @@ const HomeScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSignName, setSelectedSignName] = useState('Mesh');
   const [defaultProfile, setDefaultProfile] = useState(null);
-  const bounceAnim = useRef(new Animated.Value(0)).current;
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerAnim = useRef(new Animated.Value(-width * 0.78)).current;
 
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(bounceAnim, {
-          toValue: -10,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(bounceAnim, {
-          toValue: 0,
-          duration: 1500,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, [bounceAnim]);
+  const openDrawer = () => {
+    setDrawerOpen(true);
+    Animated.spring(drawerAnim, { toValue: 0, useNativeDriver: true, tension: 65, friction: 11 }).start();
+  };
+
+  const closeDrawer = () => {
+    Animated.timing(drawerAnim, { toValue: -width * 0.78, duration: 220, useNativeDriver: true })
+      .start(() => setDrawerOpen(false));
+  };
+
+  const navigateTo = (route) => {
+    closeDrawer();
+    const parent = navigation.getParent();
+    if (parent && (route === 'Subscription' || route === 'Pricing' || route === 'Compatibility')) {
+      setTimeout(() => parent.navigate(route), 240);
+    } else {
+      setTimeout(() => navigation.navigate(route), 240);
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -184,9 +188,7 @@ const HomeScreen = ({ navigation }) => {
 
   const handleFeaturePress = (route) => {
     if (!hasProfile) {
-      navigation.navigate('Profile', {
-        setup: true,
-      });
+      navigation.navigate('ProfileTab');
       return;
     }
     navigation.navigate(route);
@@ -218,42 +220,36 @@ const HomeScreen = ({ navigation }) => {
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
-          <View style={styles.heroHeader}>
-            <View>
-              <Text style={styles.heroDate}>{formatDate()}</Text>
-              <View style={styles.greetingRow}>
-                <Text style={styles.heroGreeting}>
-                  Namaste, {firstName} {'🙏'}
-                </Text>
-                {user?.isSubscriber && (
-                  <LinearGradient
-                    colors={['#FFD700', '#D4AF37']}
-                    style={styles.premiumBadge}
-                  >
-                    <Text style={styles.premiumBadgeText}>PREMIUM</Text>
-                  </LinearGradient>
-                )}
-              </View>
+          {/* Banner background overlay */}
+          <Image source={BANNER} style={styles.heroBannerOverlay} />
+
+          {/* ── Top row: date pill + bell ── */}
+          <View style={styles.heroTopRow}>
+            <View style={styles.datePill}>
+              <Text style={styles.datePillText}>• {formatDate()}</Text>
             </View>
-            <TouchableOpacity
-              style={styles.profileBtn}
-              onPress={() => navigation.navigate('Profile')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.profileBtnIcon}>⚙️</Text>
+            <TouchableOpacity style={styles.bellBtn} onPress={openDrawer} activeOpacity={0.7}>
+              <Ionicons name="menu" size={26} color="rgba(255,255,255,0.88)" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.heroTagline}>{'✨'} Ancient wisdom for modern life</Text>
+
+          {/* ── Greeting ── */}
+          <Text style={styles.heroNamaste}>Namaste,</Text>
+          <View style={styles.greetingRow}>
+            <Text style={styles.heroGreeting}>{firstName} {'🙏'}</Text>
+            {user?.isSubscriber && (
+              <LinearGradient colors={['#FFD700', '#D4AF37']} style={styles.premiumBadge}>
+                <Text style={styles.premiumBadgeText}>PREMIUM</Text>
+              </LinearGradient>
+            )}
+          </View>
+          <Text style={styles.heroTagline}>✦ Ancient wisdom for modern life</Text>
 
           {/* Profile setup warning */}
           {isAuthenticated && !hasProfile && (
             <TouchableOpacity
               style={styles.profileWarning}
-              onPress={() =>
-                navigation.navigate('Profile', {
-                  setup: true,
-                })
-              }
+              onPress={() => navigation.navigate('ProfileTab')}
               activeOpacity={0.85}
             >
               <Text style={styles.warningIcon}>{'⚠️'}</Text>
@@ -275,16 +271,18 @@ const HomeScreen = ({ navigation }) => {
           >
             <View style={styles.heroAiBtnInner}>
               <View style={styles.heroAiIconBox}>
-                <Image 
+                <Image
                   source={{ uri: 'https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png' }}
                   style={{ width: 32, height: 32, resizeMode: 'contain' }}
                 />
               </View>
               <View style={styles.heroAiTextContent}>
                 <Text style={styles.heroAiBtnLabel}>DIVINE GUIDANCE</Text>
-                <Text style={styles.heroAiBtnTitle}>ASK MAHARISHI AI</Text>
+                <Text style={styles.heroAiBtnTitle}>Ask Maharishi AI</Text>
               </View>
-              <Text style={styles.heroAiArrow}>→</Text>
+              <View style={styles.heroAiArrowBtn}>
+                <Text style={styles.heroAiArrow}>→</Text>
+              </View>
             </View>
           </TouchableOpacity>
         </LinearGradient>
@@ -330,15 +328,18 @@ const HomeScreen = ({ navigation }) => {
 
             {/* Today's insight */}
             <View style={styles.insightBox}>
-              <Text style={styles.insightLabel}>TODAY'S INSIGHT</Text>
+              <Text style={styles.insightLabel}>• TODAY'S INSIGHT</Text>
               <Text style={styles.insightText}>{insightText}</Text>
             </View>
           </View>
         </View>
 
+
         {/* ── DAILY RASHIFAL ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>DAILY RASHIFAL</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionLabel}>— DAILY RASHIFAL</Text>
+          </View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -367,13 +368,13 @@ const HomeScreen = ({ navigation }) => {
               </TouchableOpacity>
             ))}
           </ScrollView>
-          {/* Gold accent line */}
           <View style={styles.rashiGoldLine} />
         </View>
 
+
         {/* ── EXPLORE FEATURES ── */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>EXPLORE FEATURES</Text>
+          <Text style={[styles.sectionLabel, { marginBottom: 12 }]}>EXPLORE FEATURES</Text>
           <View style={styles.featureList}>
             {FEATURES.map((f) => (
               <TouchableOpacity
@@ -439,37 +440,65 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: 140 }} />
+        {/* Extra bottom padding: floating tab bar height (64) + bottom margin (28) + buffer */}
+        <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Floating Maharishi AI Button */}
-      <Animated.View style={[styles.floatingAiWrap, { transform: [{ translateY: bounceAnim }] }]}>
-        <TouchableOpacity
-          style={styles.floatingAiBtn}
-          onPress={() => navigation.navigate('Chat')}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={[C.saffron, C.maroon]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.floatingAiGrad}
-          >
-            <View style={{ backgroundColor: '#FFF', borderRadius: 20, padding: 4, marginRight: 4 }}>
-              <Image 
-                source={{ uri: 'https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png' }}
-                style={{ width: 24, height: 24, resizeMode: 'contain' }}
-              />
-            </View>
-            <View>
-              <Text style={styles.floatingAiLabel}>AI GURU</Text>
-              <Text style={styles.floatingAiTitle}>Ask Maharishi</Text>
-            </View>
-          </LinearGradient>
-          {/* Notification Dot */}
-          <View style={styles.notificationDot} />
-        </TouchableOpacity>
-      </Animated.View>
+      {/* ── SIDE DRAWER ── */}
+      <Modal visible={drawerOpen} transparent animationType="none" onRequestClose={closeDrawer} statusBarTranslucent>
+        <View style={styles.drawerOverlay}>
+          <TouchableWithoutFeedback onPress={closeDrawer}>
+            <View style={styles.drawerBackdrop} />
+          </TouchableWithoutFeedback>
+
+          <Animated.View style={[styles.drawerPanel, { transform: [{ translateX: drawerAnim }] }]}>
+            {/* Header */}
+            <LinearGradient colors={['#6E1532', '#7B1A38']} style={styles.drawerHeader}>
+              <View style={styles.drawerUserRow}>
+                <View style={styles.drawerAvatar}>
+                  <Image source={LOGO} style={styles.drawerAvatarLogo} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.drawerUserName}>{defaultProfile?.name || user?.firstName || 'Welcome'}</Text>
+                  <Text style={styles.drawerUserSub}>{user?.email || 'vedic member'}</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={closeDrawer} style={styles.drawerCloseBtn} activeOpacity={0.7}>
+                <Ionicons name="close" size={22} color="rgba(255,255,255,0.85)" />
+              </TouchableOpacity>
+            </LinearGradient>
+
+            {/* Menu */}
+            <ScrollView style={styles.drawerBody} showsVerticalScrollIndicator={false}>
+              {DRAWER_SECTIONS.map((section) => (
+                <View key={section.title} style={styles.drawerSection}>
+                  <Text style={styles.drawerSectionTitle}>{section.title}</Text>
+                  {section.items.map((item) => (
+                    <TouchableOpacity
+                      key={item.route}
+                      style={styles.drawerItem}
+                      onPress={() => navigateTo(item.route)}
+                      activeOpacity={0.72}
+                    >
+                      <View style={[styles.drawerItemIcon, { backgroundColor: item.iconBg }]}>
+                        <Ionicons name={item.icon} size={19} color={item.color} />
+                      </View>
+                      <Text style={styles.drawerItemLabel}>{item.label}</Text>
+                      {item.badge && (
+                        <View style={styles.drawerBadge}>
+                          <Text style={styles.drawerBadgeText}>{item.badge}</Text>
+                        </View>
+                      )}
+                      <Ionicons name="chevron-forward" size={15} color="#C4B8AC" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ))}
+              <View style={{ height: 48 }} />
+            </ScrollView>
+          </Animated.View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -488,27 +517,65 @@ const styles = StyleSheet.create({
 
   // ── HERO ──
   hero: {
-    paddingTop: Platform.OS === 'ios' ? 64 : 48,
-    paddingBottom: 64,
+    paddingTop: Platform.OS === 'ios' ? 58 : 44,
+    paddingBottom: 72,
     paddingHorizontal: 24,
+    overflow: 'hidden',
   },
-  heroDate: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.55)',
-    fontWeight: '500',
-    marginBottom: 6,
+  heroBannerOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    width: 500, height: 500, resizeMode: 'cover', opacity: 0.8,
+  },
+
+  // Date pill — "• THURSDAY 7 MAY"
+  heroTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 22,
+  },
+  datePill: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
+  },
+  datePillText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.88)',
+    fontWeight: '600',
+    letterSpacing: 0.4,
+  },
+  bellBtn: {
+    width: 38,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Greeting
+  heroNamaste: {
+    fontSize: 26,
+    fontWeight: '300',
+    color: 'rgba(255,255,255,0.92)',
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
+    fontStyle: 'italic',
+    lineHeight: 32,
   },
   heroGreeting: {
-    fontSize: 28,
+    fontSize: 34,
     fontWeight: '800',
     color: '#FFFFFF',
-    letterSpacing: -0.3,
+    letterSpacing: -0.5,
+    lineHeight: 40,
   },
   greetingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 6,
+    marginBottom: 10,
   },
   premiumBadge: {
     paddingHorizontal: 8,
@@ -525,27 +592,10 @@ const styles = StyleSheet.create({
   },
   heroTagline: {
     fontSize: 13,
-    color: '#D4BA80',
-    fontWeight: '500',
-  },
-  heroHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  profileBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  profileBtnIcon: {
-    fontSize: 22,
+    color: '#abe9f3ff',
+    fontWeight: '600',
+    marginTop: 4,
+    
   },
 
   // Profile warning
@@ -692,13 +742,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 32,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   sectionLabel: {
     fontSize: 11,
     fontWeight: '800',
     color: '#6B5040',
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    marginBottom: 12,
+  },
+  sectionViewAll: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#C8660A',
   },
 
   // ── DAILY RASHIFAL HORIZONTAL SCROLL ──
@@ -897,59 +957,134 @@ const styles = StyleSheet.create({
     color: '#7B1A38',
     letterSpacing: 0.5,
   },
-  heroAiArrow: {
-    fontSize: 24,
-    color: '#7B1A38',
-    fontWeight: 'bold',
+  heroAiArrowBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#7B1A38',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginLeft: 8,
   },
+  heroAiArrow: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
 
-  floatingAiWrap: {
+  // ── SIDE DRAWER ──
+  drawerOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  drawerBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.48)',
+  },
+  drawerPanel: {
     position: 'absolute',
-    bottom: 40,
-    right: 20,
-    zIndex: 100,
+    left: 0, top: 0, bottom: 0,
+    width: width * 0.78,
+    backgroundColor: '#FDFAF6',
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 24,
   },
-  floatingAiBtn: {
-    borderRadius: 30,
-    ...shadow.lg,
-    shadowColor: '#7B1A38',
-    shadowOpacity: 0.4,
+  drawerHeader: {
+    paddingTop: Platform.OS === 'ios' ? 56 : 40,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
   },
-  floatingAiGrad: {
+  drawerUserRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    paddingRight: 24,
-    borderRadius: 30,
     gap: 12,
+    marginBottom: 4,
   },
-  floatingAiIcon: {
-    fontSize: 28,
-    marginLeft: 4,
-  },
-  floatingAiLabel: {
-    fontSize: 9,
-    fontWeight: '900',
-    color: '#F5DFC5',
-    letterSpacing: 1.5,
-    marginBottom: 1,
-  },
-  floatingAiTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  notificationDot: {
-    position: 'absolute',
-    top: -2,
-    left: -2,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#D4BA80',
+  drawerAvatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 10,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+    overflow: 'hidden',
+  },
+  drawerAvatarLogo: {
+    width: 38, height: 38, resizeMode: 'contain',
+  },
+  drawerUserName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  drawerUserSub: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+    marginTop: 2,
+  },
+  drawerCloseBtn: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 52 : 36,
+    right: 16,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  drawerBody: {
+    flex: 1,
+  },
+  drawerSection: {
+    paddingTop: 20,
+    paddingHorizontal: 16,
+  },
+  drawerSectionTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#9A8878',
+    letterSpacing: 1.5,
+    marginBottom: 4,
+    paddingLeft: 4,
+  },
+  drawerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+  },
+  drawerItemIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  drawerItemLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#2C1E12',
+  },
+  drawerBadge: {
+    backgroundColor: '#7B1A38',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  drawerBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
   },
 
 });

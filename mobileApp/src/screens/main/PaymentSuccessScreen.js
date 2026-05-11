@@ -1,10 +1,13 @@
 import React, { useEffect } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Dimensions,
+  View, Text, StyleSheet, TouchableOpacity, Dimensions, Image, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { VedicCard } from '../../components/VedicCard';
+
+const LOGO = require('../../../assets/logo.jpeg');
+const BANNER = require('../../../assets/bannerbackground5.webp');
 
 const { width } = Dimensions.get('window');
 
@@ -12,6 +15,10 @@ const PaymentSuccessScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <LinearGradient colors={C.heroGradient} style={styles.header}>
+        <Image source={BANNER} style={styles.headerBannerOverlay} />
+        <View style={styles.headerTopRow}>
+           <Image source={LOGO} style={styles.headerLogo} />
+        </View>
         <Text style={styles.omIcon}>🔱</Text>
         <Text style={styles.headerTitle}>Thank You!</Text>
         <Text style={styles.headerSub}>Your cosmic journey has been upgraded</Text>
@@ -72,12 +79,28 @@ const PaymentSuccessScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: {
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'ios' ? 60 : 50,
     paddingBottom: 40,
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
+    overflow: 'hidden',
+  },
+  headerBannerOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    width: 500, height: 500, resizeMode: 'cover', opacity: 0.8,
+  },
+  headerTopRow: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 0,
+    zIndex: 1,
+  },
+  headerLogo: {
+    width: 38, height: 38, borderRadius: 8, resizeMode: 'contain',
+    borderWidth: 2, borderColor: '#FFFFFF',
   },
   omIcon: { fontSize: 48, marginBottom: 10 },
   headerTitle: {

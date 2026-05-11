@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, KeyboardAvoidingView, Platform, Alert, Animated
+  ScrollView, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { VedicCard } from '../../components/VedicCard';
 import LocationInput from '../../components/LocationInput';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../config/api';
 
 const GENDERS = ['Male', 'Female', 'Other'];
@@ -23,6 +24,8 @@ const ProfileWizardScreen = ({ navigation }) => {
   const { user, refreshProfileStatus } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const [form, setForm] = useState({
     fullName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
@@ -45,6 +48,23 @@ const ProfileWizardScreen = ({ navigation }) => {
 
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
+  const onDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      setForm({ ...form, dateOfBirth: dateStr });
+    }
+  };
+
+  const onTimeChange = (event, selectedTime) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      const hours = selectedTime.getHours().toString().padStart(2, '0');
+      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+      setForm({ ...form, timeOfBirth: `${hours}:${minutes}` });
+    }
+  };
+
   const handleFinish = async () => {
     setLoading(true);
     try {
@@ -54,11 +74,11 @@ const ProfileWizardScreen = ({ navigation }) => {
         timeOfBirth: form.timeOfBirth || 'Unknown',
         placeOfBirth: form.placeOfBirth,
         relationship: form.relationship,
+        gender: form.gender,
       };
       const res = await api.post('/api/profiles', payload);
       if (res.data) {
         await refreshProfileStatus();
-        // Navigation auto-updates via AppNavigator since hasProfile becomes true
       }
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Database validation error');
@@ -97,17 +117,62 @@ const ProfileWizardScreen = ({ navigation }) => {
                 <Text style={styles.stepDesc}>Accurate birth info ensures precise readings</Text>
 
                 <Text style={styles.label}>Full Name *</Text>
-                <TextInput style={styles.input} value={form.fullName} onChangeText={t => setForm({...form, fullName: t})} placeholder="John Doe" placeholderTextColor={C.textDim} />
+                <TextInput 
+                  style={styles.input} 
+                  value={form.fullName} 
+                  onChangeText={t => setForm({...form, fullName: t})} 
+                  placeholder="John Doe" 
+                  placeholderTextColor={C.textDim} 
+                />
 
                 <Text style={styles.label}>Date of Birth *</Text>
-                <TextInput style={styles.input} value={form.dateOfBirth} onChangeText={t => setForm({...form, dateOfBirth: t})} placeholder="YYYY-MM-DD" placeholderTextColor={C.textDim} />
+                <TouchableOpacity
+                  style={styles.input}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={[styles.inputText, !form.dateOfBirth && { color: C.textDim }]}>
+                    {form.dateOfBirth || 'Select Date (YYYY-MM-DD)'}
+                  </Text>
+                </TouchableOpacity>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={form.dateOfBirth ? new Date(form.dateOfBirth) : new Date(2000, 0, 1)}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onDateChange}
+                    maximumDate={new Date()}
+                  />
+                )}
 
                 <Text style={styles.label}>Time of Birth</Text>
-                <TextInput style={styles.input} value={form.timeOfBirth} onChangeText={t => setForm({...form, timeOfBirth: t})} placeholder="HH:MM" placeholderTextColor={C.textDim} />
+                <TouchableOpacity
+                  style={styles.input}
+                  onPress={() => setShowTimePicker(true)}
+                >
+                  <Text style={[styles.inputText, !form.timeOfBirth && { color: C.textDim }]}>
+                    {form.timeOfBirth || 'Select Time (HH:MM)'}
+                  </Text>
+                </TouchableOpacity>
+
+                {showTimePicker && (
+                  <DateTimePicker
+                    value={(() => {
+                      const d = new Date();
+                      if (form.timeOfBirth) {
+                        const [h, m] = form.timeOfBirth.split(':');
+                        d.setHours(parseInt(h), parseInt(m));
+                      }
+                      return d;
+                    })()}
+                    mode="time"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onTimeChange}
+                  />
+                )}
 
                 <Text style={styles.label}>Place of Birth *</Text>
                 <LocationInput 
-                  style={styles.input} 
                   value={form.placeOfBirth} 
                   onChangeText={t => setForm({...form, placeOfBirth: t})} 
                   placeholder="City, State, Country" 
@@ -162,9 +227,9 @@ const ProfileWizardScreen = ({ navigation }) => {
                   <TouchableOpacity style={styles.secondaryBtn} onPress={prevStep}>
                     <Text style={styles.secondaryBtnText}>← Back</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.primaryBtn, { flex: 1, marginBottom: 0 }]} onPress={nextStep}>
+                  <TouchableOpacity style={[styles.primaryBtn, { flex: 1, marginBottom: 0 }]} onPress={handleFinish} disabled={loading}>
                     <LinearGradient colors={['#D4760A', '#7B1A38']} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={styles.gradientBtn}>
-                      <Text style={styles.btnText}>Create Profile ✓</Text>
+                      <Text style={styles.btnText}>{loading ? 'Creating...' : 'Create Profile ✓'}</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
@@ -189,9 +254,9 @@ const ProfileWizardScreen = ({ navigation }) => {
                   ))}
                 </View>
 
-                <TouchableOpacity style={[styles.primaryBtn, { width: '100%' }]} onPress={handleFinish} disabled={loading}>
+                <TouchableOpacity style={[styles.primaryBtn, { width: '100%' }]} onPress={() => {}} >
                   <LinearGradient colors={['#D4760A', '#7B1A38']} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={styles.gradientBtn}>
-                    <Text style={styles.btnText}>{loading ? 'Preparing Space...' : '🚀 Start Exploring'}</Text>
+                    <Text style={styles.btnText}>🚀 Start Exploring</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
@@ -212,28 +277,38 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: fontSize.md, color: C.textMid, marginTop: 4 },
   stepperContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 20 },
   stepCircle: { width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center' },
-  stepActive: { backgroundColor: '#A03B2B' }, // Brownish maroon
+  stepActive: { backgroundColor: '#A03B2B' }, 
   stepInactive: { backgroundColor: '#EADCD0' },
   stepText: { fontWeight: '700', fontSize: 16 },
   stepTextActive: { color: C.white },
   stepTextInactive: { color: '#B39E8F' },
   stepLine: { width: 40, height: 2, backgroundColor: '#EADCD0', marginHorizontal: 8 },
   stepLineActive: { backgroundColor: '#A03B2B' },
-  card: { padding: spacing.lg },
+  card: { padding: spacing.lg, backgroundColor: C.white, borderRadius: radius.lg, ...shadow.lg },
   stepTitle: { fontSize: 24, fontWeight: '700', color: C.text, marginBottom: 4 },
   stepDesc: { fontSize: fontSize.sm, color: C.textMid, marginBottom: spacing.lg },
   label: { fontSize: fontSize.sm, fontWeight: '600', color: C.textMid, marginBottom: 6, marginTop: spacing.sm },
-  input: { backgroundColor: C.input, borderRadius: radius.sm, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: fontSize.md, color: C.text },
+  input: { 
+    backgroundColor: C.input, 
+    borderRadius: radius.sm, 
+    paddingHorizontal: spacing.md, 
+    paddingVertical: 14, 
+    fontSize: fontSize.md, 
+    color: C.text,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: C.border
+  },
+  inputText: { fontSize: fontSize.md, color: C.text },
   infoBox: { backgroundColor: C.saffronPale, padding: spacing.md, borderRadius: radius.sm, marginTop: spacing.lg, marginBottom: spacing.lg, borderLeftWidth: 3, borderLeftColor: C.saffron },
   infoText: { color: C.saffron, fontSize: fontSize.sm, lineHeight: 20 },
   primaryBtn: { borderRadius: radius.md, overflow: 'hidden', marginTop: spacing.md },
   gradientBtn: { paddingVertical: 16, alignItems: 'center' },
   btnText: { color: C.white, fontSize: fontSize.lg, fontWeight: '700' },
   
-  // Step 2 particular styles
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { backgroundColor: C.input, paddingVertical: 10, paddingHorizontal: 16, borderRadius: radius.sm },
-  chipActive: { backgroundColor: C.input, borderWidth: 1, borderColor: C.saffron }, // Adjust based on visual matching
+  chipActive: { backgroundColor: C.input, borderWidth: 1, borderColor: C.saffron }, 
   chipText: { color: C.textMid, fontWeight: '500' },
   chipTextActive: { color: C.text },
   previewBox: { backgroundColor: C.goldPale, borderRadius: radius.sm, padding: spacing.md, marginTop: spacing.xl, marginBottom: spacing.lg, borderWidth: 1, borderColor: C.borderGold },
@@ -244,7 +319,6 @@ const styles = StyleSheet.create({
   secondaryBtn: { paddingVertical: 14, paddingHorizontal: 20, borderWidth: 1, borderColor: C.saffron, borderRadius: radius.md },
   secondaryBtnText: { color: C.saffron, fontWeight: '700', fontSize: fontSize.md },
 
-  // Step 3
   omCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(212, 118, 10, 0.9)', justifyContent: 'center', alignItems: 'center', marginBottom: spacing.lg, ...shadow.gold },
   omText: { fontSize: 40, color: C.white },
   welcomeTitle: { fontSize: 28, fontWeight: '700', color: C.text, marginBottom: spacing.sm },

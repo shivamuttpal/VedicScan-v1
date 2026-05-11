@@ -1,118 +1,205 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View, TextInput, TouchableOpacity, Text, StyleSheet,
+  ActivityIndicator, Keyboard, ScrollView, Animated
+} from 'react-native';
 import axios from 'axios';
-import { C, radius, spacing, fontSize } from '../theme';
+import { C, spacing, radius, fontSize, shadow } from '../theme';
 
-const LocationInput = ({ value, onChangeText, placeholder, style }) => {
+const LocationInput = ({ value, onChangeText, placeholder, style, onFocus }) => {
+  const [query, setQuery] = useState(value || '');
   const [suggestions, setSuggestions] = useState([]);
-  const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownAnim = React.useRef(new Animated.Value(0)).current;
 
-  const handleSearch = async (val) => {
-    onChangeText(val);
-    if (val.length > 2) {
-      setLoading(true);
-      try {
-        const response = await axios.get(`https://photon.komoot.io/api/?q=${encodeURIComponent(val)}&limit=5`);
-        const features = response.data.features || [];
-        const results = features.map(f => {
-          const { name, city, state, country } = f.properties;
-          const parts = [name || city, state, country].filter(Boolean);
-          return [...new Set(parts)].join(', ');
-        });
-        setSuggestions([...new Set(results)]);
-        setShowDropdown(true);
-      } catch (error) {
-        console.error('Error fetching locations:', error);
-      } finally {
-        setLoading(false);
-      }
-    } else {
+  useEffect(() => {
+    setQuery(value || '');
+  }, [value]);
+
+  useEffect(() => {
+    Animated.timing(dropdownAnim, {
+      toValue: showDropdown ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [showDropdown]);
+
+  const searchLocations = async (text) => {
+    setQuery(text);
+    onChangeText(text);
+
+    if (text.length < 3) {
       setSuggestions([]);
       setShowDropdown(false);
+      return;
+    }
+
+    setLoading(true);
+    setShowDropdown(true);
+    try {
+      const response = await axios.get(`https://photon.komoot.io/api/?q=${encodeURIComponent(text)}&limit=5`);
+      
+      if (!response.data || !response.data.features) {
+        setSuggestions([]);
+        return;
+      }
+      const results = response.data.features.map(f => {
+        const { name, city, state, country } = f.properties;
+        const parts = [name, city, state, country].filter(p => p);
+        return parts.join(', ');
+      });
+      
+      const uniqueResults = [...new Set(results)];
+      setSuggestions(uniqueResults);
+    } catch (error) {
+      console.error('Location search error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const onSelect = (item) => {
+    setQuery(item);
     onChangeText(item);
     setShowDropdown(false);
+    Keyboard.dismiss();
+  };
+
+  const clearSearch = () => {
+    setQuery('');
+    onChangeText('');
     setSuggestions([]);
+    setShowDropdown(false);
   };
 
   return (
-    <View style={{ zIndex: 2000 }}>
-      <View style={{ position: 'relative' }}>
+    <View style={[styles.container, style]}>
+      <View style={styles.inputWrapper}>
+        <Text style={styles.searchIcon}>📍</Text>
         <TextInput
-          style={[style, { paddingRight: 40 }]}
-          value={value}
-          onChangeText={handleSearch}
-          placeholder={placeholder}
-          placeholderTextColor={C.textDim || '#999'}
-          autoComplete="off"
+          style={styles.input}
+          value={query}
+          onChangeText={searchLocations}
+          placeholder={placeholder || "Search city..."}
+          placeholderTextColor={C.textDim}
+          onFocus={() => {
+            if (onFocus) onFocus();
+            if (query.length >= 3) setShowDropdown(true);
+          }}
         />
-        {loading && (
-          <View style={styles.spinner}>
-            <ActivityIndicator color={C.saffron || '#D4760A'} size="small" />
-          </View>
+        {query.length > 0 && (
+          <TouchableOpacity onPress={clearSearch} style={styles.clearBtn}>
+            <Text style={styles.clearIcon}>✕</Text>
+          </TouchableOpacity>
         )}
       </View>
-      {showDropdown && (suggestions.length > 0 || loading) && (
-        <View style={styles.dropdown}>
-          {loading && suggestions.length === 0 && (
-            <View style={{ padding: 15, alignItems: 'center' }}>
-              <ActivityIndicator color={C.saffron || '#D4760A'} size="small" />
-              <Text style={{ fontSize: 12, color: C.textMid || '#666', marginTop: 5 }}>Searching locations...</Text>
-            </View>
-          )}
-          {suggestions.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.item, index === suggestions.length - 1 && { borderBottomWidth: 0 }]}
-              onPress={() => onSelect(item)}
-            >
-              <Text style={styles.itemText}>{item}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+      
+      {showDropdown && (query.length >= 3) && (
+        <Animated.View style={[styles.dropdown, { opacity: dropdownAnim, transform: [{ translateY: dropdownAnim.interpolate({ inputRange: [0, 1], outputRange: [-10, 0] }) }] }]}>
+          <ScrollView 
+            style={{ maxHeight: 220 }} 
+            keyboardShouldPersistTaps="always"
+            showsVerticalScrollIndicator={true}
+          >
+            {loading && suggestions.length === 0 ? (
+              <View style={styles.centerBox}>
+                <ActivityIndicator color={C.saffron} size="small" />
+                <Text style={styles.subtext}>Searching locations...</Text>
+              </View>
+            ) : suggestions.length > 0 ? (
+              <View>
+                {suggestions.map((item, index) => (
+                  <TouchableOpacity 
+                    key={`loc-${index}`}
+                    style={[styles.item, index === suggestions.length - 1 && { borderBottomWidth: 0 }]} 
+                    onPress={() => onSelect(item)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.itemText} numberOfLines={2}>{item}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : !loading && (
+              <View style={styles.centerBox}>
+                <Text style={styles.subtext}>No matching locations found</Text>
+              </View>
+            )}
+          </ScrollView>
+        </Animated.View>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  dropdown: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: radius.md || 12,
-    marginTop: 5,
-    borderWidth: 1,
-    borderColor: '#EADCD0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    position: 'absolute',
-    top: 55,
+  container: {
+    zIndex: 9999,
     width: '100%',
-    zIndex: 3000,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: C.input,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: C.border,
+    paddingHorizontal: 12,
+  },
+  searchIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    fontSize: fontSize.md,
+    color: C.text,
+    paddingVertical: 14,
+  },
+  clearBtn: {
+    padding: 8,
+  },
+  clearIcon: {
+    fontSize: 14,
+    color: C.textDim,
+    fontWeight: '700',
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 58,
+    left: 0,
+    right: 0,
+    backgroundColor: C.white,
+    borderRadius: radius.md,
+    zIndex: 10000,
+    ...shadow.lg,
+    borderWidth: 1,
+    borderColor: C.border,
+    overflow: 'hidden',
+    elevation: 20,
   },
   item: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: '#F0E8DE',
   },
   itemText: {
     fontSize: 14,
-    color: '#333333',
+    color: C.text,
+    fontWeight: '500',
+    lineHeight: 20,
   },
-  spinner: {
-    position: 'absolute',
-    right: 12,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
+  centerBox: {
+    padding: 30,
+    alignItems: 'center',
   },
+  subtext: {
+    fontSize: 13,
+    color: C.textMid,
+    marginTop: 8,
+    textAlign: 'center',
+  }
 });
 
 export default LocationInput;

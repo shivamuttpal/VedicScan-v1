@@ -1,14 +1,64 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  FlatList, KeyboardAvoidingView, Platform, Animated, Alert, Image,
+  FlatList, KeyboardAvoidingView, Platform, Animated, Alert, Image, Keyboard
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, spacing, radius, fontSize, shadow } from '../../theme';
+import { C, spacing, fontSize } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../config/api';
 import { sampleQuestions } from '../../data/signs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const LOGO = require('../../../assets/logo.jpeg');
+const BANNER = require('../../../assets/bannerbackground5.webp');
+
+// Tab bar total height on Android = 72 (height) + 14 (bottom offset) + 4 (gap)
+const ANDROID_TAB_CLEARANCE = 90;
+// Tab bar total height on iOS = 72 (height) + 26 (bottom offset)
+const IOS_TAB_CLEARANCE = 65;
+
+const TypingDots = () => {
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(anim, { toValue: 3, duration: 900, useNativeDriver: false }),
+        Animated.timing(anim, { toValue: 0, duration: 0, useNativeDriver: false }),
+      ])
+    ).start();
+  }, []);
+
+  const getDotOpacity = (index) =>
+    anim.interpolate({
+      inputRange: [index - 0.5, index, index + 0.5],
+      outputRange: [0.3, 1, 0.3],
+      extrapolate: 'clamp',
+    });
+
+  return (
+    <View style={dotStyles.row}>
+      {[1, 2, 3].map((i) => (
+        <Animated.View
+          key={i}
+          style={[dotStyles.dot, { opacity: getDotOpacity(i) }]}
+        />
+      ))}
+    </View>
+  );
+};
+
+const dotStyles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 4 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#C8660A' },
+});
+
+const formatTime = (id) => {
+  const date = new Date(id);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 
 const ChatScreen = ({ navigation }) => {
   const { hasProfile } = useAuth();
@@ -16,14 +66,30 @@ const ChatScreen = ({ navigation }) => {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState(null);
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const flatRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!hasProfile) {
-      navigation.navigate('ProfileTab', { screen: 'ProfileMain', params: { setup: true } });
+      navigation.navigate('ProfileTab');
       return;
     }
     loadHistory();
+
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => setKeyboardVisible(true)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
 
   const loadHistory = async () => {
@@ -32,14 +98,14 @@ const ChatScreen = ({ navigation }) => {
       const savedId = await AsyncStorage.getItem('vedicScanConversationId');
       if (saved) setMessages(JSON.parse(saved));
       if (savedId) setConversationId(savedId);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const saveHistory = async (msgs, cId) => {
     try {
       await AsyncStorage.setItem('vedicScanChatHistory', JSON.stringify(msgs));
       if (cId) await AsyncStorage.setItem('vedicScanConversationId', cId);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const sendMessage = async (text) => {
@@ -55,11 +121,11 @@ const ChatScreen = ({ navigation }) => {
       const payload = { message: userMsg };
       if (conversationId) payload.conversationId = conversationId;
 
-      const res = await api.post('/api/chat', payload);
+      const res = await api.post('/api/chat/message', payload);
       if (res.data) {
         const aiMsg = {
           role: 'assistant',
-          content: res.data.reply || res.data.message || 'I am processing your query...',
+          content: res.data.response || res.data.reply || res.data.message || 'I am processing your query...',
           id: Date.now() + 1,
         };
         const finalMsgs = [...newMsgs, aiMsg];
@@ -73,8 +139,7 @@ const ChatScreen = ({ navigation }) => {
         content: 'I apologize, I am unable to process your request right now. Please try again.',
         id: Date.now() + 1,
       };
-      const finalMsgs = [...newMsgs, errMsg];
-      setMessages(finalMsgs);
+      setMessages([...newMsgs, errMsg]);
     } finally {
       setLoading(false);
     }
@@ -101,98 +166,112 @@ const ChatScreen = ({ navigation }) => {
       <View style={[styles.msgRow, isUser ? styles.msgRowUser : styles.msgRowAi]}>
         {!isUser && (
           <View style={styles.aiAvatar}>
-            <Image 
-              source={{ uri: 'https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png' }}
-              style={{ width: 22, height: 22, resizeMode: 'contain' }}
-            />
+            <Image source={LOGO} style={styles.avatarImg} />
           </View>
         )}
-        <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
-          <Text style={[styles.msgText, isUser && styles.userMsgText]}>
-            {item.content}
+        <View style={styles.bubbleWrapper}>
+          <View style={[styles.bubble, isUser ? styles.userBubble : styles.aiBubble]}>
+            <Text style={[styles.msgText, isUser && styles.userMsgText]}>
+              {item.content}
+            </Text>
+          </View>
+          <Text style={[styles.timeText, isUser && styles.timeTextUser]}>
+            {formatTime(item.id)}
           </Text>
         </View>
       </View>
     );
   };
 
+  // Clears the floating tab bar (position:absolute) when keyboard is hidden.
+  // When keyboard is visible, we drop this padding because the tab bar hides
+  // and we want the input bar to sit directly on top of the keyboard.
+  const outerBottomPadding = isKeyboardVisible
+    ? 0
+    : (Platform.OS === 'ios' ? insets.bottom + IOS_TAB_CLEARANCE : ANDROID_TAB_CLEARANCE);
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <LinearGradient colors={['#7B1A38', '#4A0E22']} style={styles.header}>
+        <Image source={BANNER} style={styles.headerBannerOverlay} />
         <View style={styles.headerInner}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ backgroundColor: '#FFF', borderRadius: 8, padding: 2, marginRight: 10 }}>
-              <Image 
-                source={{ uri: 'https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png' }}
-                style={{ width: 28, height: 28, resizeMode: 'contain' }}
-              />
+          <View style={styles.headerLeft}>
+            <View style={styles.headerLogoWrap}>
+              <Image source={LOGO} style={styles.headerLogo} />
             </View>
             <View>
               <Text style={styles.headerTitle}>Maharshi AI</Text>
-              <Text style={styles.headerSub}>Your Vedic Guide</Text>
+              <View style={styles.onlineRow}>
+                <View style={styles.onlineDot} />
+                <Text style={styles.headerSub}>Your Vedic Guide</Text>
+              </View>
             </View>
           </View>
-          <TouchableOpacity onPress={clearChat} style={styles.clearBtn}>
+          <TouchableOpacity onPress={clearChat} style={styles.clearBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text style={styles.clearText}>🗑️</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
 
+      {/* Outer view handles tab-bar clearance when keyboard is hidden.
+          Android uses softwareKeyboardLayoutMode="resize" (app.json) so the OS
+          shrinks the window automatically — no KAV behavior needed there.
+          iOS uses KAV "padding" to shift the input above the keyboard. */}
+      <View style={{ flex: 1, paddingBottom: outerBottomPadding }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={90}
       >
-        {messages.length === 0 ? (
-          <View style={styles.emptyState}>
-            <View style={styles.emptyOm}>
-              <Text style={styles.emptyOmText}>ॐ</Text>
-            </View>
-            <Text style={styles.emptyTitle}>Ask Maharshi Anything</Text>
-            <Text style={styles.emptyDesc}>Your personal AI Vedic astrologer</Text>
+        <View style={{ flex: 1 }}>
+          {messages.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Image source={LOGO} style={styles.emptyLogo} />
+              <Text style={styles.emptyTitle}>Ask Maharshi Anything</Text>
+              <Text style={styles.emptyDesc}>Your personal AI Vedic astrologer</Text>
 
-            <View style={styles.chipsWrap}>
-              {sampleQuestions.slice(0, 4).map((q, i) => (
-                <TouchableOpacity
-                  key={i}
-                  style={styles.chip}
-                  onPress={() => sendMessage(q)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.chipText}>{q}</Text>
-                </TouchableOpacity>
-              ))}
+              <View style={styles.chipsWrap}>
+                {sampleQuestions.slice(0, 4).map((q, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    style={styles.chip}
+                    onPress={() => sendMessage(q)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.chipEmoji}>✨</Text>
+                    <Text style={styles.chipText}>{q}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-          </View>
-        ) : (
-          <FlatList
-            ref={flatRef}
-            data={messages}
-            renderItem={renderMessage}
-            keyExtractor={(item) => String(item.id)}
-            contentContainerStyle={styles.msgList}
-            onContentSizeChange={() => flatRef.current?.scrollToEnd({ animated: true })}
-          />
-        )}
+          ) : (
+            <FlatList
+              ref={flatRef}
+              data={messages}
+              renderItem={renderMessage}
+              keyExtractor={(item) => String(item.id)}
+              contentContainerStyle={styles.msgList}
+              onContentSizeChange={() => flatRef.current?.scrollToEnd({ animated: true })}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </View>
 
-        {/* Loading Indicator */}
+        {/* Typing indicator */}
         {loading && (
           <View style={styles.typingRow}>
             <View style={styles.aiAvatar}>
-              <Image 
-                source={{ uri: 'https://customer-assets.emergentagent.com/job_vedicscan/artifacts/fyeynkm9_image.png' }}
-                style={{ width: 22, height: 22, resizeMode: 'contain' }}
-              />
+              <Image source={LOGO} style={styles.avatarImg} />
             </View>
             <View style={styles.typingBubble}>
-              <Text style={styles.typingText}>Channeling cosmic wisdom...</Text>
+              <TypingDots />
             </View>
           </View>
         )}
 
         {/* Input Bar */}
-        <View style={styles.inputBar}>
+        <View style={[styles.inputBar, { paddingBottom: spacing.sm }]}>
           <TextInput
             style={styles.textInput}
             value={inputText}
@@ -201,6 +280,7 @@ const ChatScreen = ({ navigation }) => {
             placeholderTextColor={C.textDim}
             multiline
             maxLength={1000}
+            disableFullscreenUI={true}
           />
           <TouchableOpacity
             onPress={() => sendMessage()}
@@ -208,87 +288,142 @@ const ChatScreen = ({ navigation }) => {
             style={[styles.sendBtn, (!inputText.trim() || loading) && styles.sendDisabled]}
           >
             <LinearGradient
-              colors={['#D4760A', '#B8860B']}
+              colors={inputText.trim() ? ['#D4760A', '#B8860B'] : ['#E0D4C8', '#D4C8BC']}
               style={styles.sendGrad}
             >
-              <Text style={styles.sendText}>↗</Text>
+              <Text style={[styles.sendText, !inputText.trim() && styles.sendTextDim]}>↗</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
-  header: { paddingTop: 50, paddingBottom: 14, paddingHorizontal: spacing.lg },
+  container: { flex: 1, backgroundColor: '#F8F4EF' },
+  header: {
+    paddingTop: Platform.OS === 'ios' ? 55 : 45,
+    paddingBottom: 18,
+    paddingHorizontal: spacing.lg,
+    overflow: 'hidden',
+  },
+  headerBannerOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    width: 500, height: 500, resizeMode: 'cover', opacity: 0.8,
+  },
   headerInner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center' },
+  headerLogoWrap: {
+    backgroundColor: '#FFF', borderRadius: 8, padding: 3,
+    marginRight: 10, overflow: 'hidden',
+    borderWidth: 2, borderColor: '#FFFFFF',
+    shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 4, elevation: 3,
+  },
+  headerLogo: { width: 30, height: 30, resizeMode: 'contain' },
   headerTitle: { fontSize: fontSize.xl, fontWeight: '700', color: C.white },
-  headerSub: { fontSize: fontSize.sm, color: 'rgba(255,255,255,0.6)' },
-  clearBtn: { padding: 8 },
+  onlineRow: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  onlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ADE80', marginRight: 5 },
+  headerSub: { fontSize: fontSize.sm, color: 'rgba(255,255,255,0.7)' },
+  clearBtn: { padding: 6 },
   clearText: { fontSize: 18 },
-  emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
-  emptyOm: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: C.saffronPale, justifyContent: 'center', alignItems: 'center', marginBottom: spacing.md,
+
+  // Empty state
+  emptyState: {
+    flex: 1, justifyContent: 'center', alignItems: 'center',
+    paddingHorizontal: spacing.lg, paddingBottom: 100,
   },
-  emptyOmText: { fontSize: 32, color: C.saffron },
-  emptyTitle: { fontSize: fontSize.xxl, fontWeight: '700', color: C.text, marginBottom: 4 },
-  emptyDesc: { fontSize: fontSize.md, color: C.textMuted, marginBottom: spacing.lg },
-  chipsWrap: { width: '100%' },
+  emptyLogo: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#F5E6D3',
+  },
+  emptyTitle: { fontSize: fontSize.xxl, fontWeight: '800', color: '#1A0810', marginBottom: 6 },
+  emptyDesc: { fontSize: fontSize.md, color: C.textMuted, marginBottom: spacing.xl, textAlign: 'center' },
+  chipsWrap: { width: '100%', gap: 10 },
   chip: {
-    backgroundColor: C.white, borderRadius: radius.md,
-    padding: spacing.md, marginBottom: spacing.sm,
-    borderWidth: 1, borderColor: C.border,
-    ...shadow.sm,
+    backgroundColor: '#FFFFFF', borderRadius: 14,
+    paddingVertical: 12, paddingHorizontal: 14,
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1, borderColor: '#EDE4D8',
+    shadowColor: '#7B1A38', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
   },
-  chipText: { fontSize: fontSize.md, color: C.text },
-  msgList: { padding: spacing.md },
-  msgRow: { marginBottom: spacing.md, flexDirection: 'row', alignItems: 'flex-end' },
+  chipEmoji: { fontSize: 14, marginRight: 8 },
+  chipText: { fontSize: fontSize.md, color: '#3D2010', flex: 1, lineHeight: 20 },
+
+  // Messages
+  msgList: { padding: spacing.md, paddingBottom: spacing.lg },
+  msgRow: { marginBottom: 14, flexDirection: 'row', alignItems: 'flex-end' },
   msgRowUser: { justifyContent: 'flex-end' },
   msgRowAi: { justifyContent: 'flex-start' },
   aiAvatar: {
-    width: 30, height: 30, borderRadius: 15,
+    width: 32, height: 32, borderRadius: 8,
     backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center',
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: C.border,
+    marginRight: 8, borderWidth: 2, borderColor: '#FFFFFF',
+    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 4, elevation: 2,
   },
+  avatarImg: { width: 22, height: 22, resizeMode: 'contain' },
+  bubbleWrapper: { maxWidth: '78%' },
   bubble: {
-    maxWidth: '78%', padding: spacing.md,
-    borderRadius: radius.lg,
+    padding: spacing.md,
+    borderRadius: 18,
   },
   userBubble: {
-    backgroundColor: C.maroon,
+    backgroundColor: '#7B1A38',
     borderBottomRightRadius: 4,
+    shadowColor: '#7B1A38', shadowOpacity: 0.25, shadowRadius: 6, elevation: 3,
   },
   aiBubble: {
-    backgroundColor: C.white, borderWidth: 1, borderColor: C.border,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1, borderColor: '#EDE4D8',
     borderBottomLeftRadius: 4,
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 1,
   },
-  msgText: { fontSize: fontSize.md, color: C.text, lineHeight: 22 },
-  userMsgText: { color: C.white },
-  typingRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, marginBottom: spacing.sm },
+  msgText: { fontSize: fontSize.md, color: '#2D1508', lineHeight: 22 },
+  userMsgText: { color: '#FFFFFF' },
+  timeText: { fontSize: 11, color: '#A89880', marginTop: 4, marginLeft: 4 },
+  timeTextUser: { textAlign: 'right', marginRight: 4 },
+
+  // Typing
+  typingRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+  },
   typingBubble: {
-    backgroundColor: C.saffronPale, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 10,
+    backgroundColor: '#FFFFFF', borderRadius: 18, borderBottomLeftRadius: 4,
+    paddingHorizontal: 16, paddingVertical: 10,
+    borderWidth: 1, borderColor: '#EDE4D8',
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
-  typingText: { fontSize: fontSize.sm, color: C.saffron, fontStyle: 'italic' },
+
+  // Input bar
   inputBar: {
     flexDirection: 'row', alignItems: 'flex-end',
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-    borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.white,
+    paddingHorizontal: 14, paddingTop: 12,
+    borderTopWidth: 1, borderTopColor: '#EDE4D8',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 8,
+    elevation: 8, zIndex: 100,
   },
   textInput: {
-    flex: 1, backgroundColor: C.input, borderRadius: radius.md,
-    paddingHorizontal: spacing.md, paddingVertical: 12,
-    fontSize: fontSize.md, color: C.text, maxHeight: 100,
-    marginRight: spacing.sm,
+    flex: 1, backgroundColor: '#F5F0EB', borderRadius: 22,
+    paddingHorizontal: 16, paddingVertical: Platform.OS === 'ios' ? 12 : 10,
+    fontSize: fontSize.md, color: '#2D1508',
+    minHeight: 46, maxHeight: 120, marginRight: 10,
+    borderWidth: 1, borderColor: '#EDE4D8',
   },
-  sendBtn: { borderRadius: radius.md, overflow: 'hidden' },
-  sendGrad: { width: 46, height: 46, borderRadius: radius.md, justifyContent: 'center', alignItems: 'center' },
-  sendText: { color: C.white, fontSize: 20, fontWeight: '700' },
-  sendDisabled: { opacity: 0.4 },
+  sendBtn: { borderRadius: 23, overflow: 'hidden' },
+  sendGrad: {
+    width: 46, height: 46, borderRadius: 23,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  sendText: { color: '#FFFFFF', fontSize: 20, fontWeight: '700' },
+  sendTextDim: { color: '#A89880' },
+  sendDisabled: { opacity: 0.8 },
 });
 
 export default ChatScreen;

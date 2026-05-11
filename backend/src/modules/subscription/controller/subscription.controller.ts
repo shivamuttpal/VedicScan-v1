@@ -76,10 +76,13 @@ export const subscriptionController = {
         )
       );
 
+      const userRecord = await User.findById(userId).select('emailUnsubscribed').lean();
+
       res.json({
         plan,
         planEndDate: usage.planEndDate?.toISOString() || null,
         billingCycle: usage.billingCycle,
+        emailUnsubscribed: userRecord?.emailUnsubscribed ?? true,
         usage: {
           questions_asked: usage.dailyQuestionsUsed,
           limit: limits.dailyQuestions,
@@ -366,34 +369,39 @@ export const subscriptionController = {
   },
 
   /**
-   * POST /api/subscription/unsubscribe-emails
-   * Allows users to opt out of subscription lifecycle emails
+   * GET  /api/subscription/unsubscribe-emails  — public, token-based (email link clicks)
+   * POST /api/subscription/unsubscribe-emails  — authenticated, no token needed (UI toggle)
    */
   async unsubscribeEmails(req: Request, res: Response) {
     try {
-      const { token } = req.body || {};
+      const authReq = req as AuthRequest;
       const queryToken = req.query.token as string;
-      const unsubToken = token || queryToken;
+      const bodyToken = (req.body || {}).token;
+      const unsubToken = queryToken || bodyToken;
 
-      if (!unsubToken) {
-        res.status(400).json({ success: false, message: 'Unsubscribe token is required.' });
-        return;
-      }
-
-      // Decode the token to extract userId
       let userId: string | null = null;
-      try {
-        const decoded = Buffer.from(unsubToken, 'base64url').toString();
-        const parts = decoded.split(':');
-        if (parts[0] === 'unsub' && parts[1]) {
-          userId = parts[1];
-        }
-      } catch {
-        // Invalid token format
-      }
 
-      if (!userId) {
-        res.status(400).json({ success: false, message: 'Invalid unsubscribe token.' });
+      if (unsubToken) {
+        // Email-link flow: decode the base64url token
+        try {
+          const decoded = Buffer.from(unsubToken, 'base64url').toString();
+          const parts = decoded.split(':');
+          if (parts[0] === 'unsub' && parts[1]) {
+            userId = parts[1];
+          }
+        } catch {
+          // fall through — userId stays null
+        }
+
+        if (!userId) {
+          res.status(400).json({ success: false, message: 'Invalid unsubscribe token.' });
+          return;
+        }
+      } else if (authReq.user?.userId) {
+        // Authenticated UI flow: use the logged-in user
+        userId = authReq.user.userId;
+      } else {
+        res.status(400).json({ success: false, message: 'Unsubscribe token or authentication is required.' });
         return;
       }
 
@@ -409,8 +417,8 @@ export const subscriptionController = {
 
       console.log(`[Unsubscribe] User ${userId} unsubscribed from emails`);
 
-      // Return a friendly HTML page for browser-based clicks
-      if (req.query.token) {
+      // Return a friendly HTML page for browser-based GET clicks (email links)
+      if (queryToken) {
         res.send(`
           <html>
             <body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f9fafb;">

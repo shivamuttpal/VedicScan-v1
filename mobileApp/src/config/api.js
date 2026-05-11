@@ -8,9 +8,9 @@ import { Platform } from 'react-native';
 // For iOS simulator: localhost works
 // We use localhost by default and recommend 'adb reverse tcp:8001 tcp:8001' for Android
 const BACKEND_URL = Platform.select({
-  android: 'http://localhost:8001', // Use localhost + adb reverse for reliable USB debugging
-  ios: 'http://localhost:8001',
-  default: 'http://localhost:8001',
+  android: 'https://vedicscan.com/', // Use localhost + adb reverse for reliable USB debugging
+  ios: 'https://vedicscan.com/',
+  default: 'https://vedicscan.com/',
 });
 
 // If you are using a physical device, you might need to change this to your LAN IP:

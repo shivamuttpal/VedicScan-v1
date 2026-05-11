@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  ActivityIndicator,
+  ActivityIndicator, Image, Platform
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
@@ -10,9 +10,12 @@ import RashiChip from '../../components/RashiChip';
 import api from '../../config/api';
 import { SIGNS } from '../../data/signs';
 
+const LOGO = require('../../../assets/logo.jpeg');
+const BANNER = require('../../../assets/bannerbackground5.webp');
+
 const PERIODS = ['daily', 'weekly', 'monthly'];
 
-const RashifalScreen = () => {
+const RashifalScreen = ({ navigation }) => {
   const [selectedSign, setSelectedSign] = useState(0);
   const [period, setPeriod] = useState('daily');
   const [rashifal, setRashifal] = useState(null);
@@ -44,7 +47,14 @@ const RashifalScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <LinearGradient colors={['#D4760A', '#B8860B']} style={styles.header}>
-        <Text style={styles.headerTitle}>☀️ Rashifal</Text>
+        <Image source={BANNER} style={styles.headerBannerOverlay} />
+        <View style={styles.headerTopRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Text style={styles.backText}>← Back</Text>
+          </TouchableOpacity>
+          <Image source={LOGO} style={styles.headerLogo} />
+        </View>
+        <Text style={styles.headerTitle}>Rashifal</Text>
         <Text style={styles.headerSub}>Your Daily Horoscope</Text>
       </LinearGradient>
 
@@ -144,10 +154,27 @@ const RashifalScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: {
-    paddingTop: 50, paddingBottom: 16, paddingHorizontal: spacing.lg,
-    borderBottomLeftRadius: 20, borderBottomRightRadius: 20,
+    paddingTop: Platform.OS === 'ios' ? 55 : 45, paddingBottom: 16, paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 25, borderBottomRightRadius: 25,
+    overflow: 'hidden',
+  },
+  headerBannerOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    width: 500, height: 500, resizeMode: 'cover', opacity: 0.8,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  headerLogo: {
+    width: 36, height: 36, borderRadius: 8, resizeMode: 'contain',
+    borderWidth: 2, borderColor: '#FFFFFF',
   },
   headerTitle: { fontSize: fontSize.xxl, fontWeight: '700', color: C.white },
+  backBtn: { marginBottom: 0 },
+  backText: { color: 'rgba(255,255,255,0.8)', fontSize: fontSize.md },
   headerSub: { fontSize: fontSize.sm, color: 'rgba(255,255,255,0.7)' },
   periodRow: {
     flexDirection: 'row', marginHorizontal: spacing.lg,

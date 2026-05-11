@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-  Alert, RefreshControl, Platform,
+  Alert, RefreshControl, Platform, Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
@@ -10,6 +10,9 @@ import { VedicCard, GoldBar } from '../../components/VedicCard';
 import LocationInput from '../../components/LocationInput';
 import api from '../../config/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
+
+const LOGO = require('../../../assets/logo.jpeg');
+const BANNER = require('../../../assets/bannerbackground5.webp');
 
 const GENDERS = ['Male', 'Female', 'Other'];
 const RELATIONSHIPS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Friend', 'Other'];
@@ -38,7 +41,7 @@ const ProfileScreen = ({ route, navigation }) => {
       const nameFromContext = (user.firstName || user.name || '').trim();
       const lastNameFromContext = (user.lastName || '').trim();
       const fullName = `${nameFromContext} ${lastNameFromContext}`.trim();
-      
+
       if (fullName) {
         setForm(prev => ({ ...prev, fullName }));
       } else if (user.email || user.phone) {
@@ -94,7 +97,7 @@ const ProfileScreen = ({ route, navigation }) => {
         relationship: form.relationship,
         isDefault: form.isDefault,
       };
-      
+
       if (editingId) {
         await api.put(`/api/profiles/${editingId}`, payload);
         Alert.alert('Success', 'Profile updated!');
@@ -184,9 +187,12 @@ const ProfileScreen = ({ route, navigation }) => {
     <View style={styles.container}>
       {/* Header */}
       <LinearGradient colors={['#6C3FA0', '#4A2680']} style={styles.header}>
+        <Image source={BANNER} style={styles.headerBannerOverlay} />
         <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.headerTitle}>👤 Profile</Text>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+               <Text style={styles.headerTitle}>Profile</Text>
+            </View>
             <Text style={styles.headerSub}>
               {hasProfile ? `${profiles.length} birth profile(s)` : 'Create your first profile'}
             </Text>
@@ -210,7 +216,7 @@ const ProfileScreen = ({ route, navigation }) => {
         <View style={styles.body}>
           {/* Subscription Card */}
           <VedicCard style={{ marginBottom: spacing.md }}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.subCard}
               onPress={() => navigation.navigate('Subscription')}
             >
@@ -439,10 +445,19 @@ const ProfileScreen = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: {
-    paddingTop: 50, paddingBottom: 16, paddingHorizontal: spacing.lg,
-    borderBottomLeftRadius: 20, borderBottomRightRadius: 20,
+    paddingTop: Platform.OS === 'ios' ? 55 : 45, paddingBottom: 16, paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 25, borderBottomRightRadius: 25,
+    overflow: 'hidden',
   },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headerBannerOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    width: 500, height: 500, resizeMode: 'cover', opacity: 0.8,
+  },
+  headerLogo: {
+    width: 34, height: 34, borderRadius: 8, resizeMode: 'contain',
+    borderWidth: 2, borderColor: '#FFFFFF',
+  },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 1 },
   headerTitle: { fontSize: fontSize.xxl, fontWeight: '700', color: C.white },
   headerSub: { fontSize: fontSize.sm, color: 'rgba(255,255,255,0.7)' },
   logoutBtn: {

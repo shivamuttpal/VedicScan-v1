@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  Alert, Linking,
+  Alert, Linking, Image, Platform
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { VedicCard, GoldBar } from '../../components/VedicCard';
 import api from '../../config/api';
+
+const LOGO = require('../../../assets/logo.jpeg');
+const BANNER = require('../../../assets/bannerbackground5.webp');
 
 const PricingScreen = ({ navigation }) => {
   const [selectedPlan, setSelectedPlan] = useState('standard');
@@ -66,7 +69,7 @@ const PricingScreen = ({ navigation }) => {
       price: prices[currency].premium.monthly,
       period: '/month',
       icon: '👑',
-      features: ['51 AI questions / day', 'Everything in Standard', 'Monthly reports', 'Real astrologer review'],
+      features: ['51 AI questions / day', 'Everything in Standard', 'Monthly reports'],
       color: '#7B1A38',
     },
   ];
@@ -98,10 +101,14 @@ const PricingScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <LinearGradient colors={C.heroGradient} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>💎 Choose Your Plan</Text>
+        <Image source={BANNER} style={styles.headerBannerOverlay} />
+        <View style={styles.headerTopRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Text style={styles.backText}>← Back</Text>
+          </TouchableOpacity>
+          <Image source={LOGO} style={styles.headerLogo} />
+        </View>
+        <Text style={styles.headerTitle}>Choose Your Plan</Text>
         <Text style={styles.headerSub}>Unlock the full power of Vedic wisdom</Text>
       </LinearGradient>
 
@@ -205,10 +212,25 @@ const PricingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
   header: {
-    paddingTop: 50, paddingBottom: 20, paddingHorizontal: spacing.lg,
+    paddingTop: Platform.OS === 'ios' ? 55 : 45, paddingBottom: 20, paddingHorizontal: spacing.lg,
     borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
+    overflow: 'hidden',
   },
-  backBtn: { marginBottom: spacing.sm },
+  headerBannerOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    width: 500, height: 500, resizeMode: 'cover', opacity: 0.8,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  headerLogo: {
+    width: 36, height: 36, borderRadius: 8, resizeMode: 'contain',
+    borderWidth: 2, borderColor: '#FFFFFF',
+  },
+  backBtn: { marginBottom: 0 },
   backText: { color: 'rgba(255,255,255,0.8)', fontSize: fontSize.md },
   headerTitle: { fontSize: fontSize.h3, fontWeight: '700', color: C.white },
   headerSub: { fontSize: fontSize.md, color: 'rgba(255,255,255,0.6)' },

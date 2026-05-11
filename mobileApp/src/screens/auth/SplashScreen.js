@@ -1,10 +1,13 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Dimensions, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize } from '../../theme';
 import { SIGNS } from '../../data/signs';
 
 const { width } = Dimensions.get('window');
+
+const LOGO = require('../../../assets/logo.jpeg');
+// const BANNER = require('../../../assets/bannerbackground5.webp');
 
 const PLANETS = [
   { name: 'Surya', icon: '☀️', color: '#D4760A', radius: 70, duration: 4000, startOffset: 0 },
@@ -50,6 +53,7 @@ const SplashScreen = ({ navigation }) => {
   return (
     <LinearGradient colors={C.authGradient} style={styles.container}>
       <View style={styles.header}>
+
         <Text style={styles.tagline}>ANCIENT WISDOM · MODERN AI</Text>
         <Text style={styles.brand}>
           Vedic<Text style={styles.brandAccent}>Scan</Text>
@@ -57,14 +61,18 @@ const SplashScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.solarsystem}>
+        {/* Banner background overlay */}
+        {/* <Image source={BANNER} style={styles.bannerOverlay} /> */}
+
         {/* Orbits */}
         {PLANETS.map((p, i) => (
           <View key={`orbit-${i}`} style={[styles.orbitCircle, { width: p.radius * 2, height: p.radius * 2, borderRadius: p.radius }]} />
         ))}
-        
-        {/* Center Om */}
+
+        {/* Center Logo */}
         <View style={styles.omCenter}>
-          <Text style={styles.omText}>ॐ</Text>
+          {/* <Image source={LOGO} style={styles.centerLogo} /> */}
+        <Image source={LOGO} style={styles.headerLogo} />
         </View>
 
         {/* Planets */}
@@ -85,7 +93,7 @@ const SplashScreen = ({ navigation }) => {
             end={{ x: 1, y: 0 }}
             style={styles.gradientBtn}
           >
-            <Text style={styles.btnIcon}>🔱</Text>
+            <Text style={styles.btnIcon}>ॐ</Text>
             <Text style={styles.primaryBtnText}>Begin Your Journey</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -108,17 +116,22 @@ const SplashScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'space-between', alignItems: 'center', paddingTop: 60, paddingBottom: 20 },
-  header: { alignItems: 'center', marginTop: 20 },
+  header: { alignItems: 'center', marginTop: 60 },
   tagline: { fontSize: fontSize.sm, color: C.goldBorder, letterSpacing: 2, marginBottom: 8, fontWeight: '600' },
   brand: { fontSize: 42, fontWeight: '800', color: C.white },
   brandAccent: { color: C.saffron },
-  solarsystem: { width: 300, height: 300, justifyContent: 'center', alignItems: 'center', marginTop: -20 },
+  headerLogo: { width: 60, height: 60, borderRadius: 8, resizeMode: 'contain', marginBottom: 0, borderWidth: 3, borderColor: '#FFFFFF' },
+  solarsystem: { width: 300, height: 300, justifyContent: 'center', alignItems: 'center', marginTop: -20, overflow: 'hidden' },
+  bannerOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    width: 500, height: 500, resizeMode: 'cover', opacity: 0.8,
+  },
   orbitCircle: { position: 'absolute', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
-  omCenter: { width: 60, height: 60, borderRadius: 30, backgroundColor: 'rgba(184, 134, 11, 0.15)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(184, 134, 11, 0.4)' },
-  omText: { fontSize: 32, color: C.goldBorder },
+  omCenter: { width: 60, height: 60, borderRadius: 10, backgroundColor: 'rgba(184, 134, 11, 0.15)', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#FFFFFF', overflow: 'hidden' },
+  centerLogo: { width: 50, height: 50, resizeMode: 'contain', borderRadius: 8 },
   orbitWrapper: { position: 'absolute', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
   planetContainer: { position: 'absolute', alignItems: 'center' },
-  planetBall: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: {width: 0, height: 2}, shadowOpacity: 0.5, shadowRadius: 3, elevation: 4 },
+  planetBall: { width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.5, shadowRadius: 3, elevation: 4 },
   planetIcon: { fontSize: 14 },
   planetName: { fontSize: 10, color: 'rgba(255,255,255,0.6)', marginTop: 4, fontWeight: '500' },
   footer: { width: '100%', paddingHorizontal: spacing.lg, alignItems: 'center' },

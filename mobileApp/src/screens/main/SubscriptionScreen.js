@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, 
-  RefreshControl, ActivityIndicator, Platform,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  RefreshControl, ActivityIndicator, Platform, Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { VedicCard, GoldBar } from '../../components/VedicCard';
 import api from '../../config/api';
 
+const LOGO = require('../../../assets/logo.jpeg');
+const BANNER = require('../../../assets/bannerbackground5.webp');
+
 const PLAN_META = {
-  free:     { label: 'Free',     color: '#9A8878', bg: '#F8F5F1', border: '#E8DFD2', icon: '✨' },
+  free: { label: 'Free', color: '#9A8878', bg: '#F8F5F1', border: '#E8DFD2', icon: '✨' },
   standard: { label: 'Standard', color: '#D4760A', bg: '#FFF8F0', border: '#FFDAB9', icon: '👑' },
-  premium:  { label: 'Premium',  color: '#6C3FA0', bg: '#F5F0FF', border: '#DCD0FF', icon: '👑' },
+  premium: { label: 'Premium', color: '#6C3FA0', bg: '#F5F0FF', border: '#DCD0FF', icon: '👑' },
 };
 
 function daysUntil(dateStr) {
@@ -24,7 +27,7 @@ const UsageBar = ({ label, used, limit, color }) => {
   const isUnlimited = limit >= 99999;
   const pct = isUnlimited ? 0 : Math.min(100, Math.round((used / limit) * 100));
   const barColor = pct >= 90 ? '#D93025' : pct >= 70 ? '#D4760A' : '#188038';
-  
+
   return (
     <View style={styles.usageItem}>
       <View style={styles.usageLabelRow}>
@@ -105,9 +108,13 @@ const SubscriptionScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <LinearGradient colors={['#6C3FA0', '#4A2680']} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>←</Text>
-        </TouchableOpacity>
+        <Image source={BANNER} style={styles.headerBannerOverlay} />
+        <View style={styles.headerTopRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Text style={styles.backText}>←</Text>
+          </TouchableOpacity>
+          <Image source={LOGO} style={styles.headerLogo} />
+        </View>
         <Text style={styles.headerTitle}>Subscription</Text>
         <Text style={styles.headerSub}>Manage your cosmic plan</Text>
       </LinearGradient>
@@ -172,17 +179,18 @@ const SubscriptionScreen = ({ navigation }) => {
           </View>
           <GoldBar />
           <View style={styles.usageContent}>
-            <UsageBar 
-              label="Daily Questions" 
-              used={status?.usage?.daily?.used || 0} 
+            <UsageBar
+              label="Daily Questions"
+              used={status?.usage?.daily?.used || 0}
               limit={status?.limits?.daily_questions || 3}
             />
-            <UsageBar 
-              label="Monthly Questions" 
-              used={status?.usage?.monthly?.used || 0} 
+            {/* Monthly question limit tracking disabled
+            <UsageBar
+              label="Monthly Questions"
+              used={status?.usage?.monthly?.used || 0}
               limit={status?.limits?.monthly_questions || 90}
-            />
-            
+            /> */}
+
             <View style={styles.remainingRow}>
               <View style={styles.remainingBox}>
                 <Text style={styles.remNum}>
@@ -190,12 +198,13 @@ const SubscriptionScreen = ({ navigation }) => {
                 </Text>
                 <Text style={styles.remLabel}>Left Today</Text>
               </View>
+              {/* Monthly "Left Month" box disabled
               <View style={styles.remainingBox}>
                 <Text style={styles.remNum}>
                   {Math.max(0, (status?.limits?.monthly_questions || 90) - (status?.usage?.monthly?.used || 0))}
                 </Text>
                 <Text style={styles.remLabel}>Left Month</Text>
-              </View>
+              </View> */}
             </View>
           </View>
         </VedicCard>
@@ -206,12 +215,12 @@ const SubscriptionScreen = ({ navigation }) => {
             <View style={styles.notifyInfo}>
               <Text style={styles.notifyTitle}>📩 Email Notifications</Text>
               <Text style={styles.notifyDesc}>
-                {status?.emailUnsubscribed 
-                  ? 'Notifications are currently disabled.' 
+                {status?.emailUnsubscribed
+                  ? 'Notifications are currently disabled.'
                   : 'Receive renewal alerts and cosmic insights.'}
               </Text>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.toggleBtn, status?.emailUnsubscribed && styles.toggleBtnOff]}
               onPress={handleEmailToggle}
               disabled={emailLoading}
@@ -229,7 +238,7 @@ const SubscriptionScreen = ({ navigation }) => {
 
         {/* Upgrade CTA */}
         {plan === 'free' && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.upgradeBtn}
             onPress={() => navigation.navigate('Pricing')}
           >
@@ -250,11 +259,32 @@ const styles = StyleSheet.create({
   loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: C.bg },
   loaderText: { marginTop: 12, color: C.textMid, fontSize: 14 },
   header: {
-    paddingTop: 50, paddingBottom: 20, paddingHorizontal: spacing.lg,
-    borderBottomLeftRadius: 24, borderBottomRightRadius: 24,
+    paddingTop: Platform.OS === 'ios' ? 55 : 45, paddingBottom: 16, paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 25, borderBottomRightRadius: 25,
+    overflow: 'hidden',
   },
-  backBtn: { marginBottom: 10 },
-  backText: { color: C.white, fontSize: 24, fontWeight: '700' },
+  headerBannerOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    width: 500, height: 500, resizeMode: 'cover', opacity: 0.8,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  headerLogo: {
+    width: 36, height: 36, borderRadius: 8, resizeMode: 'contain',
+    borderWidth: 2, borderColor: '#FFFFFF',
+  },
+  backBtn: {
+    width: 36, height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backText: { color: C.white, fontSize: 20, fontWeight: '700' },
   headerTitle: { fontSize: 28, fontWeight: '800', color: C.white },
   headerSub: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
   scrollBody: { padding: spacing.lg },
@@ -298,7 +328,7 @@ const styles = StyleSheet.create({
   barFill: { height: '100%', borderRadius: 4 },
   remainingRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
   remainingBox: {
-    flex: 1, backgroundColor: '#F8F9FA', borderRadius: 12, 
+    flex: 1, backgroundColor: '#F8F9FA', borderRadius: 12,
     padding: 12, alignItems: 'center', borderWidth: 1, borderColor: '#F1F3F4',
   },
   remNum: { fontSize: 24, fontWeight: '800', color: C.text },
@@ -307,7 +337,7 @@ const styles = StyleSheet.create({
   notifyInfo: { flex: 1, marginRight: 12 },
   notifyTitle: { fontSize: 15, fontWeight: '700', color: C.text },
   notifyDesc: { fontSize: 12, color: C.textMuted, marginTop: 4, lineHeight: 18 },
-  toggleBtn: { 
+  toggleBtn: {
     backgroundColor: '#6C3FA0', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12,
     minWidth: 80, alignItems: 'center',
   },

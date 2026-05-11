@@ -3,7 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import api, { TOKEN_KEY } from '../config/api';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-const GOOGLE_WEB_CLIENT_ID = '174486315809-n8r88rj0o5b61ef2tjbgi8jdj4fvkicr.apps.googleusercontent.com';
+// IMPORTANT: Replace this with the "Web Client ID" from your new google-services.json (client_type: 3)
+const GOOGLE_WEB_CLIENT_ID = '556295205143-hbht1irra1a2lb2vnp2i34ko6ki3c5dr.apps.googleusercontent.com';
 
 const AuthContext = createContext();
 
@@ -71,15 +72,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   const saveSession = async (newToken, userData) => {
+    setLoading(true);
     try {
       await AsyncStorage.setItem(TOKEN_KEY, newToken);
       await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
       setToken(newToken);
       setUser(userData);
-      setIsAuthenticated(true);
+      // Wait for profile status BEFORE removing loader
+      // and BEFORE signaling authentication to navigation
       await refreshProfileStatus(newToken);
+      setIsAuthenticated(true);
     } catch (error) {
       console.error('Error saving session:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,6 +136,11 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const logout = async () => {
+    try {
+      await GoogleSignin.signOut();
+    } catch (e) {
+      // This might fail if the user is not signed in with Google, which is fine
+    }
     await clearSession();
   };
 

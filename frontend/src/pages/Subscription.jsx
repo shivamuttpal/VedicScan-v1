@@ -61,7 +61,7 @@ const Subscription = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [emailUnsubscribed, setEmailUnsubscribed] = useState(false);
+  const [emailUnsubscribed, setEmailUnsubscribed] = useState(true);
   const [emailLoading, setEmailLoading] = useState(false);
 
   const fetchStatus = async () => {
@@ -69,6 +69,7 @@ const Subscription = () => {
     try {
       const { data } = await api.get('/api/subscription/status');
       setStatus(data);
+      setEmailUnsubscribed(data?.emailUnsubscribed ?? true);
     } catch (err) {
       toast.error('Failed to load subscription details');
     } finally {
@@ -86,7 +87,7 @@ const Subscription = () => {
         setEmailUnsubscribed(false);
         toast.success('You are now subscribed to email updates.');
       } else {
-        await api.post('/api/subscription/unsubscribe-emails', { token: null });
+        await api.post('/api/subscription/unsubscribe-emails');
         setEmailUnsubscribed(true);
         toast.success('You have unsubscribed from email notifications.');
       }
@@ -254,11 +255,12 @@ const Subscription = () => {
                 used={status?.usage?.daily?.used ?? 0}
                 limit={status?.limits?.daily_questions ?? 3}
               />
+              {/* Monthly question limit tracking disabled
               <UsageBar
                 label="Monthly Questions"
                 used={status?.usage?.monthly?.used ?? 0}
                 limit={status?.limits?.monthly_questions ?? 90}
-              />
+              /> */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="p-5 rounded-xl bg-vedic-bg border border-vborder/50 text-center shadow-sm">
                   <p className="text-3xl font-bold text-vtext font-playfair">
@@ -269,6 +271,7 @@ const Subscription = () => {
                   </p>
                   <p className="text-[10px] uppercase tracking-wider text-vtext-muted mt-2 font-semibold">Questions left today</p>
                 </div>
+                {/* Monthly "Questions left this month" box disabled
                 <div className="p-5 rounded-xl bg-vedic-bg border border-vborder/50 text-center shadow-sm">
                   <p className="text-3xl font-bold text-vtext font-playfair">
                     {Math.max(0, (status?.limits?.monthly_questions ?? 90) - (status?.usage?.monthly?.used ?? 0)) >= 99999
@@ -277,7 +280,7 @@ const Subscription = () => {
                     }
                   </p>
                   <p className="text-[10px] uppercase tracking-wider text-vtext-muted mt-2 font-semibold">Questions left this month</p>
-                </div>
+                </div> */}
               </div>
             </div>
           </GoldCard>

@@ -1,25 +1,68 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Text, Image } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 import AuthStack from './AuthStack';
 import MainTabs from './MainTabs';
 import SetupStack from './SetupStack';
 import { C } from '../theme';
 
+const LOGO = require('../../assets/logo.jpeg');
+
+// Feature screens that render full-screen above the tab bar
+import CompatibilityScreen from '../screens/main/CompatibilityScreen';
+// import InsightsScreen from '../screens/main/InsightsScreen'; // hidden
+import PricingScreen from '../screens/main/PricingScreen';
+import SubscriptionScreen from '../screens/main/SubscriptionScreen';
+import PaymentSuccessScreen from '../screens/main/PaymentSuccessScreen';
+// import RashifalScreen from '../screens/main/RashifalScreen'; // hidden
+
+const Root = createNativeStackNavigator();
+
+// RootStack wraps the Tab navigator and exposes extra full-screen routes.
+// Any tab or nested screen can call navigation.navigate('Compatibility') etc.
+// and reach these screens without showing the tab bar.
+const RootStack = () => (
+  <Root.Navigator screenOptions={{ headerShown: false }}>
+    <Root.Screen name="MainTabs" component={MainTabs} />
+    <Root.Screen
+      name="Compatibility"
+      component={CompatibilityScreen}
+      options={{ animation: 'slide_from_right' }}
+    />
+    {/* <Root.Screen name="Insights" component={InsightsScreen} options={{ animation: 'slide_from_right' }} /> */}{/* hidden */}
+    <Root.Screen
+      name="Pricing"
+      component={PricingScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
+    <Root.Screen
+      name="Subscription"
+      component={SubscriptionScreen}
+      options={{ animation: 'slide_from_bottom' }}
+    />
+    <Root.Screen
+      name="PaymentSuccess"
+      component={PaymentSuccessScreen}
+      options={{ animation: 'fade' }}
+    />
+    {/* <Root.Screen name="Rashifal" component={RashifalScreen} options={{ animation: 'slide_from_right' }} /> */}{/* hidden */}
+  </Root.Navigator>
+);
+
 const AppNavigator = () => {
   const { isAuthenticated, hasProfile, loading } = useAuth();
 
   if (loading) {
     return (
-      <View style={styles.loader}>
-        <View style={styles.omCircle}>
-          <Text style={styles.omText}>🔱</Text>
-        </View>
-        <ActivityIndicator size="large" color={C.saffron} style={styles.spinner} />
+      <LinearGradient colors={C.heroGradient} style={styles.loader}>
+        <Image source={LOGO} style={styles.loaderLogo} />
+        <ActivityIndicator size="large" color={C.goldBorder} style={styles.spinner} />
         <Text style={styles.loadingText}>VedicScan</Text>
-        <Text style={styles.loadingSub}>Loading your cosmic journey...</Text>
-      </View>
+        <Text style={styles.loadingSub}>Aligning your stars...</Text>
+      </LinearGradient>
     );
   }
 
@@ -27,8 +70,10 @@ const AppNavigator = () => {
     <NavigationContainer>
       {!isAuthenticated ? (
         <AuthStack />
+      ) : !hasProfile ? (
+        <SetupStack />
       ) : (
-        <MainTabs />
+        <RootStack />
       )}
     </NavigationContainer>
   );
@@ -41,18 +86,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: C.bgDark,
   },
-  omCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(184, 134, 11, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  omText: {
-    fontSize: 38,
-    color: C.goldBorder,
+  loaderLogo: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 30,
+    borderWidth: 2,
+    borderColor: 'rgba(184, 134, 11, 0.3)',
   },
   spinner: { marginBottom: 16 },
   loadingText: {

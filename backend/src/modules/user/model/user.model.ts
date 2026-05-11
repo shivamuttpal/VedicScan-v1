@@ -117,7 +117,7 @@ const UserSchema = new Schema<IUser>(
     },
     emailUnsubscribed: {
       type: Boolean,
-      default: false,
+      default: true,
     },
   },
   {

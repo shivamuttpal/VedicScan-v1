@@ -23,7 +23,8 @@
         "backgroundColor": "#1A0810"
       },
       "package": "com.vedicscan.app",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "favicon": "./assets/favicon.png"

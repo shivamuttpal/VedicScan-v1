@@ -23,7 +23,32 @@ export const babyNamingController = {
             const pada = (seed % 4) + 1;
 
             const syllables = NamingService.getSyllables(nakshatraName, pada);
-            const suggestedNames = NamingService.suggestNames(syllables, gender);
+            let suggestedNames = NamingService.suggestNames(syllables, gender);
+
+            // Generate using AI if static database returns empty (which is common)
+            if (suggestedNames.length === 0 && openaiService.isConfigured()) {
+                try {
+                    const prompt = `Generate 5 highly auspicious, modern yet traditional Vedic baby names for a ${gender} child born in ${placeOfBirth} under Nakshatra ${nakshatraName} (Pada ${pada}). The names MUST start with the syllable "${syllables[0]}". 
+                    Return ONLY a JSON array of objects, where each object has strictly 4 fields: "name", "meaning", "gender" (which should be "${gender}"), and "origin" (e.g. Sanskrit). Example: [{"name": "${syllables[0]}...","meaning":"...","gender":"${gender}","origin":"Sanskrit"}]`;
+                    
+                    const threadId = await openaiService.createThread();
+                    await openaiService.addMessage(threadId, prompt);
+                    const runResult = await openaiService.runAssistant(threadId, 500, 2);
+                    
+                    try {
+                        const jsonMatch = runResult.response.match(/\[.*\]/s);
+                        if (jsonMatch) {
+                            suggestedNames = JSON.parse(jsonMatch[0]);
+                        } else {
+                            suggestedNames = JSON.parse(runResult.response);
+                        }
+                    } catch (parseError) {
+                        console.error('Failed to parse AI names JSON:', parseError);
+                    }
+                } catch (aiError) {
+                    console.error('AI Name generation failed:', aiError);
+                }
+            }
 
             res.json({
                 success: true,

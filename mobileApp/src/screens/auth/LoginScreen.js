@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ScrollView, Alert,
+  KeyboardAvoidingView, Platform, ScrollView, Alert, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../config/api';
 import { statusCodes } from '@react-native-google-signin/google-signin';
+
+const LOGO = require('../../../assets/logo.jpeg');
 
 const LoginScreen = ({ navigation }) => {
   const { saveSession, googleLogin } = useAuth();
@@ -79,7 +81,7 @@ const LoginScreen = ({ navigation }) => {
           
           <View style={styles.header}>
             <View style={styles.omCircle}>
-              <Text style={styles.omText}>🔱</Text>
+              <Image source={LOGO} style={styles.logoImg} />
             </View>
             <Text style={styles.brand}>
               Vedic<Text style={styles.brandAccent}>Scan</Text>
@@ -167,13 +169,14 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bgWarm },
   scroll: { flexGrow: 1, paddingHorizontal: spacing.xl, paddingVertical: spacing.xxl, alignItems: 'center' },
-  header: { alignItems: 'center', marginBottom: spacing.xl },
+  header: { alignItems: 'center', marginBottom: spacing.xl,paddingTop:20 },
   omCircle: {
-    width: 64, height: 64, borderRadius: 16,
-    backgroundColor: '#A03B2B', justifyContent: 'center', alignItems: 'center',
-    marginBottom: spacing.sm, ...shadow.gold
+    width: 64, height: 64, borderRadius: 12,
+    backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center',
+    marginBottom: spacing.sm, ...shadow.gold, overflow: 'hidden',
+    borderWidth: 2, borderColor: '#FFFFFF',
   },
-  omText: { fontSize: 32, color: C.saffronSoft },
+  logoImg: { width: 54, height: 54, resizeMode: 'contain' },
   brand: { fontSize: fontSize.h2, fontWeight: '700', color: C.maroon },
   brandAccent: { color: C.saffron },
   subtitle: { fontSize: fontSize.sm, color: C.textMid, marginTop: 4 },

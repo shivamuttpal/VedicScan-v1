@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "556295205143",
+    "project_id": "vedicscan-40bcf",
+    "storage_bucket": "vedicscan-40bcf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:556295205143:android:049803d3bef8ca886f8752",
+        "android_client_info": {
+          "package_name": "com.vedicscan.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeC7K-5Rd1DFoWda4Q2-FxR3ZKx5WxPj8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

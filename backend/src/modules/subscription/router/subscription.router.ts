@@ -8,15 +8,16 @@ const router = Router();
 // but we'll define it here. NOTE: Requires raw body.
 router.post('/webhook', subscriptionController.handleWebhook);
 
-// Unsubscribe from emails — public (accessed via email link, no auth required)
-router.post('/unsubscribe-emails', subscriptionController.unsubscribeEmails);
-router.get('/unsubscribe-emails', subscriptionController.unsubscribeEmails); // GET for email link clicks
+// GET unsubscribe — public (accessed via email link, no auth required)
+router.get('/unsubscribe-emails', subscriptionController.unsubscribeEmails);
 
 // Protected routes
 router.use(authMiddleware);
 router.get('/status', subscriptionController.getStatus);
 router.post('/create-checkout-session', subscriptionController.createOrder);
 router.post('/resubscribe-emails', subscriptionController.resubscribeEmails);
+// POST unsubscribe — authenticated (from UI toggle)
+router.post('/unsubscribe-emails', subscriptionController.unsubscribeEmails);
 router.post('/verify-payment', subscriptionController.verifyPayment); // returns 400
 
 export { router as subscriptionRouter };

@@ -51,10 +51,15 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
-            <span className="text-xl transform group-hover:rotate-12 transition-transform duration-300">🔱</span>
-            <div className="text-2xl font-bold tracking-tight font-playfair flex items-baseline">
+            <img
+              src="/logo.jpeg"
+              alt="VedicScan"
+              style={{ height: "60px", width: "90px" }}
+              className="rounded-lg object-cover shadow-sm border border-vborder/30 group-hover:scale-105 transition-transform duration-300"
+            />
+            {/* <div className="text-2xl font-bold tracking-tight font-playfair flex items-baseline">
               <span className="bg-gradient-to-r from-saffron via-gold to-maroon bg-clip-text text-transparent">VedicScan</span>
-            </div>
+            </div> */}
           </Link>
 
           {/* Desktop Navigation */}
@@ -119,9 +124,11 @@ const Navbar = () => {
                       size="sm"
                       className="font-semibold ml-2 rounded-full border-vborder/60 hover:border-saffron hover:bg-saffron-pale hover:text-saffron shadow-sm transition-all pr-1"
                     >
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-saffron to-maroon text-white flex items-center justify-center text-[10px] mr-2 shadow-sm">
-                        {user?.name?.[0] || 'U'}
-                      </div>
+                      <img
+                        src="/logo.jpeg"
+                        alt="VedicScan"
+                        className="w-6 h-6 rounded-full object-cover mr-2 shadow-sm border border-vborder/40"
+                      />
                       <span className="mr-1">{user?.name?.split(' ')[0] || 'Account'}</span>
                       <ChevronDown className="w-3.5 h-3.5 opacity-50" />
                     </Button>
