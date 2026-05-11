@@ -1,10 +1,9 @@
 /**
- * Chat Controller — Production Grade with AstrologyEngine Pipeline
+ * Chat Controller — Production Grade with Persistent Memory
  * 
  * Pipeline:
- *   User Question → AstrologyEngine (interpret → themes → prompt) → OpenAI → Response Cleaner → Chat Response
- * 
- * The LLM never does astrology. It only does human storytelling.
+ *   User Question → AstrologyEngine (interpret → themes → memory context → prompt) 
+ *   → OpenAI → Response Cleaner → Persist Memory → Chat Response
  */
 
 import { Response } from 'express';
@@ -15,16 +14,9 @@ import { openaiService } from '../services/openai.service';
 import { PlanLimits } from '../../../config/plans';
 import crypto from 'crypto';
 
-// Import memory layer for cleanup
-const { clearMemory } = require('../../../../AstrologyEngine/conversation_memory');
-
 export const chatController = {
   /**
    * POST /api/chat/message
-   * 
-   * Accepts: { message, conversationId?, userProfile? }
-   *   - userProfile should contain chart data as a structured object (not raw string)
-   * Returns: { conversationId, response, usage }
    */
   async handleMessage(req: AuthRequest, res: Response) {
     try {
@@ -60,25 +52,26 @@ export const chatController = {
           userId,
           title: message.substring(0, 50),
           messages: [],
+          metadata: {
+            recentTopics: [],
+            emotionalConcerns: [],
+            tonePreference: null,
+            messageCount: 0
+          }
         });
         isFirstMessage = true;
       }
 
-      // Add user message to MongoDB
+      // Add user message to local array (saved later)
       chat.messages.push({ role: 'user', content: message });
 
-      // ─── Parse chart data for the AstrologyEngine ───
-      // userProfile can be:
-      //   - A JSON string containing chart data
-      //   - An object with chart fields
-      //   - A string with profile info (legacy — will use as-is for context)
+      // ─── Parse chart data ───
       let chartData: any = null;
       if (userProfile) {
         if (typeof userProfile === 'string') {
           try {
             chartData = JSON.parse(userProfile);
           } catch {
-            // Legacy string format — try to extract what we can
             chartData = null;
           }
         } else if (typeof userProfile === 'object') {
@@ -86,7 +79,7 @@ export const chatController = {
         }
       }
 
-      // ─── Call OpenAI via AstrologyEngine Pipeline ───
+      // ─── Call OpenAI via Optimized Pipeline ───
       let botResponse: string;
       let promptTokens = 0;
       let completionTokens = 0;
@@ -100,7 +93,7 @@ export const chatController = {
             threadId,
             message,
             chartData,
-            finalConvId,
+            chat.metadata, // Pass persistent memory
             isFirstMessage,
             maxTokens,
             maxContext
@@ -109,6 +102,9 @@ export const chatController = {
           botResponse = result.response;
           promptTokens = result.promptTokens;
           completionTokens = result.completionTokens;
+          
+          // Update persistent memory in the document
+          chat.metadata = result.updatedMemory;
 
           // Store the thread mapping
           if (userUsage && result.threadId) {
@@ -119,11 +115,10 @@ export const chatController = {
           botResponse = 'I am so sorry, but I am finding it a little difficult to connect with the cosmos right now. Could you please give me just a moment and try again? 🙏';
         }
       } else {
-        // Fallback mock response when OpenAI is not configured
-        botResponse = `Namaste! 🙏\n\nI received your question: *"${message}"*\n\n⚠️ The AI Assistant is not yet configured. Please set your OPENAI_ASSISTANT_ID in the backend .env file.\n\nTo set up:\n1. Go to https://platform.openai.com/assistants\n2. Create an Assistant with your Vedic knowledge PDFs\n3. Copy the Assistant ID (asst_xxxx)\n4. Add it to your .env as OPENAI_ASSISTANT_ID`;
+        botResponse = `Namaste! 🙏\n\nAI Assistant is not yet configured. Please set OPENAI_ASSISTANT_ID in .env.`;
       }
 
-      // Add bot message to MongoDB
+      // Add bot message and save session
       chat.messages.push({ role: 'assistant', content: botResponse });
       await chat.save();
 
@@ -139,32 +134,19 @@ export const chatController = {
               monthlyTokensUsed: (promptTokens + completionTokens),
               totalPromptTokens: promptTokens,
               totalCompletionTokens: completionTokens,
-            }
+            },
+            $set: { threadMap: userUsage.threadMap }
           }
         );
-        
-        // Refresh local object for the frontend usage stats below
         userUsage.dailyQuestionsUsed += 1;
         userUsage.monthlyQuestionsUsed += 1;
       }
 
-      // ─── Build usage stats for frontend ───
+      // ─── Build usage stats ───
       const usageStats = userUsage && planLimits ? {
-        daily: {
-          used: userUsage.dailyQuestionsUsed,
-          limit: planLimits.dailyQuestions,
-          remaining: Math.max(0, planLimits.dailyQuestions - userUsage.dailyQuestionsUsed),
-        },
-        monthly: {
-          used: userUsage.monthlyQuestionsUsed,
-          limit: planLimits.monthlyQuestions,
-          remaining: Math.max(0, planLimits.monthlyQuestions - userUsage.monthlyQuestionsUsed),
-        },
-        tokens: {
-          prompt: promptTokens,
-          completion: completionTokens,
-          total: promptTokens + completionTokens,
-        },
+        daily: { used: userUsage.dailyQuestionsUsed, limit: planLimits.dailyQuestions, remaining: Math.max(0, planLimits.dailyQuestions - userUsage.dailyQuestionsUsed) },
+        monthly: { used: userUsage.monthlyQuestionsUsed, limit: planLimits.monthlyQuestions, remaining: Math.max(0, planLimits.monthlyQuestions - userUsage.monthlyQuestionsUsed) },
+        tokens: { prompt: promptTokens, completion: completionTokens, total: promptTokens + completionTokens },
       } : null;
 
       res.json({
@@ -178,33 +160,21 @@ export const chatController = {
     }
   },
 
-  /**
-   * GET /api/chat/history
-   * Returns all conversations for the authenticated user
-   */
   async getHistory(req: AuthRequest, res: Response) {
     try {
       const userId = req.user!.userId;
-      const chats = await ChatSession.find({ userId })
-        .sort({ updatedAt: -1 })
-        .limit(20);
+      const chats = await ChatSession.find({ userId }).sort({ updatedAt: -1 }).limit(20);
       res.json({ conversations: chats });
     } catch (error) {
       res.status(500).json({ error: 'Failed to get history' });
     }
   },
 
-  /**
-   * DELETE /api/chat/history/:id
-   * Deletes a specific conversation and its memory
-   */
   async deleteHistory(req: AuthRequest, res: Response) {
     try {
       const { id } = req.params;
       const userId = req.user!.userId;
       await ChatSession.findOneAndDelete({ conversationId: id, userId });
-      // Also clear in-memory conversation context
-      clearMemory(id);
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: 'Failed to delete history' });

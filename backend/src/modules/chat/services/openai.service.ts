@@ -1,14 +1,7 @@
 /**
  * OpenAI Assistants API Service — Production Grade (Token Optimized)
  * 
- * Integrates the AstrologyEngine pipeline:
- *   Chart Data → Interpretation Engine → Theme Aggregator → Prompt Builder → LLM → Response Cleaner
- * 
- * TOKEN OPTIMIZATION STRATEGY:
- *   - First message: Full chart context injected once into thread. User question sent separately.
- *   - Follow-ups: Only question-relevant themes in system prompt. User sends just the question.
- *   - maxCompletionTokens scaled per question type (daily=250, career=400, deep=500).
- *   - Thread truncation keeps only last N messages to cap context window.
+ * Integrates the AstrologyEngine pipeline with persistent memory.
  */
 
 import OpenAI from 'openai';
@@ -24,6 +17,7 @@ export interface AssistantRunResult {
   completionTokens: number;
   totalTokens: number;
   threadId: string;
+  updatedMemory: any;
 }
 
 class OpenAIService {
@@ -66,7 +60,7 @@ class OpenAIService {
     systemInstructions: string,
     maxCompletionTokens: number = 400,
     maxContextMessages: number = 10
-  ): Promise<AssistantRunResult> {
+  ): Promise<any> { // Internal helper result
     const run = await this.client.beta.threads.runs.createAndPoll(threadId, {
       assistant_id: this.assistantId,
       instructions: systemInstructions,
@@ -82,7 +76,6 @@ class OpenAIService {
       throw new Error(`Assistant run failed with status: ${run.status}`);
     }
 
-    // Extract the latest assistant message
     const messages = await this.client.beta.threads.messages.list(threadId, {
       order: 'desc',
       limit: 1,
@@ -99,41 +92,22 @@ class OpenAIService {
       }
     }
 
-    if (!responseText) {
-      responseText = 'I am so sorry, I seem to have lost my connection for a moment. Could you please ask again? 🙏';
-    }
-
     const usage = run.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
 
     return {
-      response: responseText,
-      promptTokens: usage.prompt_tokens || 0,
-      completionTokens: usage.completion_tokens || 0,
-      totalTokens: usage.total_tokens || 0,
-      threadId,
+      response: responseText || 'I am so sorry, I seem to have lost my connection. 🙏',
+      usage,
     };
   }
 
   /**
-   * Full chat flow — Production Pipeline (Token Optimized)
-   * 
-   * FIRST MESSAGE flow:
-   *   1. Build full chart context via AstrologyEngine
-   *   2. Inject context + seed reply into thread (this stays in thread memory)
-   *   3. Add user's actual question as separate message
-   *   4. Run with compressed system prompt
-   * 
-   * FOLLOW-UP MESSAGE flow:
-   *   1. Build only question-relevant themes
-   *   2. Add user question (with lightweight context hints)
-   *   3. Run with compressed system prompt
-   *   4. Thread already has full context from message 1
+   * Full chat flow — Production Pipeline
    */
   async chat(
     threadId: string | null,
     userMessage: string,
     chartData: any | null,
-    conversationId: string,
+    memory: any | null,
     isFirstMessage: boolean,
     planMaxCompletionTokens: number = 800,
     maxContextMessages: number = 10
@@ -143,19 +117,18 @@ class OpenAIService {
     const hasChart = chartData && typeof chartData === 'object' && Object.keys(chartData).length > 0;
 
     // ─── Build prompt via AstrologyEngine ───
-    const prompt = buildMaharshiPrompt({
+    const { prompt, updatedMemory } = buildMaharshiPrompt({
       userQuestion: userMessage,
       chartData: hasChart ? chartData : {},
-      conversationId,
+      memory,
       isFirstMessage,
     });
 
-    // Use the SMALLER of plan limit and question-type suggestion
+    // Token limit scaling
     const maxCompletionTokens = Math.min(planMaxCompletionTokens, prompt.suggestedMaxTokens || 400);
 
     if (isFirstMessage && hasChart && prompt.initialContext) {
-      // FIRST MESSAGE: Inject the full chart context into thread once.
-      // This context persists in the thread — no need to re-send on follow-ups.
+      // Inject context once per thread
       await this.addMessage(actualThreadId, prompt.initialContext, 'user');
       await this.addMessage(
         actualThreadId,
@@ -164,31 +137,33 @@ class OpenAIService {
       );
     }
 
-    // Add the user's actual question (prompt.user is already optimized per message type)
+    // Add user question
     await this.addMessage(actualThreadId, prompt.user, 'user');
 
-    // Run the assistant
-    const result = await this.runAssistant(
+    // Run Assistant
+    const runResult = await this.runAssistant(
       actualThreadId,
       prompt.system,
       maxCompletionTokens,
       maxContextMessages
     );
 
-    // ─── Clean the response ───
-    result.response = cleanLLMResponse(result.response);
-
-    return result;
+    return {
+      response: cleanLLMResponse(runResult.response),
+      promptTokens: runResult.usage.prompt_tokens || 0,
+      completionTokens: runResult.usage.completion_tokens || 0,
+      totalTokens: runResult.usage.total_tokens || 0,
+      threadId: actualThreadId,
+      updatedMemory
+    };
   }
 
   /**
-   * Verify the service is properly configured
+   * Verify configuration
    */
   isConfigured(): boolean {
-    return !!(config.openai.apiKey && config.openai.assistantId && 
-              config.openai.assistantId !== 'asst_REPLACE_WITH_YOUR_ASSISTANT_ID');
+    return !!(config.openai.apiKey && config.openai.assistantId);
   }
 }
 
-// Singleton instance
 export const openaiService = new OpenAIService();

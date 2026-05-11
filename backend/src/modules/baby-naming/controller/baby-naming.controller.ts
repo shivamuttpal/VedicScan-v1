@@ -3,6 +3,10 @@ import { NamingService, NAKSHATRA_SYLLABLES } from '../service/naming.service';
 import { NAKSHATRA_TABLE } from '../../compatibility/service/koota.service';
 import { openaiService } from '../../chat/services/openai.service';
 
+// Lightweight system prompt for baby naming — keeps token usage minimal
+const NAMING_SYSTEM_PROMPT = 'You are a Vedic naming expert. Return ONLY valid JSON arrays with no extra text. Each object must have exactly 4 fields: name, meaning, gender, origin.';
+const EXPLAIN_SYSTEM_PROMPT = 'You are a Vedic naming expert. Provide spiritual and Vedic explanations for baby names in a respectful, warm tone. Keep explanations concise (150-250 words).';
+
 export const babyNamingController = {
     /**
      * POST /api/baby-naming/generate
@@ -33,7 +37,7 @@ export const babyNamingController = {
                     
                     const threadId = await openaiService.createThread();
                     await openaiService.addMessage(threadId, prompt);
-                    const runResult = await openaiService.runAssistant(threadId, 500, 2);
+                    const runResult = await openaiService.runAssistant(threadId, NAMING_SYSTEM_PROMPT, 500, 2);
                     
                     try {
                         const jsonMatch = runResult.response.match(/\[.*\]/s);
@@ -94,18 +98,9 @@ export const babyNamingController = {
             let explanation: string;
 
             if (openaiService.isConfigured()) {
-                const result = await openaiService.runAssistant(
-                    await openaiService.createThread(), // Individual threads for explanations
-                    500,
-                    2
-                );
-                // Note: In a real flow, we'd add the prompt to the thread first.
-                // But for a single-shot explanation, we can use a simpler helper if available.
-                // For now, using the basic assistant run with the prompt as the first message.
-                
                 const threadId = await openaiService.createThread();
                 await openaiService.addMessage(threadId, prompt);
-                const runResult = await openaiService.runAssistant(threadId, 500, 2);
+                const runResult = await openaiService.runAssistant(threadId, EXPLAIN_SYSTEM_PROMPT, 500, 2);
                 explanation = runResult.response;
             } else {
                 explanation = `### Spiritual Significance of ${name}\n\n**${name}** means "${meaning}". \n\nThis name is particularly auspicious for children born under **${nakshatra} Nakshatra**. In Vedic tradition, names starting with the syllable **${syllable}** are said to harmonize with the child's lunar vibrations, bringing stability and prosperity. \n\n*Note: AI Assistant not configured for detailed spiritual deep-dives.*`;

@@ -1,29 +1,20 @@
 /**
- * CONVERSATION MEMORY
+ * CONVERSATION MEMORY — Pure Logic
  * 
- * Stores per-user conversational context so Maharshi can remember:
- *   - Recent topics discussed
- *   - User's emotional tone
- *   - Tone preference (spiritual, modern, traditional)
- *   - Key concerns raised
+ * This module provides logic for transforming conversational metadata into
+ * human-like context strings and updating that metadata based on user messages.
  * 
- * This is an in-memory store. For production persistence, extend this
- * to write to MongoDB (the ChatSession model already stores messages).
- * 
- * Memory is injected into the Prompt Builder so responses feel continuous.
+ * Production Note: The actual storage (MongoDB) is handled by the Chat Controller.
+ * This file stays purely logical and framework-independent.
  */
-
-// In-memory store keyed by conversationId
-const memoryStore = new Map();
 
 /**
- * Creates a memory context string for the Prompt Builder.
+ * Creates a memory context string from a memory object.
  * 
- * @param {string} conversationId
+ * @param {Object} memory - The metadata object (from ChatSession model)
  * @returns {string} Natural language memory context
  */
-function getMemoryContext(conversationId) {
-  const memory = memoryStore.get(conversationId);
+function getMemoryContext(memory) {
   if (!memory) return '';
 
   const parts = [];
@@ -45,25 +36,25 @@ function getMemoryContext(conversationId) {
 }
 
 /**
- * Updates conversational memory after each exchange.
+ * Updates a conversational memory object after an exchange.
  * 
- * @param {string} conversationId
+ * @param {Object} memory - The existing metadata object (will be mutated)
  * @param {string} userMessage - The user's latest message
  * @param {string} questionType - Detected from prompt_builder
+ * @returns {Object} The updated memory object
  */
-function updateMemory(conversationId, userMessage, questionType) {
-  if (!memoryStore.has(conversationId)) {
-    memoryStore.set(conversationId, {
+function updateMemory(memory, userMessage, questionType) {
+  // Initialize if empty
+  if (!memory) {
+    memory = {
       recentTopics: [],
       emotionalConcerns: [],
       tonePreference: null,
-      messageCount: 0,
-      createdAt: new Date()
-    });
+      messageCount: 0
+    };
   }
 
-  const memory = memoryStore.get(conversationId);
-  memory.messageCount += 1;
+  memory.messageCount = (memory.messageCount || 0) + 1;
 
   // Track topic from question type
   const topicMap = {
@@ -79,6 +70,7 @@ function updateMemory(conversationId, userMessage, questionType) {
   };
 
   const topic = topicMap[questionType] || 'general life';
+  if (!memory.recentTopics) memory.recentTopics = [];
   if (!memory.recentTopics.includes(topic)) {
     memory.recentTopics.push(topic);
     // Keep only last 4 topics
@@ -98,6 +90,7 @@ function updateMemory(conversationId, userMessage, questionType) {
     'financial worry': /money|debt|broke|financial|poor/
   };
 
+  if (!memory.emotionalConcerns) memory.emotionalConcerns = [];
   for (const [concern, pattern] of Object.entries(emotionalKeywords)) {
     if (pattern.test(msg) && !memory.emotionalConcerns.includes(concern)) {
       memory.emotionalConcerns.push(concern);
@@ -113,28 +106,11 @@ function updateMemory(conversationId, userMessage, questionType) {
   } else if (/practical|straight|direct|clear/i.test(msg)) {
     memory.tonePreference = 'practical';
   }
-}
 
-/**
- * Clears memory for a conversation (e.g., when deleted).
- * @param {string} conversationId
- */
-function clearMemory(conversationId) {
-  memoryStore.delete(conversationId);
-}
-
-/**
- * Gets raw memory object (for debugging/testing).
- * @param {string} conversationId
- * @returns {Object|null}
- */
-function getRawMemory(conversationId) {
-  return memoryStore.get(conversationId) || null;
+  return memory;
 }
 
 module.exports = {
   getMemoryContext,
-  updateMemory,
-  clearMemory,
-  getRawMemory
+  updateMemory
 };

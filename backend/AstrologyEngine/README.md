@@ -80,11 +80,17 @@ Takes the interpretation array and compresses it into themed buckets:
 Strips: `**bold**`, `## headings`, `- bullets`, AI phrases like "As an AI..."
 
 ### 5. `conversation_memory.js`
-Tracks recent topics, emotional concerns, and tone preference per conversation. Produces natural language memory context like:
-> "The user has recently been exploring career direction. They seem emotionally concerned about self-doubt."
+Pure logic for managing conversational metadata:
+- Tracks recent topics (career, love, etc.)
+- Detects emotional concerns from user input
+- Remembers tone preferences
+- Produces natural language context strings
+
+**Note:** This module is purely functional. The actual state is persisted in the **MongoDB ChatSession model** by the backend controller.
 
 ### 6. `chat_orchestrator.js`
-Wires everything together. Single entry point: `buildMaharshiPrompt()`
+Wires everything together. Single entry point: `buildMaharshiPrompt({ userQuestion, chartData, memory, isFirstMessage })`.
+Returns `{ prompt, updatedMemory }`.
 
 ## Usage from Backend
 

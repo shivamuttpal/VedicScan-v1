@@ -6,16 +6,11 @@
  * Pipeline:
  *   1. interpretChart()        — Chart → Structured interpretations
  *   2. aggregateThemes()       — Interpretations → Compressed emotional themes  
- *   3. getMemoryContext()      — Retrieve conversational context
+ *   3. getMemoryContext()      — Retrieve conversational context from object
  *   4. buildAstrologerPrompt() — Themes + Memory + Question → Final prompt
  *   5. LLM Call                — Send to OpenAI Assistants API
  *   6. cleanResponse()         — Strip AI formatting artifacts
- *   7. updateMemory()          — Store context for next turn
- * 
- * TOKEN OPTIMIZATION:
- *   - First message: full context injected into thread, user sends just the question
- *   - Follow-ups: only question-relevant themes + lightweight memory
- *   - maxCompletionTokens scaled by question type
+ *   7. updateMemory()          — Update context object for next turn
  */
 
 const { interpretChart }        = require('./interpretation_engine');
@@ -29,21 +24,21 @@ const { getMemoryContext, updateMemory } = require('./conversation_memory');
  * 
  * @param {Object} params
  * @param {string} params.userQuestion - The user's question
- * @param {Object} params.chartData - Raw chart data (from Swiss Ephemeris or mock)
- * @param {string} params.conversationId - Unique conversation identifier
+ * @param {Object} params.chartData - Raw chart data
+ * @param {Object} params.memory - Persisted memory object from database
  * @param {string} [params.userMood] - Optional detected mood
- * @param {boolean} [params.isFirstMessage] - Whether this is the first message in the conversation
- * @returns {{ system: string, user: string, questionType: string, initialContext: string, suggestedMaxTokens: number }}
+ * @param {boolean} [params.isFirstMessage] - Whether this is the first message
+ * @returns {{ prompt: Object, updatedMemory: Object }}
  */
-function buildMaharshiPrompt({ userQuestion, chartData, conversationId, userMood, isFirstMessage = false }) {
+function buildMaharshiPrompt({ userQuestion, chartData, memory, userMood, isFirstMessage = false }) {
   // STEP 1 — Interpret chart into structured items
   const interpretedData = interpretChart(chartData);
 
   // STEP 2 — Aggregate into compressed emotional themes
   const themes = aggregateThemes(interpretedData);
 
-  // STEP 3 — Retrieve conversation memory
-  const memoryContext = getMemoryContext(conversationId);
+  // STEP 3 — Retrieve conversation memory context
+  const memoryContext = getMemoryContext(memory);
 
   // STEP 4 — Build the final prompt
   const prompt = buildAstrologerPrompt({
@@ -51,18 +46,17 @@ function buildMaharshiPrompt({ userQuestion, chartData, conversationId, userMood
     themes,
     memoryContext,
     userMood,
-    isFirstMessage,
+    isFirstMessage
   });
 
   // STEP 5 — Update memory for next turn
-  updateMemory(conversationId, userQuestion, prompt.questionType);
+  const updatedMemory = updateMemory(memory, userQuestion, prompt.questionType);
 
-  return prompt;
+  return { prompt, updatedMemory };
 }
 
 /**
  * Cleans a raw LLM response.
- * Exposed here so the chat controller doesn't need to import response_cleaner directly.
  */
 function cleanLLMResponse(rawText) {
   return cleanResponse(rawText);
@@ -71,7 +65,6 @@ function cleanLLMResponse(rawText) {
 module.exports = {
   buildMaharshiPrompt,
   cleanLLMResponse,
-  // Re-export for direct access if needed
   interpretChart,
   aggregateThemes,
   buildAstrologerPrompt,
