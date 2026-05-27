@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IRashifal extends Document {
   sign: string;
   prediction: string;
+  predictionHi: string;
   date: string; // YYYY-MM-DD format for easy querying
   dayOfWeek: string;
   lord?: string;
@@ -13,6 +14,7 @@ export interface IRashifal extends Document {
 const RashifalSchema: Schema = new Schema({
   sign: { type: String, required: true },
   prediction: { type: String, required: true },
+  predictionHi: { type: String, default: '' },
   date: { type: String, required: true },
   dayOfWeek: { type: String, required: true },
   lord: { type: String },

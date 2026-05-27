@@ -30,12 +30,15 @@ class RashifalService {
       // 1. Clear all old data (we only keep predictions for the current day)
       await Rashifal.deleteMany({});
 
-      // 2. Prepare the prompt for batch generation
-      const prompt = `Generate daily Vedic Astrology predictions (Rashifal) for all 12 zodiac signs for today, ${dayOfWeek}. 
-      Return the data strictly as a JSON object with a key "predictions" which is an array of objects.
-      Each object in the array must have these keys: "sign" (Sign Name), "prediction" (2-3 sentences max).
+      // 2. Prepare the prompt for batch generation (English + Hindi in one call)
+      const prompt = `Generate daily Vedic Astrology predictions (Rashifal) for all 12 zodiac signs for today, ${dayOfWeek}.
+      Return strictly as a JSON object with key "predictions" which is an array of objects.
+      Each object must have exactly these keys:
+        "sign": the sign name (use the romanized Sanskrit name exactly as given),
+        "prediction": 2-3 sentences in English,
+        "predictionHi": the same 2-3 sentences translated into Hindi written in Devanagari script.
       Signs: ${SIGNS.join(', ')}.
-      The tone should be wise, encouraging, and authentically Vedic. 
+      Tone: wise, encouraging, authentically Vedic.
       Only return the JSON object, no extra text.`;
 
       const response = await this.client.chat.completions.create({
@@ -66,6 +69,7 @@ class RashifalService {
       const docs = predictions.map((p: any) => ({
         sign: p.sign,
         prediction: p.prediction,
+        predictionHi: p.predictionHi || '',
         date: today,
         dayOfWeek: dayOfWeek,
         createdAt: new Date()
