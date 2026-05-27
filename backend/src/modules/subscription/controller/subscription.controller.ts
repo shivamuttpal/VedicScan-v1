@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { AuthRequest } from '../../../middlewares/auth.middleware';
 import { UserUsage, getISTMidnight, getISTMonthStart } from '../model/subscription.model';
 import { Transaction, TransactionStatus } from '../model/transaction.model';
+import { PricingConfig, DEFAULT_PRICING } from '../model/pricing.model';
 import {
   getPlanLimits,
   PlanType,
@@ -16,6 +17,14 @@ import { paymentService } from '../services/payment.service';
 import { User } from '../../user/model/user.model';
 import { sendPaymentSuccessEmail } from '../../../utils/mail.util';
 import config from '../../../config';
+
+async function seedPricingIfEmpty() {
+  const count = await PricingConfig.countDocuments();
+  if (count === 0) {
+    await PricingConfig.insertMany(DEFAULT_PRICING);
+    console.log('[Pricing] Seeded default pricing config');
+  }
+}
 
 // RevenueCat event types that activate or renew a subscription
 const RC_ACTIVATE_EVENTS = new Set([
@@ -50,6 +59,21 @@ function getBillingCycleFromProductId(productId: string): 'monthly' | 'annual' {
 }
 
 export const subscriptionController = {
+  /**
+   * GET /api/subscription/pricing  — public
+   * Returns active pricing plans from DB, auto-seeding defaults on first call.
+   */
+  async getPricing(_req: Request, res: Response) {
+    try {
+      await seedPricingIfEmpty();
+      const plans = await PricingConfig.find({ isActive: true }).lean().select('-__v -createdAt -updatedAt');
+      res.json({ success: true, data: plans });
+    } catch (error) {
+      console.error('[Pricing] getPricing error:', error);
+      res.status(500).json({ success: false, message: 'Failed to load pricing' });
+    }
+  },
+
   /**
    * GET /api/subscription/status
    * Returns real usage data for the authenticated user
@@ -200,10 +224,20 @@ export const subscriptionController = {
       let cycle = 'none';
 
       if (oneTime) {
+        // One-time features: still use static PLAN_PRICES (paise/cents)
         amount = (PLAN_PRICES as any)[selectedCurrency]?.['one-time']?.[plan];
       } else {
+        // Subscription plans: read from DB (major units) and convert to paise/cents for Stripe
         cycle = billingCycle === 'annual' ? 'annual' : 'monthly';
-        amount = (PLAN_PRICES as any)[selectedCurrency]?.[plan]?.[cycle];
+        const pricingDoc = await PricingConfig.findOne({ planId: plan, isActive: true }).lean();
+        if (pricingDoc) {
+          const majorAmount = (pricingDoc as any)[selectedCurrency]?.[cycle];
+          if (majorAmount) amount = Math.round(majorAmount * 100);
+        }
+        // Fallback to static PLAN_PRICES if DB doc not found
+        if (!amount) {
+          amount = (PLAN_PRICES as any)[selectedCurrency]?.[plan]?.[cycle];
+        }
       }
 
       if (!amount) {
@@ -509,6 +543,64 @@ export const subscriptionController = {
   },
 
   /**
+   * POST /api/subscription/revenuecat-sync
+   * Client-triggered sync: the mobile app sends the active RevenueCat entitlement details
+   * after a purchase or restore, and this updates the backend plan.
+   * This is the fallback when the server-to-server webhook hasn't fired yet (sandbox, delay, etc.)
+   */
+  async syncRevenueCat(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.user!.userId;
+      const {
+        productId = '',
+        entitlementIds = [] as string[],
+        expirationAtMs,
+        isActive,
+      } = req.body;
+
+      if (!isActive) {
+        res.json({ success: true, synced: false, message: 'No active RC subscription to sync' });
+        return;
+      }
+
+      const plan = getPlanFromRC(entitlementIds, productId);
+      const billingCycle = getBillingCycleFromProductId(productId);
+
+      let usage = await UserUsage.findOne({ userId });
+      if (!usage) usage = new UserUsage({ userId });
+
+      const now = new Date();
+      usage.previousPlan = usage.plan;
+      usage.plan = plan as any;
+      usage.billingCycle = billingCycle;
+      usage.planStartDate = usage.planStartDate || now;
+      usage.expiryWarningNotified = false;
+      usage.expiryNotified = false;
+
+      const isLifetime = productId === 'lifetime';
+      if (isLifetime) {
+        usage.planEndDate = new Date('2125-01-01T00:00:00.000Z');
+      } else if (expirationAtMs) {
+        usage.planEndDate = new Date(Number(expirationAtMs));
+      } else {
+        const baseDate = (usage.planEndDate && usage.planEndDate > now) ? usage.planEndDate : now;
+        usage.planEndDate = new Date(
+          baseDate.getTime() + (billingCycle === 'annual' ? 365 : 30) * 24 * 60 * 60 * 1000
+        );
+      }
+
+      await usage.save();
+      await User.updateOne({ _id: userId }, { $set: { isSubscriber: true } });
+
+      console.log(`[RC Sync] Synced ${plan}/${billingCycle} for user ${userId} — expires ${usage.planEndDate}`);
+      res.json({ success: true, synced: true, plan, billingCycle, planEndDate: usage.planEndDate });
+    } catch (error: any) {
+      console.error('[RC Sync] Error:', error);
+      res.status(500).json({ success: false, message: error.message || 'Sync failed' });
+    }
+  },
+
+  /**
    * POST /api/subscription/revenuecat-webhook
    * Handles RevenueCat server-to-server webhook for Apple IAP and Google Play Billing.
    * Authorization: Bearer <REVENUECAT_WEBHOOK_AUTH_TOKEN>
@@ -539,8 +631,9 @@ export const subscriptionController = {
       environment,
     } = event;
 
-    // Ignore sandbox events in production
-    if (environment === 'SANDBOX' && config.env === 'production') {
+    // Ignore sandbox events in production unless explicitly allowed (set REVENUECAT_ALLOW_SANDBOX=true for testing)
+    if (environment === 'SANDBOX' && config.env === 'production' && !config.revenueCat.allowSandbox) {
+      console.log(`[RevenueCat Webhook] Skipping sandbox event in production: ${type}`);
       res.json({ received: true });
       return;
     }

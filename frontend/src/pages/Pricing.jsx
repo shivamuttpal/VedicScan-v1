@@ -10,16 +10,21 @@ import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { GoldCard, Mandala } from '../components/VedicUI';
 
+const DEFAULT_PRICES = {
+  INR: { standard: { monthly: 149, annual: 1499 }, premium: { monthly: 299, annual: 2999 }, symbol: '₹' },
+  USD: { standard: { monthly: 9, annual: 49 }, premium: { monthly: 19, annual: 99 }, symbol: '$' },
+};
+
 const Pricing = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const [processingPlan, setProcessingPlan] = useState(null);
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [currency, setCurrency] = useState('INR');
-  const [currentPlan, setCurrentPlan] = useState('free'); // user's active plan
+  const [currentPlan, setCurrentPlan] = useState('free');
   const [planEnd, setPlanEnd] = useState(null);
+  const [prices, setPrices] = useState(DEFAULT_PRICES);
 
-  // Detect location on mount + fetch current subscription
   React.useEffect(() => {
     const detectLocation = async () => {
       try {
@@ -33,29 +38,33 @@ const Pricing = () => {
     };
     detectLocation();
 
-    // Fetch subscription status if authenticated
+    // Fetch DB-driven pricing
+    api.get('/api/subscription/pricing')
+      .then(({ data }) => {
+        if (data.success && Array.isArray(data.data)) {
+          const built = {
+            INR: { ...DEFAULT_PRICES.INR },
+            USD: { ...DEFAULT_PRICES.USD },
+          };
+          data.data.forEach((plan) => {
+            const id = plan.planId;
+            if (plan.INR) built.INR[id] = { monthly: plan.INR.monthly, annual: plan.INR.annual };
+            if (plan.USD) built.USD[id] = { monthly: plan.USD.monthly, annual: plan.USD.annual };
+          });
+          setPrices(built);
+        }
+      })
+      .catch(() => {}); // keep defaults on error
+
     if (isAuthenticated) {
       api.get('/api/subscription/status')
         .then(({ data }) => {
           setCurrentPlan(data.plan || 'free');
           setPlanEnd(data.planEndDate || null);
         })
-        .catch(() => {}); // silent fail
+        .catch(() => {});
     }
   }, [isAuthenticated]);
-
-  const prices = {
-    INR: {
-      standard: { monthly: 50, annual: 2999 },
-      premium: { monthly: 50, annual: 9999 },
-      symbol: '₹'
-    },
-    USD: {
-      standard: { monthly: 29, annual: 290 },
-      premium: { monthly: 99, annual: 990 },
-      symbol: '$'
-    }
-  };
 
   const currentPrices = prices[currency];
 

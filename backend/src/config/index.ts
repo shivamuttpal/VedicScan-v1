@@ -40,6 +40,8 @@ interface Config {
   };
   revenueCat: {
     webhookAuthToken: string;
+    secretKey: string;
+    allowSandbox: boolean;
   };
 }
 
@@ -79,6 +81,8 @@ const config: Config = {
   },
   revenueCat: {
     webhookAuthToken: process.env.REVENUECAT_WEBHOOK_AUTH_TOKEN || '',
+    secretKey: process.env.REVENUECAT_SECRET_KEY || '',
+    allowSandbox: process.env.REVENUECAT_ALLOW_SANDBOX === 'true',
   },
 };
 
