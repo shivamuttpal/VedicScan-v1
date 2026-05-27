@@ -15,6 +15,39 @@ import {
 import { paymentService } from '../services/payment.service';
 import { User } from '../../user/model/user.model';
 import { sendPaymentSuccessEmail } from '../../../utils/mail.util';
+import config from '../../../config';
+
+// RevenueCat event types that activate or renew a subscription
+const RC_ACTIVATE_EVENTS = new Set([
+  'INITIAL_PURCHASE',
+  'RENEWAL',
+  'UNCANCELLATION',
+  'NON_RENEWING_PURCHASE',
+  'PRODUCT_CHANGE',
+]);
+
+// Entitlement ID → plan name
+const RC_ENTITLEMENT_TO_PLAN: Record<string, string> = {
+  'vedicscan Pro': 'premium',
+  standard_access: 'standard',
+  premium_access: 'premium',
+};
+
+function getPlanFromRC(entitlementIds: string[], productId: string): string {
+  for (const id of entitlementIds) {
+    if (RC_ENTITLEMENT_TO_PLAN[id]) return RC_ENTITLEMENT_TO_PLAN[id];
+  }
+  if (productId.includes('premium')) return 'premium';
+  if (productId.includes('standard')) return 'standard';
+  // lifetime and yearly products all map to premium
+  return 'premium';
+}
+
+function getBillingCycleFromProductId(productId: string): 'monthly' | 'annual' {
+  if (productId === 'lifetime') return 'annual'; // treated as annual for backend limits
+  if (productId.includes('annual') || productId.includes('year') || productId === 'yearly') return 'annual';
+  return 'monthly';
+}
 
 export const subscriptionController = {
   /**
@@ -473,5 +506,138 @@ export const subscriptionController = {
    */
   async upgradePlan(req: AuthRequest, res: Response) {
     res.status(400).json({ success: false, message: 'Endpoint deprecated. Please use create-order flow.' });
+  },
+
+  /**
+   * POST /api/subscription/revenuecat-webhook
+   * Handles RevenueCat server-to-server webhook for Apple IAP and Google Play Billing.
+   * Authorization: Bearer <REVENUECAT_WEBHOOK_AUTH_TOKEN>
+   */
+  async handleRevenueCatWebhook(req: Request, res: Response) {
+    // Verify authorization header
+    const authHeader = req.headers['authorization'] || '';
+    const expectedToken = config.revenueCat.webhookAuthToken;
+    if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const event = req.body?.event;
+    if (!event) {
+      res.status(400).json({ error: 'Missing event payload' });
+      return;
+    }
+
+    const {
+      type,
+      app_user_id: userId,
+      product_id: productId = '',
+      entitlement_ids: entitlementIds = [],
+      expiration_at_ms: expirationAtMs,
+      id: rcEventId,
+      store,
+      environment,
+    } = event;
+
+    // Ignore sandbox events in production
+    if (environment === 'SANDBOX' && config.env === 'production') {
+      res.json({ received: true });
+      return;
+    }
+
+    if (!userId) {
+      console.error('[RevenueCat Webhook] Missing app_user_id');
+      res.status(400).json({ error: 'Missing app_user_id' });
+      return;
+    }
+
+    console.log(`[RevenueCat Webhook] ${type} for user ${userId} | product: ${productId} | store: ${store}`);
+
+    try {
+      if (RC_ACTIVATE_EVENTS.has(type)) {
+        // ── Activate or renew subscription ──
+        const plan = getPlanFromRC(entitlementIds, productId);
+        const billingCycle = getBillingCycleFromProductId(productId);
+        const purchaseSource = store === 'APP_STORE' ? 'apple' : 'google';
+
+        let usage = await UserUsage.findOne({ userId });
+        if (!usage) {
+          usage = new UserUsage({ userId });
+        }
+
+        const now = new Date();
+        usage.previousPlan = usage.plan;
+        usage.plan = plan as any;
+        usage.billingCycle = billingCycle;
+        usage.planStartDate = now;
+
+        // Lifetime purchases have no expiry
+        const isLifetime = productId === 'lifetime';
+        if (isLifetime) {
+          // Set far-future date (100 years) so expiry checks never trigger
+          usage.planEndDate = new Date('2125-01-01T00:00:00.000Z');
+        } else if (expirationAtMs) {
+          usage.planEndDate = new Date(expirationAtMs);
+        } else {
+          const baseDate = (usage.planEndDate && usage.planEndDate > now) ? usage.planEndDate : now;
+          usage.planEndDate = new Date(
+            baseDate.getTime() + (billingCycle === 'annual' ? 365 : 30) * 24 * 60 * 60 * 1000
+          );
+        }
+
+        usage.expiryWarningNotified = false;
+        usage.expiryNotified = false;
+        await usage.save();
+
+        await User.updateOne({ _id: userId }, { $set: { isSubscriber: true } });
+
+        // Record transaction for audit trail (use rcEventId as unique key)
+        if (rcEventId) {
+          const exists = await Transaction.findOne({ stripeSessionId: `rc_${rcEventId}` });
+          if (!exists) {
+            await Transaction.create({
+              userId,
+              stripeSessionId: `rc_${rcEventId}`,
+              revenueCatEventId: rcEventId,
+              purchaseSource,
+              amount: 0,
+              currency: event.currency || 'INR',
+              plan,
+              billingCycle,
+              status: TransactionStatus.COMPLETED,
+            });
+          }
+        }
+
+        // Send success email
+        const user = await User.findById(userId).select('email').lean();
+        if (user?.email && type === 'INITIAL_PURCHASE') {
+          sendPaymentSuccessEmail(user.email, plan, 0, event.currency || 'INR')
+            .catch(err => console.error('[RevenueCat Webhook] Email failed:', err));
+        }
+
+        console.log(`[RevenueCat Webhook] Activated ${plan} (${billingCycle}) for user ${userId} until ${usage.planEndDate}`);
+
+      } else if (type === 'EXPIRATION') {
+        // ── Subscription expired ──
+        const usage = await UserUsage.findOne({ userId });
+        if (usage && usage.plan !== 'free') {
+          usage.previousPlan = usage.plan;
+          usage.plan = 'free';
+          usage.billingCycle = 'none';
+          await usage.save();
+          await User.updateOne({ _id: userId }, { $set: { isSubscriber: false } });
+          console.log(`[RevenueCat Webhook] Expired — reverted user ${userId} to free`);
+        }
+      }
+      // CANCELLATION is intentionally ignored: user keeps access until expiration_at_ms
+    } catch (error) {
+      console.error('[RevenueCat Webhook] Error:', error);
+      // Return 200 so RevenueCat doesn't keep retrying on our bug
+      res.json({ received: true, error: 'Internal processing error' });
+      return;
+    }
+
+    res.json({ received: true });
   },
 };

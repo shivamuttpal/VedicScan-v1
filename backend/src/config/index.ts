@@ -38,6 +38,9 @@ interface Config {
     secretKey: string;
     webhookSecret: string;
   };
+  revenueCat: {
+    webhookAuthToken: string;
+  };
 }
 
 const config: Config = {
@@ -73,6 +76,9 @@ const config: Config = {
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY || '',
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+  },
+  revenueCat: {
+    webhookAuthToken: process.env.REVENUECAT_WEBHOOK_AUTH_TOKEN || '',
   },
 };
 

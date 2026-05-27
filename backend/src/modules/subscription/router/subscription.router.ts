@@ -4,9 +4,11 @@ import { authMiddleware } from '../../../middlewares/auth.middleware';
 
 const router = Router();
 
-// Webhook must be unauthenticated and handled before global JSON parser if possible,
-// but we'll define it here. NOTE: Requires raw body.
+// Stripe webhook — requires raw body for signature verification
 router.post('/webhook', subscriptionController.handleWebhook);
+
+// RevenueCat webhook — Apple IAP + Google Play Billing (unauthenticated, token-verified inside handler)
+router.post('/revenuecat-webhook', subscriptionController.handleRevenueCatWebhook);
 
 // GET unsubscribe — public (accessed via email link, no auth required)
 router.get('/unsubscribe-emails', subscriptionController.unsubscribeEmails);
