@@ -446,33 +446,34 @@ const Chat = () => {
 
           if (chartResponse.data.success) {
             const moon = chartResponse.data.moon;
+            const lagna = chartResponse.data.lagna || {};
+            const p = chartResponse.data.planets || {};
             const dasha = chartResponse.data.dasha_data;
             const meta = chartResponse.data.meta;
 
             chartDataString = `
-BIRTH CHART DATA FOR ${selectedProfile.name}:
-- Date of Birth: ${selectedProfile.dateOfBirth}
-- Time of Birth: ${selectedProfile.timeOfBirth}
-- Place of Birth: ${selectedProfile.placeOfBirth}
+BIRTH CHART FOR ${selectedProfile.name}:
+DOB: ${selectedProfile.dateOfBirth} | TOB: ${selectedProfile.timeOfBirth} | Place: ${selectedProfile.placeOfBirth}
 
-MOON POSITION (Calculated using Swiss Ephemeris with Lahiri Ayanamsa):
-- Rashi (Moon Sign): ${moon.sign_vedic}
-- Nakshatra: ${moon.nakshatra}
-- Moon Degree: ${moon.degree}°
-- Pada: ${moon.pada || 'N/A'}
+LAGNA (Ascendant): ${lagna.sign || 'N/A'} (${lagna.degree?.toFixed(2) || 'N/A'}°)
 
-CURRENT VIMSOTTARI DASHA PERIODS:
-- Mahadasha: ${dasha?.current_mahadasha || 'Unknown'} (ends ${dasha?.mahadasha_end_date || 'Unknown'})
-- Antardasha: ${dasha?.current_antardasha || 'Unknown'} (ends ${dasha?.antardasha_end_date || 'Unknown'})
+PLANETARY POSITIONS (Swiss Ephemeris, Lahiri Ayanamsa):
+- Sun:     ${p.Sun?.rashi || 'N/A'} | ${p.Sun?.nakshatra || 'N/A'} | ${p.Sun?.degree?.toFixed(2) || 'N/A'}°
+- Moon:    ${moon.sign_vedic} | ${moon.nakshatra} | ${moon.degree?.toFixed(2)}° | Pada ${moon.pada || 'N/A'}
+- Mars:    ${p.Mars?.rashi || 'N/A'} | ${p.Mars?.nakshatra || 'N/A'} | ${p.Mars?.degree?.toFixed(2) || 'N/A'}°
+- Mercury: ${p.Mercury?.rashi || 'N/A'} | ${p.Mercury?.nakshatra || 'N/A'} | ${p.Mercury?.degree?.toFixed(2) || 'N/A'}°
+- Jupiter: ${p.Jupiter?.rashi || 'N/A'} | ${p.Jupiter?.nakshatra || 'N/A'} | ${p.Jupiter?.degree?.toFixed(2) || 'N/A'}°
+- Venus:   ${p.Venus?.rashi || 'N/A'} | ${p.Venus?.nakshatra || 'N/A'} | ${p.Venus?.degree?.toFixed(2) || 'N/A'}°
+- Saturn:  ${p.Saturn?.rashi || 'N/A'} | ${p.Saturn?.nakshatra || 'N/A'} | ${p.Saturn?.degree?.toFixed(2) || 'N/A'}°
+- Rahu:    ${p.Rahu?.rashi || 'N/A'} | ${p.Rahu?.nakshatra || 'N/A'} | ${p.Rahu?.degree?.toFixed(2) || 'N/A'}°
+- Ketu:    ${p.Ketu?.rashi || 'N/A'} | ${p.Ketu?.nakshatra || 'N/A'} | ${p.Ketu?.degree?.toFixed(2) || 'N/A'}°
 
-CURRENT DATE CONTEXT:
-- Today's Date: ${meta?.current_date || 'Unknown'}
-- Day: ${meta?.current_weekday || 'Unknown'}
+VIMSHOTTARI DASHA:
+- Mahadasha:  ${dasha?.current_mahadasha || 'N/A'} (ends ${dasha?.mahadasha_end_date || 'N/A'})
+- Antardasha: ${dasha?.current_antardasha || 'N/A'} (ends ${dasha?.antardasha_end_date || 'N/A'})
 
-Note: This data is calculated using high-precision astronomical calculations (VedicV2Engine).
-`;
-            console.log('Generated Vedic Chart from Backend:', chartDataString);
-            console.log('DEBUG - Dasha Data:', dasha);
+TODAY: ${meta?.current_date || 'N/A'} (${meta?.current_weekday || 'N/A'})
+`.trim();
           } else {
             throw new Error('Chart calculation failed');
           }

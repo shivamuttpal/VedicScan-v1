@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(Select-Object -First 5)",
+      "Bash(npm info *)",
+      "Bash(node -e \"const pkg = require\\('./node_modules/react-native-purchases-ui/package.json'\\); console.log\\(pkg.version, pkg.main || pkg.exports\\)\")",
+      "Bash(node -e \"const k = Object.keys\\(require\\('./node_modules/react-native-purchases-ui/lib/commonjs/index'\\)\\); console.log\\(k.join\\('\\\\n'\\)\\)\")",
+      "Bash(adb reverse *)",
+      "Bash(Get-ChildItem -Path \"d:\\\\Vedicscan1\\\\mobileApp\" -Directory)",
+      "Bash(xargs grep -l \"i18n\\\\|translate\\\\|language\\\\|lang\\\\.json\\\\|locales\")",
+      "Bash(npx tsc *)",
+      "Bash(Get-ChildItem -Path \"d:\\\\Vedicscan1\\\\backend\\\\astrologyCalculation\" -Recurse -File)",
+      "Bash(Select-Object FullName)"
+    ]
+  }
+}
