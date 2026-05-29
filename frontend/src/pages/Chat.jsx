@@ -128,6 +128,8 @@ const Chat = () => {
   const [usage, setUsage] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [chartData, setChartData] = useState(null);
+  const [chartProfileId, setChartProfileId] = useState(null);
   const messagesEndRef = useRef(null);
   const typingIndicatorRef = useRef(null);
   const lastUserMessageRef = useRef(null);
@@ -138,6 +140,27 @@ const Chat = () => {
     loadChatHistoryFromDB();
     fetchUsageStats();
   }, []);
+
+  // Pre-calculate chart whenever the selected profile changes so sendMessage is instant
+  useEffect(() => {
+    if (!selectedProfile) return;
+    const pid = selectedProfile._id || selectedProfile.id;
+    if (pid === chartProfileId) return;
+
+    api.post('/api/chart/calculate', {
+      dateOfBirth: selectedProfile.dateOfBirth,
+      timeOfBirth: selectedProfile.timeOfBirth || '12:00',
+      placeOfBirth: selectedProfile.placeOfBirth,
+      timezoneOffset: 5.5,
+    })
+      .then((res) => {
+        if (res.data?.success) {
+          setChartData(res.data);
+          setChartProfileId(pid);
+        }
+      })
+      .catch((e) => console.warn('Chart pre-calc failed:', e.message));
+  }, [selectedProfile]);
 
   const fetchUsageStats = async () => {
     try {
@@ -432,26 +455,17 @@ const Chat = () => {
     setIsTyping(true);
 
     try {
-      // Calculate Vedic chart using backend API (high precision Swiss Ephemeris)
+      // Attach chart context using pre-calculated data (avoids per-message API call)
       let chartDataString = null;
       if (selectedProfile) {
-        try {
-          // Call backend API to get accurate chart data
-          const chartResponse = await api.post('/api/chart/calculate', {
-            dateOfBirth: selectedProfile.dateOfBirth,
-            timeOfBirth: selectedProfile.timeOfBirth,
-            placeOfBirth: selectedProfile.placeOfBirth,
-            timezoneOffset: 5.5  // IST - can be made dynamic based on location
-          });
+        if (chartData) {
+          const moon = chartData.moon;
+          const lagna = chartData.lagna || {};
+          const p = chartData.planets || {};
+          const dasha = chartData.dasha_data;
+          const meta = chartData.meta;
 
-          if (chartResponse.data.success) {
-            const moon = chartResponse.data.moon;
-            const lagna = chartResponse.data.lagna || {};
-            const p = chartResponse.data.planets || {};
-            const dasha = chartResponse.data.dasha_data;
-            const meta = chartResponse.data.meta;
-
-            chartDataString = `
+          chartDataString = `
 BIRTH CHART FOR ${selectedProfile.name}:
 DOB: ${selectedProfile.dateOfBirth} | TOB: ${selectedProfile.timeOfBirth} | Place: ${selectedProfile.placeOfBirth}
 
@@ -474,12 +488,7 @@ VIMSHOTTARI DASHA:
 
 TODAY: ${meta?.current_date || 'N/A'} (${meta?.current_weekday || 'N/A'})
 `.trim();
-          } else {
-            throw new Error('Chart calculation failed');
-          }
-        } catch (chartError) {
-          console.error('Error calculating chart:', chartError);
-          // Fallback to basic profile info
+        } else {
           chartDataString = `Name: ${selectedProfile.name}, DOB: ${selectedProfile.dateOfBirth}, Time: ${selectedProfile.timeOfBirth}, Place: ${selectedProfile.placeOfBirth}`;
         }
       }

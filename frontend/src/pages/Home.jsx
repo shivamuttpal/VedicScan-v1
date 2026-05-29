@@ -32,26 +32,12 @@ const Home = () => {
     });
   };
 
-  // Helper: Determine Rashi based on DOB (Sun sign ranges)
-  const determineRashi = (dateStr) => {
-    if (!dateStr) return 'Mesh';
-    const date = new Date(dateStr);
-    const m = date.getMonth() + 1;
-    const d = date.getDate();
-
-    if ((m === 3 && d >= 21) || (m === 4 && d <= 19)) return 'Mesh';
-    if ((m === 4 && d >= 20) || (m === 5 && d <= 20)) return 'Vrishabh';
-    if ((m === 5 && d >= 21) || (m === 6 && d <= 20)) return 'Mithun';
-    if ((m === 6 && d >= 21) || (m === 7 && d <= 22)) return 'Kark';
-    if ((m === 7 && d >= 23) || (m === 8 && d <= 22)) return 'Simha';
-    if ((m === 8 && d >= 23) || (m === 9 && d <= 22)) return 'Kanya';
-    if ((m === 9 && d >= 23) || (m === 10 && d <= 22)) return 'Tula';
-    if ((m === 10 && d >= 23) || (m === 11 && d <= 21)) return 'Vrishchik';
-    if ((m === 11 && d >= 22) || (m === 12 && d <= 21)) return 'Dhanu';
-    if ((m === 12 && d >= 22) || (m === 1 && d <= 19)) return 'Makar';
-    if ((m === 1 && d >= 20) || (m === 2 && d <= 18)) return 'Kumbh';
-    if ((m === 2 && d >= 19) || (m === 3 && d <= 20)) return 'Meen';
-    return 'Mesh';
+  // Maps English planet sign names (from vedic_engine.py) to Sanskrit Rashifal names
+  const VEDIC_RASHI_MAP = {
+    'Aries': 'Mesh', 'Taurus': 'Vrishabh', 'Gemini': 'Mithun',
+    'Cancer': 'Kark', 'Leo': 'Simha', 'Virgo': 'Kanya',
+    'Libra': 'Tula', 'Scorpio': 'Vrishchik', 'Sagittarius': 'Dhanu',
+    'Capricorn': 'Makar', 'Aquarius': 'Kumbh', 'Pisces': 'Meen',
   };
 
   // Fetch daily predictions
@@ -85,10 +71,24 @@ const Home = () => {
         const res = await axios.get(`${BACKEND_URL}/api/profiles/default`, {
           headers: { Authorization: `Bearer ${authToken}` }
         });
-        if (res.data) {
-          setDefaultProfile(res.data);
-          const rashi = determineRashi(res.data.dateOfBirth);
-          setSelectedSignName(rashi);
+        if (!res.data) return;
+        setDefaultProfile(res.data);
+
+        // Calculate true Vedic Janma Rashi (Moon sign, sidereal Lahiri Ayanamsa)
+        try {
+          const chartRes = await axios.post(`${BACKEND_URL}/api/chart/calculate`, {
+            dateOfBirth: res.data.dateOfBirth,
+            timeOfBirth: res.data.timeOfBirth || '12:00',
+            placeOfBirth: res.data.placeOfBirth,
+            timezoneOffset: 5.5,
+          }, { headers: { Authorization: `Bearer ${authToken}` } });
+
+          if (chartRes.data?.success) {
+            const rashiEN = chartRes.data.moon.sign_vedic;
+            setSelectedSignName(VEDIC_RASHI_MAP[rashiEN] || 'Mesh');
+          }
+        } catch {
+          // Fallback: keep default Mesh if chart calculation fails
         }
       } catch (err) {
         console.error('Failed to fetch default profile:', err);
