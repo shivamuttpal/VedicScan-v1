@@ -1,15 +1,12 @@
 import { Request, Response } from 'express';
 import { kundaliService } from '../services/kundali.service';
 import { generateKundaliPDF } from '../services/pdf.service';
-
-interface AuthRequest extends Request {
-  user?: { id: string; email: string };
-}
+import { AuthRequest } from '../../../middlewares/auth.middleware';
 
 export const kundaliController = {
   async generate(req: AuthRequest, res: Response) {
     try {
-      const userId = req.user!.id;
+      const userId = req.user!.userId;
       const { name, dateOfBirth, timeOfBirth, placeOfBirth, timezoneOffset, forceRegenerate } = req.body;
 
       if (!name || !dateOfBirth || !timeOfBirth || !placeOfBirth) {
@@ -42,7 +39,7 @@ export const kundaliController = {
 
   async getById(req: AuthRequest, res: Response) {
     try {
-      const userId = req.user!.id;
+      const userId = req.user!.userId;
       const { id } = req.params;
 
       const kundali = await kundaliService.getById(id, userId);
@@ -59,7 +56,7 @@ export const kundaliController = {
 
   async list(req: AuthRequest, res: Response) {
     try {
-      const userId = req.user!.id;
+      const userId = req.user!.userId;
       const kundalis = await kundaliService.getByUser(userId);
       res.json({ success: true, data: kundalis });
     } catch (error: any) {
@@ -70,7 +67,7 @@ export const kundaliController = {
 
   async downloadPDF(req: AuthRequest, res: Response) {
     try {
-      const userId = req.user!.id;
+      const userId = req.user!.userId;
       const { id } = req.params;
 
       const kundali = await kundaliService.getById(id, userId);
@@ -93,7 +90,7 @@ export const kundaliController = {
 
   async deleteKundali(req: AuthRequest, res: Response) {
     try {
-      const userId = req.user!.id;
+      const userId = req.user!.userId;
       const { id } = req.params;
       const deleted = await kundaliService.deleteById(id, userId);
       if (!deleted) {
