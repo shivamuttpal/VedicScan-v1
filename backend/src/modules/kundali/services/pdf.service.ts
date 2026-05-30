@@ -136,7 +136,8 @@ function ensureSpace(doc: PDFKit.PDFDocument, neededPx: number) {
   }
 }
 
-export function generateKundaliPDF(kundali: IKundali): Buffer {
+export function generateKundaliPDF(kundali: IKundali): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
   const doc = new PDFDocument({
     size: 'A4',
     margins: { top: 40, bottom: 40, left: 45, right: 45 },
@@ -145,6 +146,7 @@ export function generateKundaliPDF(kundali: IKundali): Buffer {
 
   const buffers: Buffer[] = [];
   doc.on('data', (chunk: Buffer) => buffers.push(chunk));
+  doc.on('error', reject);
 
   const pageW = doc.page.width - doc.page.margins.left - doc.page.margins.right;
   const L = doc.page.margins.left;
@@ -588,7 +590,7 @@ export function generateKundaliPDF(kundali: IKundali): Buffer {
   doc.font('Helvetica').fontSize(7.5).fillColor(TEXT_MUTED)
      .text('This Kundali report is provided for spiritual guidance and self-understanding only. It is NOT medical advice, financial advice, or legal advice. Astrological interpretations are symbolic and traditional in nature. VedicScan does not guarantee outcomes based on this report.', L + 10, doc.y + 20, { width: pageW - 20, align: 'center' });
 
+  doc.on('end', () => resolve(Buffer.concat(buffers)));
   doc.end();
-
-  return Buffer.concat(buffers);
+  }); // end Promise
 }

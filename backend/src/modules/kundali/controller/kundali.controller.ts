@@ -78,7 +78,7 @@ export const kundaliController = {
         return res.status(404).json({ success: false, message: 'Kundali not found' });
       }
 
-      const pdfBuffer = generateKundaliPDF(kundali);
+      const pdfBuffer = await generateKundaliPDF(kundali);
       const filename = `VedicScan_Kundali_${kundali.name.replace(/\s+/g, '_')}_${kundali.dateOfBirth}.pdf`;
 
       res.setHeader('Content-Type', 'application/pdf');
