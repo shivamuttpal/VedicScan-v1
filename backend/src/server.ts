@@ -7,7 +7,7 @@ import rateLimit from 'express-rate-limit';
 import config from './config';
 import connectDatabase from './config/database';
 import { errorHandler, notFoundHandler } from './middlewares';
-import { userRouter, profileRouter, chartRouter, chatRouter, subscriptionRouter, compatibilityRouter, babyNamingRouter, rashifalRouter, systemRouter } from './modules';
+import { userRouter, profileRouter, chartRouter, chatRouter, subscriptionRouter, compatibilityRouter, babyNamingRouter, rashifalRouter, systemRouter, kundaliRouter } from './modules';
 import { initCronJobs } from './utils/cron.util';
 
 // Initialize Express app
@@ -76,6 +76,7 @@ app.use('/api/compatibility', compatibilityRouter);
 app.use('/api/baby-naming', babyNamingRouter);
 app.use('/api/rashifal', rashifalRouter);
 app.use('/api/system', systemRouter);
+app.use('/api/kundali', kundaliRouter);
 
 // Root endpoint
 app.get('/', (req: Request, res: Response) => {

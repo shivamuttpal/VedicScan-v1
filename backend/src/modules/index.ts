@@ -7,3 +7,4 @@ export * from './compatibility';
 export * from './baby-naming';
 export { default as rashifalRouter } from './rashifal/router/rashifal.router';
 export * from './system';
+export * from './kundali';
