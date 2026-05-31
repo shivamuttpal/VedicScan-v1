@@ -1,601 +1,747 @@
 import PDFDocument from 'pdfkit';
 import { IKundali } from '../model/kundali.model';
 
-// Colors
-const GOLD = '#C8A45A';
-const DARK_MAROON = '#7B1A38';
-const DARK_BG = '#1A0A14';
-const LIGHT_BG = '#FDF8F0';
-const BORDER = '#E8D5B0';
-const TEXT_DARK = '#2C1810';
-const TEXT_MUTED = '#8B7355';
-const WHITE = '#FFFFFF';
-const TABLE_ALT = '#F9F3E8';
+/* ────────────────────────────────────────────────────────────────────────
+   VedicScan — Kundali Report Generator (v2)
+   Drop-in replacement for generateKundaliPDF.
+   Zero new dependencies: uses PDFKit's built-in Times/Helvetica families and
+   vector-drawn ornaments, so it renders identically on any server.
+   ──────────────────────────────────────────────────────────────────────── */
 
-// North Indian chart house positions in a 4×4 grid
-// houses 5,6 are at row=2,3 col=3 and row=3,col=3
-// Format: houseNumber → { row, col }
-const NI_POSITIONS: Record<number, { row: number; col: number }> = {
-  12: { row: 0, col: 0 },
-  1:  { row: 0, col: 1 },
-  2:  { row: 0, col: 2 },
-  3:  { row: 0, col: 3 },
-  4:  { row: 1, col: 3 },
-  5:  { row: 2, col: 3 },
-  6:  { row: 3, col: 3 },
-  7:  { row: 3, col: 2 },
-  8:  { row: 3, col: 1 },
-  9:  { row: 3, col: 0 },
-  10: { row: 2, col: 0 },
-  11: { row: 1, col: 0 },
+/* ── Palette ───────────────────────────────────────────────────────────── */
+const C = {
+  gold:       '#C8A45A',
+  goldLight:  '#E6CE94',
+  goldDeep:   '#A07C32',
+  maroon:     '#6E142F',
+  maroonDeep: '#4A0C1F',
+  ink:        '#2C1810',
+  inkSoft:    '#5A4636',
+  muted:      '#8B7355',
+  cream:      '#FDF8EF',
+  creamAlt:   '#F7EEDD',
+  card:       '#FBF4E6',
+  rule:       '#E3D2AE',
+  night:      '#1A0A14',
+  nightAlt:   '#2A1228',
+  white:      '#FFFFFF',
+  green:      '#1F6B33',
+  red:        '#8E1B1B',
+};
+
+/* ── Fonts (serif for prose/headings, sans for data) ───────────────────── */
+const SERIF = 'Times-Roman';
+const SERIF_B = 'Times-Bold';
+const SERIF_I = 'Times-Italic';
+const SANS = 'Helvetica';
+const SANS_B = 'Helvetica-Bold';
+
+const PLANET_ABBR: Record<string, string> = {
+  Sun: 'Su', Moon: 'Mo', Mars: 'Ma', Mercury: 'Me', Jupiter: 'Ju',
+  Venus: 'Ve', Saturn: 'Sa', Rahu: 'Ra', Ketu: 'Ke',
+};
+const RASHIS = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const PLANET_ORDER = ['Sun','Moon','Mars','Mercury','Jupiter','Venus','Saturn','Rahu','Ketu'];
+
+type Doc = PDFKit.PDFDocument;
+
+/* ════════════════════════════════════════════════════════════════════════
+   VECTOR ORNAMENTS  (always render — no glyph/font dependency)
+   ════════════════════════════════════════════════════════════════════════ */
+
+function star(doc: Doc, cx: number, cy: number, r: number, color: string, points = 8) {
+  const inner = r * 0.42;
+  doc.save();
+  let started = false;
+  for (let i = 0; i < points * 2; i++) {
+    const rad = i % 2 === 0 ? r : inner;
+    const a = (Math.PI / points) * i - Math.PI / 2;
+    const px = cx + Math.cos(a) * rad;
+    const py = cy + Math.sin(a) * rad;
+    if (!started) { doc.moveTo(px, py); started = true; } else { doc.lineTo(px, py); }
+  }
+  doc.closePath().fillColor(color).fill();
+  doc.restore();
+}
+
+function diamondDot(doc: Doc, cx: number, cy: number, r: number, color: string) {
+  doc.save();
+  doc.moveTo(cx, cy - r).lineTo(cx + r, cy).lineTo(cx, cy + r).lineTo(cx - r, cy)
+     .closePath().fillColor(color).fill();
+  doc.restore();
+}
+
+/* Ornamental divider: a centred line broken by a small diamond + flanking dots */
+function divider(doc: Doc, cx: number, y: number, halfWidth: number, color = C.gold) {
+  doc.save();
+  doc.lineWidth(0.8).strokeColor(color);
+  doc.moveTo(cx - halfWidth, y).lineTo(cx - 14, y).stroke();
+  doc.moveTo(cx + 14, y).lineTo(cx + halfWidth, y).stroke();
+  diamondDot(doc, cx, y, 4, color);
+  diamondDot(doc, cx - 22, y, 1.6, color);
+  diamondDot(doc, cx + 22, y, 1.6, color);
+  doc.restore();
+}
+
+/* Lotus-petal rosette used on the cover */
+function lotus(doc: Doc, cx: number, cy: number, r: number, color: string, petals = 8) {
+  doc.save();
+  doc.lineWidth(1).strokeColor(color);
+  for (let i = 0; i < petals; i++) {
+    const a = (Math.PI * 2 / petals) * i;
+    const tipX = cx + Math.cos(a) * r;
+    const tipY = cy + Math.sin(a) * r;
+    const c1x = cx + Math.cos(a - 0.32) * r * 0.62;
+    const c1y = cy + Math.sin(a - 0.32) * r * 0.62;
+    const c2x = cx + Math.cos(a + 0.32) * r * 0.62;
+    const c2y = cy + Math.sin(a + 0.32) * r * 0.62;
+    doc.moveTo(cx, cy).quadraticCurveTo(c1x, c1y, tipX, tipY)
+       .quadraticCurveTo(c2x, c2y, cx, cy).stroke();
+  }
+  doc.circle(cx, cy, r * 0.22).fillColor(color).fill();
+  doc.restore();
+}
+
+/* Concentric mandala ring for the cover */
+function mandala(doc: Doc, cx: number, cy: number, r: number) {
+  doc.save();
+  doc.lineWidth(0.8).strokeColor(C.gold).circle(cx, cy, r).stroke();
+  doc.lineWidth(0.5).strokeColor(C.goldDeep).circle(cx, cy, r * 0.82).stroke();
+  // outer ticks
+  const ticks = 48;
+  doc.lineWidth(0.5).strokeColor(C.gold);
+  for (let i = 0; i < ticks; i++) {
+    const a = (Math.PI * 2 / ticks) * i;
+    doc.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r)
+       .lineTo(cx + Math.cos(a) * r * 0.9, cy + Math.sin(a) * r * 0.9).stroke();
+  }
+  lotus(doc, cx, cy, r * 0.58, C.gold, 12);
+  doc.restore();
+}
+
+/* Corner flourish (quarter ornament). corner: 'tl'|'tr'|'bl'|'br' */
+function cornerFlourish(doc: Doc, x: number, y: number, s: number, corner: string, color = C.gold) {
+  doc.save();
+  doc.lineWidth(1).strokeColor(color);
+  const fx = corner.includes('r') ? -1 : 1;
+  const fy = corner.includes('b') ? -1 : 1;
+  doc.translate(x, y).scale(fx, fy);
+  doc.moveTo(0, s).quadraticCurveTo(0, 0, s, 0).stroke();
+  doc.moveTo(4, s).quadraticCurveTo(4, 4, s, 4).stroke();
+  diamondDot(doc, s * 0.5, s * 0.5, 2.4, color);
+  doc.circle(2.5, 2.5, 1.6).fillColor(color).fill();
+  doc.restore();
+}
+
+/* Small celestial symbols drawn as vectors (sun / crescent / ascendant / star) */
+function symbol(doc: Doc, kind: string, cx: number, cy: number, r: number, color: string) {
+  doc.save();
+  if (kind === 'sun') {
+    doc.lineWidth(1.2).strokeColor(color).circle(cx, cy, r * 0.55).stroke();
+    doc.circle(cx, cy, 1.2).fillColor(color).fill();
+    for (let i = 0; i < 8; i++) {
+      const a = (Math.PI * 2 / 8) * i;
+      doc.moveTo(cx + Math.cos(a) * r * 0.72, cy + Math.sin(a) * r * 0.72)
+         .lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r).lineWidth(1).strokeColor(color).stroke();
+    }
+  } else if (kind === 'moon') {
+    doc.circle(cx, cy, r * 0.7).fillColor(color).fill();
+    doc.circle(cx + r * 0.32, cy - r * 0.1, r * 0.62).fillColor(C.nightAlt).fill();
+  } else if (kind === 'asc') {
+    doc.lineWidth(1.4).strokeColor(color);
+    doc.moveTo(cx, cy + r * 0.7).lineTo(cx, cy - r * 0.7).stroke();
+    doc.moveTo(cx - r * 0.45, cy - r * 0.2).lineTo(cx, cy - r * 0.7).lineTo(cx + r * 0.45, cy - r * 0.2).stroke();
+  } else {
+    star(doc, cx, cy, r * 0.85, color, 6);
+  }
+  doc.restore();
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   NORTH INDIAN DIAMOND CHART  (authentic layout)
+   ════════════════════════════════════════════════════════════════════════ */
+
+// Text-anchor positions for the 12 fixed houses, as fractions of the square.
+const NI: Record<number, [number, number]> = {
+  1:  [0.50, 0.235], 2:  [0.255, 0.115], 3:  [0.115, 0.255], 4:  [0.235, 0.50],
+  5:  [0.115, 0.745], 6:  [0.255, 0.885], 7:  [0.50, 0.765], 8:  [0.745, 0.885],
+  9:  [0.885, 0.745], 10: [0.765, 0.50], 11: [0.885, 0.255], 12: [0.745, 0.115],
 };
 
 function drawNorthIndianChart(
-  doc: PDFKit.PDFDocument,
-  x: number,
-  y: number,
-  size: number,
-  _lagnaSign: string,
+  doc: Doc, x: number, y: number, size: number,
   houses: Array<{ number: number; sign: string; planets: string[] }>,
-  title: string
+  title: string,
+  retroSet: Set<string> = new Set(),
 ) {
-  const cell = size / 4;
+  const S = size;
+  const mid = S / 2;
 
   // Title
-  doc.font('Helvetica-Bold').fontSize(11).fillColor(DARK_MAROON)
-     .text(title, x, y - 18, { width: size, align: 'center' });
+  doc.font(SERIF_B).fontSize(10.5).fillColor(C.maroon)
+     .text(title, x, y - 20, { width: S, align: 'center' });
 
-  // Draw 4×4 grid outer border
-  doc.rect(x, y, size, size).strokeColor(GOLD).lineWidth(1.5).stroke();
+  // Soft parchment fill behind the chart
+  doc.rect(x, y, S, S).fill(C.cream);
 
-  // Draw all internal grid lines
-  doc.strokeColor(BORDER).lineWidth(0.5);
-  for (let i = 1; i < 4; i++) {
-    doc.moveTo(x + i * cell, y).lineTo(x + i * cell, y + size).stroke();
-    doc.moveTo(x, y + i * cell).lineTo(x + size, y + i * cell).stroke();
-  }
+  // Outer frame (double line)
+  doc.lineWidth(2).strokeColor(C.gold).rect(x, y, S, S).stroke();
+  doc.lineWidth(0.6).strokeColor(C.goldDeep).rect(x + 3.5, y + 3.5, S - 7, S - 7).stroke();
 
-  // Fill center 2×2 with light background
-  doc.rect(x + cell, y + cell, cell * 2, cell * 2)
-     .fillColor('#F5EDE0').fill()
-     .strokeColor(GOLD).lineWidth(1).stroke();
+  // Diagonals + inner diamond
+  doc.lineWidth(0.9).strokeColor(C.gold);
+  doc.moveTo(x, y).lineTo(x + S, y + S).stroke();
+  doc.moveTo(x + S, y).lineTo(x, y + S).stroke();
+  doc.moveTo(x + mid, y).lineTo(x + S, y + mid)
+     .lineTo(x + mid, y + S).lineTo(x, y + mid).closePath().stroke();
 
-  // Center label
-  doc.font('Helvetica-Bold').fontSize(8).fillColor(DARK_MAROON)
-     .text('VedicScan', x + cell + 2, y + cell + cell * 0.5 - 10, { width: cell * 2 - 4, align: 'center' })
-     .font('Helvetica').fontSize(7).fillColor(TEXT_MUTED)
-     .text('Birth Chart', x + cell + 2, y + cell + cell * 0.5 + 2, { width: cell * 2 - 4, align: 'center' });
+  // Centre seal
+  doc.save();
+  diamondDot(doc, x + mid, y + mid, 13, C.creamAlt);
+  doc.lineWidth(0.8).strokeColor(C.goldDeep);
+  doc.moveTo(x + mid, y + mid - 13).lineTo(x + mid + 13, y + mid)
+     .lineTo(x + mid, y + mid + 13).lineTo(x + mid - 13, y + mid).closePath().stroke();
+  star(doc, x + mid, y + mid, 5, C.gold, 8);
+  doc.restore();
 
-  // Draw diagonal lines in center corners (for visual effect)
-  doc.strokeColor(GOLD).lineWidth(0.8);
-  // Top-left corner of center → diagonals
-  doc.moveTo(x + cell, y + cell).lineTo(x + cell * 2, y + cell * 2).stroke();
-  doc.moveTo(x + cell * 3, y + cell).lineTo(x + cell * 2, y + cell * 2).stroke();
-  doc.moveTo(x + cell, y + cell * 3).lineTo(x + cell * 2, y + cell * 2).stroke();
-  doc.moveTo(x + cell * 3, y + cell * 3).lineTo(x + cell * 2, y + cell * 2).stroke();
-
-  // Fill each house cell
-  for (const house of houses) {
-    const pos = NI_POSITIONS[house.number];
+  // House contents
+  for (const h of houses) {
+    const pos = NI[h.number];
     if (!pos) continue;
+    const cx = x + pos[0] * S;
+    const cy = y + pos[1] * S;
+    const lagna = h.number === 1;
 
-    const cx = x + pos.col * cell;
-    const cy = y + pos.row * cell;
+    // Rashi number (small, muted) just above the anchor
+    const rNum = RASHIS.indexOf(h.sign) + 1;
+    doc.font(SANS).fontSize(6).fillColor(lagna ? C.maroon : C.muted)
+       .text(rNum > 0 ? String(rNum) : '', cx - 18, cy - 16, { width: 36, align: 'center' });
 
-    // Highlight Lagna (House 1)
-    if (house.number === 1) {
-      doc.rect(cx, cy, cell, cell).fillColor('#FEF4E8').fill();
-      doc.rect(cx, cy, cell, cell).strokeColor(GOLD).lineWidth(1.5).stroke();
+    // Planets (primary content of a North-Indian house)
+    if (h.planets.length) {
+      const labels = h.planets.map(p => {
+        const ab = PLANET_ABBR[p] || p.slice(0, 2);
+        return retroSet.has(p) ? `${ab}(R)` : ab;
+      });
+      // wrap to max 3 per line
+      const lines: string[] = [];
+      for (let i = 0; i < labels.length; i += 3) lines.push(labels.slice(i, i + 3).join(' '));
+      doc.font(SANS_B).fontSize(7.5).fillColor(C.maroon)
+         .text(lines.join('\n'), cx - 26, cy - 4, { width: 52, align: 'center', lineGap: 1 });
+    } else {
+      diamondDot(doc, cx, cy + 2, 1.4, C.rule);
     }
 
-    // House number (top-left small)
-    doc.font('Helvetica').fontSize(6).fillColor(TEXT_MUTED)
-       .text(`H${house.number}`, cx + 3, cy + 3);
-
-    // Sign name (center top)
-    doc.font('Helvetica-Bold').fontSize(7).fillColor(TEXT_DARK)
-       .text(house.sign.substring(0, 3).toUpperCase(), cx + 3, cy + 13, { width: cell - 6, align: 'center' });
-
-    // Planets (below sign name)
-    if (house.planets.length > 0) {
-      const planetAbbr = house.planets.map(p => p.substring(0, 2)).join(' ');
-      doc.font('Helvetica').fontSize(6.5).fillColor(DARK_MAROON)
-         .text(planetAbbr, cx + 3, cy + 24, { width: cell - 6, align: 'center' });
-
-      // Show full names if space allows
-      if (house.planets.length <= 2) {
-        doc.font('Helvetica').fontSize(6).fillColor(DARK_MAROON)
-           .text(house.planets.join('\n'), cx + 3, cy + 34, { width: cell - 6, align: 'center' });
-      }
+    if (lagna) {
+      // "Asc" marker for house 1
+      doc.font(SANS_B).fontSize(5.5).fillColor(C.goldDeep)
+         .text('ASC', cx - 18, cy + 14, { width: 36, align: 'center' });
     }
   }
 }
 
-function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, y?: number) {
-  const yPos = y ?? doc.y + 12;
-  doc.rect(doc.page.margins.left, yPos, doc.page.width - doc.page.margins.left - doc.page.margins.right, 24)
-     .fillColor(DARK_MAROON).fill();
-  doc.font('Helvetica-Bold').fontSize(11).fillColor(WHITE)
-     .text(title, doc.page.margins.left + 10, yPos + 6,
-       { width: doc.page.width - doc.page.margins.left - doc.page.margins.right - 20 });
+/* ════════════════════════════════════════════════════════════════════════
+   PAGE FURNITURE
+   ════════════════════════════════════════════════════════════════════════ */
+
+function contentHeader(doc: Doc, L: number, pageW: number, title: string) {
+  // maroon band with gold rule + side flourishes
+  doc.rect(0, 0, doc.page.width, 46).fill(C.maroon);
+  doc.rect(0, 46, doc.page.width, 2.2).fill(C.gold);
+  doc.font(SERIF_B).fontSize(15).fillColor(C.white)
+     .text(title, L, 15, { width: pageW, align: 'center', characterSpacing: 1 });
+  const cx = doc.page.width / 2;
+  const half = doc.widthOfString(title) / 2 + 18;
+  doc.lineWidth(0.8).strokeColor(C.goldLight);
+  diamondDot(doc, cx - half, 23, 2.2, C.goldLight);
+  diamondDot(doc, cx + half, 23, 2.2, C.goldLight);
+}
+
+function pageFrame(doc: Doc) {
+  const m = 22;
+  doc.lineWidth(0.8).strokeColor(C.rule)
+     .rect(m, m + 30, doc.page.width - m * 2, doc.page.height - m * 2 - 30).stroke();
+  const s = 16;
+  const x0 = m, y0 = m + 30, x1 = doc.page.width - m, y1 = doc.page.height - m;
+  cornerFlourish(doc, x0, y0, s, 'tl');
+  cornerFlourish(doc, x1, y0, s, 'tr');
+  cornerFlourish(doc, x0, y1, s, 'bl');
+  cornerFlourish(doc, x1, y1, s, 'br');
+}
+
+function sectionHeader(doc: Doc, L: number, pageW: number, title: string, y?: number, accent = C.maroon) {
+  const yPos = y ?? doc.y + 10;
+  // gradient bar
+  const g = doc.linearGradient(L, yPos, L + pageW, yPos + 24);
+  g.stop(0, accent).stop(1, C.maroonDeep);
+  doc.rect(L, yPos, pageW, 25).fill(g);
+  doc.rect(L, yPos, 3.5, 25).fill(C.gold);
+  doc.font(SERIF_B).fontSize(11.5).fillColor(C.white)
+     .text(title, L + 14, yPos + 7, { width: pageW - 28, characterSpacing: 0.5 });
+  diamondDot(doc, L + pageW - 12, yPos + 12.5, 2.6, C.goldLight);
+  doc.y = yPos + 25;
   doc.moveDown(0.5);
 }
 
-function _drawKeyValue(doc: PDFKit.PDFDocument, label: string, value: string, col1X: number, col2X: number) {
+/* ════════════════════════════════════════════════════════════════════════
+   TABLE HELPER
+   ════════════════════════════════════════════════════════════════════════ */
+function tableHeader(doc: Doc, L: number, pageW: number, headers: string[], widths: number[]) {
   const y = doc.y;
-  doc.font('Helvetica-Bold').fontSize(9.5).fillColor(TEXT_MUTED)
-     .text(label, col1X, y, { continued: false });
-  doc.font('Helvetica').fontSize(9.5).fillColor(TEXT_DARK)
-     .text(value, col2X, y, { continued: false });
-  doc.moveDown(0.4);
+  doc.rect(L, y, pageW, 22).fill(C.maroon);
+  doc.rect(L, y + 21, pageW, 1).fill(C.gold);
+  let tx = L;
+  headers.forEach((h, i) => {
+    doc.font(SANS_B).fontSize(8.5).fillColor(C.white)
+       .text(h, tx + 6, y + 7, { width: widths[i] - 8 });
+    tx += widths[i];
+  });
+  doc.y = y + 22;
 }
 
-function ensureSpace(doc: PDFKit.PDFDocument, neededPx: number) {
-  if (doc.y + neededPx > doc.page.height - doc.page.margins.bottom) {
+function ensureSpace(doc: Doc, needed: number, onNewPage?: () => void) {
+  if (doc.y + needed > doc.page.height - 50) {
     doc.addPage();
+    onNewPage?.();
   }
 }
 
+/* ════════════════════════════════════════════════════════════════════════
+   MAIN
+   ════════════════════════════════════════════════════════════════════════ */
 export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-  // Serialize through toJSON then back to a plain JS object.
-  // This converts Mongoose Maps → plain objects and resolves all getters,
-  // so the rest of the function can use simple property access safely.
-  const kundali: any = JSON.parse(JSON.stringify(rawKundali));
+    const kundali: any = JSON.parse(JSON.stringify(rawKundali));
 
-  const doc = new PDFDocument({
-    size: 'A4',
-    margins: { top: 40, bottom: 40, left: 45, right: 45 },
-    info: { Title: `Kundali Report — ${kundali.name}`, Author: 'VedicScan' },
-  });
-
-  const buffers: Buffer[] = [];
-  doc.on('data', (chunk: Buffer) => buffers.push(chunk));
-  doc.on('error', reject);
-
-  const pageW = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-  const L = doc.page.margins.left;
-
-  // ─── COVER PAGE ─────────────────────────────────────────────────────────────
-  doc.rect(0, 0, doc.page.width, doc.page.height).fillColor(DARK_BG).fill();
-
-  // Top gold bar
-  doc.rect(0, 0, doc.page.width, 6).fillColor(GOLD).fill();
-  doc.rect(0, doc.page.height - 6, doc.page.width, 6).fillColor(GOLD).fill();
-
-  doc.moveDown(4);
-  doc.font('Helvetica').fontSize(12).fillColor(GOLD)
-     .text('✦  VEDICSCAN  ✦', L, 80, { width: pageW, align: 'center' });
-
-  doc.font('Helvetica-Bold').fontSize(28).fillColor(WHITE)
-     .text('Personal Kundali Report', L, 120, { width: pageW, align: 'center' });
-
-  doc.font('Helvetica').fontSize(13).fillColor(GOLD)
-     .text('Vedic Astrology • Lahiri Ayanamsa • Swiss Ephemeris', L, 162, { width: pageW, align: 'center' });
-
-  // Divider
-  doc.rect(L + 60, 192, pageW - 120, 1).fillColor(GOLD).fill();
-
-  // Name
-  doc.font('Helvetica-Bold').fontSize(24).fillColor(WHITE)
-     .text(kundali.name, L, 210, { width: pageW, align: 'center' });
-
-  // Birth Details Box
-  doc.rect(L + 40, 255, pageW - 80, 110)
-     .fillColor('#2A1228').fill()
-     .strokeColor(GOLD).lineWidth(1).stroke();
-
-  const bx = L + 60;
-  const by = 272;
-  const bw = (pageW - 80) / 2 - 20;
-  const labelColor = '#C8A45A';
-  const valColor = WHITE;
-
-  const infoItems = [
-    ['Date of Birth', kundali.dateOfBirth],
-    ['Time of Birth', kundali.timeOfBirth],
-    ['Place of Birth', kundali.placeOfBirth],
-    ['Generated on', new Date(kundali.generatedAt).toLocaleDateString('en-IN')],
-  ];
-  infoItems.forEach(([label, val], i) => {
-    const col = i % 2 === 0 ? bx : bx + bw + 40;
-    const row = by + Math.floor(i / 2) * 38;
-    doc.font('Helvetica').fontSize(8).fillColor(labelColor).text(label.toUpperCase(), col, row);
-    doc.font('Helvetica-Bold').fontSize(10.5).fillColor(valColor).text(val, col, row + 12);
-  });
-
-  // Key Signs
-  doc.rect(L + 40, 378, pageW - 80, 80)
-     .fillColor('#1E0D1A').fill()
-     .strokeColor(GOLD).lineWidth(0.8).stroke();
-
-  const signs = [
-    ['Lagna', kundali.lagna.sign, '↑'],
-    ['Moon Sign', kundali.moonSign, '☽'],
-    ['Sun Sign', kundali.sunSign, '☀'],
-    ['Nakshatra', kundali.moonNakshatra, '✦'],
-  ];
-  const signW = (pageW - 80) / 4;
-  signs.forEach(([label, val, sym], i) => {
-    const sx = L + 40 + i * signW + signW / 2;
-    doc.font('Helvetica').fontSize(16).fillColor(GOLD).text(sym, sx - 10, 392, { width: 20, align: 'center' });
-    doc.font('Helvetica-Bold').fontSize(9).fillColor(WHITE).text(val, L + 40 + i * signW + 4, 416, { width: signW - 8, align: 'center' });
-    doc.font('Helvetica').fontSize(7).fillColor(labelColor).text(label, L + 40 + i * signW + 4, 430, { width: signW - 8, align: 'center' });
-  });
-
-  doc.font('Helvetica').fontSize(8).fillColor(TEXT_MUTED)
-     .text('This report is for spiritual guidance purposes only. Not medical or financial advice.', L, doc.page.height - 70, { width: pageW, align: 'center' });
-
-  // ─── PAGE 2: BIRTH CHART ───────────────────────────────────────────────────
-  doc.addPage();
-  doc.rect(0, 0, doc.page.width, 40).fillColor(DARK_MAROON).fill();
-  doc.font('Helvetica-Bold').fontSize(14).fillColor(WHITE)
-     .text('BIRTH CHART (D1) & NAVAMSA (D9)', L, 12, { width: pageW, align: 'center' });
-
-  const chartSize = 220;
-  const chartY = 60;
-
-  // D1 Chart
-  const housesArr = Array.isArray(kundali.houses)
-    ? kundali.houses
-    : Object.values(kundali.houses as any || {});
-
-  drawNorthIndianChart(doc, L, chartY, chartSize, kundali.lagna.sign, housesArr as any, 'D1 — Rashi Chart (Birth Chart)');
-
-  // D9 Navamsa Chart (to the right)
-  const navamsa = kundali.navamsa;
-  const navHouses: Array<{ number: number; sign: string; planets: string[] }> = [];
-  const rashis = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
-  const navLagnaIdx = rashis.indexOf(navamsa?.lagnaSign || 'Aries');
-
-  for (let h = 1; h <= 12; h++) {
-    const signIdx = (navLagnaIdx + h - 1) % 12;
-    const sign = rashis[signIdx];
-    const planetsInHouse = navamsa?.planets
-      ? Object.entries(navamsa.planets as any).filter(([, p]: any) => p != null && p.houseNumber === h).map(([name]) => name)
-      : [];
-    navHouses.push({ number: h, sign, planets: planetsInHouse });
-  }
-
-  drawNorthIndianChart(doc, L + chartSize + 30, chartY, chartSize, navamsa?.lagnaSign || '', navHouses, 'D9 — Navamsa Chart');
-
-  // Lagna details below charts
-  doc.y = chartY + chartSize + 20;
-  doc.font('Helvetica-Bold').fontSize(9).fillColor(TEXT_DARK)
-     .text(`Lagna: ${kundali.lagna.sign} ${kundali.lagna.degree.toFixed(2)}°  |  Navamsa Lagna: ${navamsa?.lagnaSign || 'N/A'}  |  Moon Pada: ${kundali.moonPada}`, L, doc.y, { align: 'center', width: pageW });
-
-  doc.moveDown(1);
-
-  // ─── PAGE 3: PLANETARY POSITIONS ──────────────────────────────────────────
-  doc.addPage();
-  doc.rect(0, 0, doc.page.width, 40).fillColor(DARK_MAROON).fill();
-  doc.font('Helvetica-Bold').fontSize(14).fillColor(WHITE)
-     .text('PLANETARY POSITIONS', L, 12, { width: pageW, align: 'center' });
-
-  doc.y = 55;
-
-  const colWidths = [70, 70, 75, 65, 40, 70];
-  const headers = ['Planet', 'Sign (Rashi)', 'Nakshatra', 'Degree', 'House', 'Navamsa Sign'];
-
-  // Table header
-  let tx = L;
-  doc.rect(L, doc.y, pageW, 22).fillColor(DARK_MAROON).fill();
-  headers.forEach((h, i) => {
-    doc.font('Helvetica-Bold').fontSize(8.5).fillColor(WHITE)
-       .text(h, tx + 4, doc.y + 7, { width: colWidths[i] - 4 });
-    tx += colWidths[i];
-  });
-  doc.moveDown(0.3);
-  doc.y += 14;
-
-  const PLANET_ORDER = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
-  let rowAlt = false;
-  for (const pname of PLANET_ORDER) {
-    const p = (kundali.planets as any)?.[pname] || (kundali.planets as any)?.get?.(pname);
-    if (!p) continue;
-
-    tx = L;
-    const rowY = doc.y;
-    if (rowAlt) {
-      doc.rect(L, rowY, pageW, 20).fillColor(TABLE_ALT).fill();
-    }
-    rowAlt = !rowAlt;
-
-    const cols = [
-      pname,
-      p.rashi || 'N/A',
-      p.nakshatra || 'N/A',
-      `${(p.degree || 0).toFixed(2)}°`,
-      `${p.houseNumber || 'N/A'}`,
-      p.navamsaSign || 'N/A',
-    ];
-    cols.forEach((val, i) => {
-      doc.font(i === 0 ? 'Helvetica-Bold' : 'Helvetica')
-         .fontSize(9).fillColor(TEXT_DARK)
-         .text(val, tx + 4, rowY + 6, { width: colWidths[i] - 4 });
-      tx += colWidths[i];
+    const doc = new PDFDocument({
+      size: 'A4',
+      margins: { top: 60, bottom: 50, left: 48, right: 48 },
+      bufferPages: true,
+      info: { Title: `Kundali Report — ${kundali.name}`, Author: 'VedicScan' },
     });
-    doc.y = rowY + 20;
-  }
 
-  doc.moveDown(1);
+    const buffers: Buffer[] = [];
+    doc.on('data', (c: Buffer) => buffers.push(c));
+    doc.on('error', reject);
 
-  // Houses Summary
-  drawSectionHeader(doc, 'HOUSE PLACEMENTS');
-  doc.y += 8;
+    const L = doc.page.margins.left;
+    const R = doc.page.margins.right;
+    const pageW = doc.page.width - L - R;
+    const cx = doc.page.width / 2;
 
-  const houseRows: [string, string, string][] = (housesArr as any[]).map(h => [
-    `House ${h.number}`,
-    h.sign,
-    h.planets?.join(', ') || '—',
-  ]);
+    /* ── COVER ─────────────────────────────────────────────────────────── */
+    const PW = doc.page.width, PH = doc.page.height;
+    // night radial glow
+    const glow = doc.radialGradient(cx, PH * 0.42, 40, cx, PH * 0.42, PH * 0.65);
+    glow.stop(0, C.nightAlt).stop(1, C.night);
+    doc.rect(0, 0, PW, PH).fill(glow);
 
-  let houseAlt = false;
-  for (const [hNum, hSign, hPlanets] of houseRows) {
-    const hy = doc.y;
-    if (houseAlt) doc.rect(L, hy, pageW, 18).fillColor(TABLE_ALT).fill();
-    houseAlt = !houseAlt;
-    doc.font('Helvetica-Bold').fontSize(8.5).fillColor(TEXT_DARK).text(hNum, L + 4, hy + 4, { width: 60 });
-    doc.font('Helvetica').fontSize(8.5).fillColor(TEXT_DARK).text(hSign, L + 70, hy + 4, { width: 90 });
-    doc.font('Helvetica').fontSize(8.5).fillColor(DARK_MAROON).text(hPlanets, L + 170, hy + 4, { width: pageW - 175 });
-    doc.y = hy + 18;
-  }
+    // double gold frame
+    doc.lineWidth(2).strokeColor(C.gold).rect(26, 26, PW - 52, PH - 52).stroke();
+    doc.lineWidth(0.7).strokeColor(C.goldDeep).rect(31, 31, PW - 62, PH - 62).stroke();
+    cornerFlourish(doc, 38, 38, 22, 'tl');
+    cornerFlourish(doc, PW - 38, 38, 22, 'tr');
+    cornerFlourish(doc, 38, PH - 38, 22, 'bl');
+    cornerFlourish(doc, PW - 38, PH - 38, 22, 'br');
 
-  // ─── PAGE 4: YOGAS & DOSHAS ───────────────────────────────────────────────
-  doc.addPage();
-  doc.rect(0, 0, doc.page.width, 40).fillColor(DARK_MAROON).fill();
-  doc.font('Helvetica-Bold').fontSize(14).fillColor(WHITE)
-     .text('YOGAS & DOSHAS', L, 12, { width: pageW, align: 'center' });
-  doc.y = 55;
+    mandala(doc, cx, 132, 46);
 
-  // Yogas
-  drawSectionHeader(doc, '✦ AUSPICIOUS YOGAS IN YOUR CHART');
-  doc.y += 8;
-  const presentYogas = kundali.yogas.filter((y: any) => y.isPresent);
-  if (presentYogas.length === 0) {
-    doc.font('Helvetica').fontSize(9.5).fillColor(TEXT_MUTED)
-       .text('No major yogas are formed in your birth chart. The chart shows a balanced energy.', L, doc.y, { width: pageW });
-    doc.moveDown(1);
-  } else {
-    for (const yoga of presentYogas) {
-      ensureSpace(doc, 70);
-      doc.rect(L, doc.y, pageW, 20).fillColor('#FEF4E8').fill().strokeColor(GOLD).lineWidth(0.5).stroke();
-      doc.font('Helvetica-Bold').fontSize(9.5).fillColor(DARK_MAROON)
-         .text(`${yoga.name}  —  ${yoga.strength}`, L + 8, doc.y + 5, { width: pageW - 16 });
-      doc.y += 22;
-      doc.font('Helvetica').fontSize(9).fillColor(TEXT_DARK)
-         .text(yoga.description, L + 8, doc.y, { width: pageW - 16 });
-      doc.moveDown(0.8);
-    }
-  }
+    doc.font(SERIF).fontSize(12).fillColor(C.gold)
+       .text('V E D I C S C A N', L, 196, { width: pageW, align: 'center', characterSpacing: 3 });
+    doc.font(SERIF_B).fontSize(30).fillColor(C.white)
+       .text('Personal Kundali Report', L, 218, { width: pageW, align: 'center' });
+    doc.font(SERIF_I).fontSize(11.5).fillColor(C.goldLight)
+       .text('Vedic Astrology  ·  Lahiri Ayanamsa  ·  Swiss Ephemeris', L, 258, { width: pageW, align: 'center' });
+    divider(doc, cx, 286, 150);
 
-  doc.moveDown(0.5);
+    // Name
+    doc.font(SERIF_B).fontSize(23).fillColor(C.white)
+       .text(kundali.name, L, 302, { width: pageW, align: 'center' });
 
-  // Doshas
-  drawSectionHeader(doc, '⚠ DOSHAS & KARMIC PATTERNS');
-  doc.y += 8;
+    // Birth details card
+    const cardX = L + 26, cardY = 348, cardW = pageW - 52, cardH = 118;
+    const cardG = doc.linearGradient(cardX, cardY, cardX, cardY + cardH);
+    cardG.stop(0, C.nightAlt).stop(1, '#22101D');
+    doc.roundedRect(cardX, cardY, cardW, cardH, 6).fill(cardG);
+    doc.lineWidth(1).strokeColor(C.gold).roundedRect(cardX, cardY, cardW, cardH, 6).stroke();
 
-  const presentDoshas = kundali.doshas.filter((d: any) => d.isPresent);
-  if (presentDoshas.length === 0) {
-    doc.font('Helvetica').fontSize(9.5).fillColor(TEXT_MUTED)
-       .text('No significant doshas found in your chart. This is a highly auspicious indication.', L, doc.y, { width: pageW });
-    doc.moveDown(1);
-  } else {
-    for (const dosha of presentDoshas) {
-      ensureSpace(doc, 90);
-      const sevColor = dosha.severity === 'High' ? '#8B0000' : dosha.severity === 'Medium' ? '#7B4F00' : DARK_MAROON;
-      doc.rect(L, doc.y, pageW, 20).fillColor('#FFF5F5').fill().strokeColor('#DFA0A0').lineWidth(0.5).stroke();
-      doc.font('Helvetica-Bold').fontSize(9.5).fillColor(sevColor)
-         .text(`${dosha.name}  —  Severity: ${dosha.severity}`, L + 8, doc.y + 5, { width: pageW - 16 });
-      doc.y += 22;
-      doc.font('Helvetica').fontSize(9).fillColor(TEXT_DARK)
-         .text(dosha.description, L + 8, doc.y, { width: pageW - 16 });
-      doc.moveDown(0.5);
-      if (dosha.remedy) {
-        doc.font('Helvetica-Bold').fontSize(8.5).fillColor(DARK_MAROON).text('Remedy: ', L + 8, doc.y, { continued: true });
-        doc.font('Helvetica').fontSize(8.5).fillColor(TEXT_DARK).text(dosha.remedy, { width: pageW - 20 });
-      }
-      doc.moveDown(0.8);
-    }
-  }
+    const info: [string, string][] = [
+      ['Date of Birth', kundali.dateOfBirth],
+      ['Time of Birth', kundali.timeOfBirth],
+      ['Place of Birth', kundali.placeOfBirth],
+      ['Report Generated', new Date(kundali.generatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })],
+    ];
+    const colW = cardW / 2;
+    info.forEach(([label, val], i) => {
+      const col = cardX + 22 + (i % 2) * colW;
+      const row = cardY + 20 + Math.floor(i / 2) * 50;
+      doc.font(SANS).fontSize(7.5).fillColor(C.gold).text(label.toUpperCase(), col, row, { characterSpacing: 1 });
+      doc.font(SERIF_B).fontSize(11).fillColor(C.white).text(String(val), col, row + 12, { width: colW - 36 });
+    });
 
-  // ─── PAGE 5: DASHA TIMELINE ───────────────────────────────────────────────
-  doc.addPage();
-  doc.rect(0, 0, doc.page.width, 40).fillColor(DARK_MAROON).fill();
-  doc.font('Helvetica-Bold').fontSize(14).fillColor(WHITE)
-     .text('VIMSHOTTARI DASHA ANALYSIS', L, 12, { width: pageW, align: 'center' });
-  doc.y = 55;
+    // Key signs strip
+    const stripY = 488;
+    const items: [string, string, string][] = [
+      ['Lagna', kundali.lagna.sign, 'asc'],
+      ['Moon Sign', kundali.moonSign, 'moon'],
+      ['Sun Sign', kundali.sunSign, 'sun'],
+      ['Nakshatra', kundali.moonNakshatra, 'star'],
+    ];
+    const sw = pageW / 4;
+    items.forEach(([label, val, sym], i) => {
+      const bx = L + i * sw;
+      symbol(doc, sym, bx + sw / 2, stripY, 12, C.gold);
+      doc.font(SERIF_B).fontSize(11).fillColor(C.white).text(val, bx, stripY + 18, { width: sw, align: 'center' });
+      doc.font(SANS).fontSize(7).fillColor(C.gold).text(label.toUpperCase(), bx, stripY + 34, { width: sw, align: 'center', characterSpacing: 1 });
+      if (i < 3) doc.lineWidth(0.5).strokeColor(C.goldDeep).moveTo(bx + sw, stripY - 8).lineTo(bx + sw, stripY + 40).stroke();
+    });
 
-  // Current periods box
-  doc.rect(L, doc.y, pageW, 70).fillColor(LIGHT_BG).fill().strokeColor(GOLD).lineWidth(1).stroke();
-  const d = kundali.dasha;
-  const bY = doc.y + 10;
-  doc.font('Helvetica-Bold').fontSize(10).fillColor(DARK_MAROON)
-     .text('CURRENT PLANETARY PERIODS', L + 10, bY, { width: pageW - 20, align: 'center' });
-  doc.font('Helvetica-Bold').fontSize(9).fillColor(TEXT_MUTED).text('Mahadasha:', L + 10, bY + 18);
-  doc.font('Helvetica').fontSize(9).fillColor(TEXT_DARK).text(`${d.currentMahadasha}  (${d.mahadashaStartDate} → ${d.mahadashaEndDate})`, L + 90, bY + 18);
-  doc.font('Helvetica-Bold').fontSize(9).fillColor(TEXT_MUTED).text('Antardasha:', L + 10, bY + 32);
-  doc.font('Helvetica').fontSize(9).fillColor(TEXT_DARK).text(`${d.currentAntardasha}  (${d.antardashaStartDate} → ${d.antardashaEndDate})`, L + 90, bY + 32);
-  if (d.currentPratyantar) {
-    doc.font('Helvetica-Bold').fontSize(9).fillColor(TEXT_MUTED).text('Pratyantar:', L + 10, bY + 46);
-    doc.font('Helvetica').fontSize(9).fillColor(TEXT_DARK).text(`${d.currentPratyantar}  (ends ${d.pratyantarEndDate})`, L + 90, bY + 46);
-  }
-  doc.y += 80;
+    divider(doc, cx, 556, 150);
+    doc.font(SERIF_I).fontSize(8.5).fillColor(C.muted)
+       .text('Prepared for spiritual guidance and self-understanding.\nNot a substitute for medical, financial, or legal advice.',
+         L, PH - 92, { width: pageW, align: 'center', lineGap: 2 });
 
-  // Mahadasha timeline table
-  drawSectionHeader(doc, 'MAHADASHA TIMELINE');
-  doc.y += 8;
+    /* ── PAGE 2: CHARTS ────────────────────────────────────────────────── */
+    doc.addPage();
+    contentHeader(doc, L, pageW, 'BIRTH CHART  (D1)  &  NAVAMSA  (D9)');
+    pageFrame(doc);
 
-  const mdHeaders = ['Mahadasha (Planet)', 'Start Date', 'End Date', 'Duration', 'Status'];
-  const mdWidths = [130, 80, 80, 65, 60];
-  let mdX = L;
-  doc.rect(L, doc.y, pageW, 20).fillColor(DARK_MAROON).fill();
-  mdHeaders.forEach((h, i) => {
-    doc.font('Helvetica-Bold').fontSize(8).fillColor(WHITE)
-       .text(h, mdX + 4, doc.y + 6, { width: mdWidths[i] - 4 });
-    mdX += mdWidths[i];
-  });
-  doc.y += 20;
-
-  let mdAlt = false;
-  for (const md of (d.timeline || []).slice(0, 18)) {
-    ensureSpace(doc, 20);
-    const mdY = doc.y;
-    if (mdAlt) doc.rect(L, mdY, pageW, 18).fillColor(TABLE_ALT).fill();
-    if (md.isCurrent) doc.rect(L, mdY, pageW, 18).fillColor('#FFF8E8').fill();
-    mdAlt = !mdAlt;
-
-    mdX = L;
-    const mdYear = Math.round(
-      (new Date(md.endDate).getTime() - new Date(md.startDate).getTime()) / (365.25 * 24 * 3600 * 1000)
+    const retroSet = new Set<string>(
+      Object.entries(kundali.planets || {}).filter(([, p]: any) => p?.retrograde).map(([n]) => n)
     );
-    const mCols = [
-      md.isCurrent ? `► ${md.planet}` : md.planet,
-      md.startDate,
-      md.endDate,
-      `${mdYear} yrs`,
-      md.isCurrent ? 'Active' : '',
+
+    const chartSize = 215;
+    const gap = (pageW - chartSize * 2) > 0 ? (pageW - chartSize * 2) : 24;
+    const chartY = 90;
+    const x1 = L + (pageW - (chartSize * 2 + gap)) / 2;
+    const x2 = x1 + chartSize + gap;
+
+    const housesArr: any[] = Array.isArray(kundali.houses) ? kundali.houses : Object.values(kundali.houses || {});
+    drawNorthIndianChart(doc, x1, chartY, chartSize, housesArr, 'D1 · Rashi (Birth Chart)', retroSet);
+
+    // build navamsa houses
+    const nav = kundali.navamsa;
+    const navIdx = RASHIS.indexOf(nav?.lagnaSign || 'Aries');
+    const navHouses = Array.from({ length: 12 }, (_, k) => {
+      const h = k + 1;
+      const sign = RASHIS[(navIdx + h - 1) % 12];
+      const planets = nav?.planets
+        ? Object.entries(nav.planets).filter(([, p]: any) => p?.houseNumber === h).map(([n]) => n)
+        : [];
+      return { number: h, sign, planets };
+    });
+    drawNorthIndianChart(doc, x2, chartY, chartSize, navHouses, 'D9 · Navamsa Chart', retroSet);
+
+    // legend + summary band
+    let infoY = chartY + chartSize + 34;
+    doc.roundedRect(L, infoY, pageW, 70, 5).fill(C.card);
+    doc.lineWidth(0.8).strokeColor(C.gold).roundedRect(L, infoY, pageW, 70, 5).stroke();
+    doc.font(SERIF_B).fontSize(10).fillColor(C.maroon)
+       .text('Chart Summary', L + 14, infoY + 10);
+    const sumPairs: [string, string][] = [
+      ['Lagna (Ascendant)', `${kundali.lagna.sign}  ${kundali.lagna.degree.toFixed(2)}°`],
+      ['Navamsa Lagna', nav?.lagnaSign || 'N/A'],
+      ['Moon Nakshatra', `${kundali.moonNakshatra} (Pada ${kundali.moonPada})`],
+      ['Moon / Sun Sign', `${kundali.moonSign} / ${kundali.sunSign}`],
     ];
-    mCols.forEach((val, i) => {
-      doc.font(md.isCurrent ? 'Helvetica-Bold' : 'Helvetica')
-         .fontSize(8.5)
-         .fillColor(md.isCurrent ? DARK_MAROON : TEXT_DARK)
-         .text(val, mdX + 4, mdY + 4, { width: mdWidths[i] - 4 });
-      mdX += mdWidths[i];
+    sumPairs.forEach((pr, i) => {
+      const colx = L + 14 + (i % 2) * (pageW / 2);
+      const rowy = infoY + 30 + Math.floor(i / 2) * 18;
+      doc.font(SANS).fontSize(8).fillColor(C.muted).text(pr[0] + ':', colx, rowy, { width: 110 });
+      doc.font(SANS_B).fontSize(8.5).fillColor(C.ink).text(pr[1], colx + 110, rowy, { width: pageW / 2 - 124 });
     });
-    doc.y = mdY + 18;
-  }
 
-  // Current MD Antardasha table
-  const currentMD = d.timeline?.find((m: any) => m.isCurrent);
-  if (currentMD?.antardashas?.length) {
-    doc.moveDown(1);
-    ensureSpace(doc, 200);
-    drawSectionHeader(doc, `ANTARDASHA IN ${currentMD.planet.toUpperCase()} MAHADASHA`);
-    doc.y += 8;
+    // planet abbreviation legend
+    infoY += 84;
+    doc.font(SANS).fontSize(7.5).fillColor(C.muted)
+       .text('Legend:  Su Sun · Mo Moon · Ma Mars · Me Mercury · Ju Jupiter · Ve Venus · Sa Saturn · Ra Rahu · Ke Ketu · (R) Retrograde',
+         L, infoY, { width: pageW, align: 'center' });
 
-    const adHeaders = ['Antardasha', 'Start Date', 'End Date', 'Status'];
-    const adWidths = [140, 100, 100, 80];
-    let adX = L;
-    doc.rect(L, doc.y, pageW, 20).fillColor(DARK_MAROON).fill();
-    adHeaders.forEach((h, i) => {
-      doc.font('Helvetica-Bold').fontSize(8).fillColor(WHITE)
-         .text(h, adX + 4, doc.y + 6, { width: adWidths[i] - 4 });
-      adX += adWidths[i];
-    });
-    doc.y += 20;
+    /* ── PAGE 3: PLANETARY POSITIONS ───────────────────────────────────── */
+    doc.addPage();
+    contentHeader(doc, L, pageW, 'PLANETARY POSITIONS');
+    pageFrame(doc);
+    doc.y = 66;
 
-    let adAlt = false;
-    for (const ad of currentMD.antardashas) {
-      ensureSpace(doc, 18);
-      const adY = doc.y;
-      if (adAlt) doc.rect(L, adY, pageW, 18).fillColor(TABLE_ALT).fill();
-      if (ad.isCurrent) doc.rect(L, adY, pageW, 18).fillColor('#FFF8E8').fill();
-      adAlt = !adAlt;
-      adX = L;
-      [ad.isCurrent ? `► ${ad.planet}` : ad.planet, ad.startDate, ad.endDate, ad.isCurrent ? 'Active' : ''].forEach((val, i) => {
-        doc.font(ad.isCurrent ? 'Helvetica-Bold' : 'Helvetica')
-           .fontSize(8.5).fillColor(ad.isCurrent ? DARK_MAROON : TEXT_DARK)
-           .text(val, adX + 4, adY + 4, { width: adWidths[i] - 4 });
-        adX += adWidths[i];
+    const pw = [62, 78, 92, 58, 44, pageW - 62 - 78 - 92 - 58 - 44];
+    tableHeader(doc, L, pageW, ['Planet', 'Rashi', 'Nakshatra', 'Degree', 'House', 'Navamsa'], pw);
+
+    let alt = false;
+    for (const name of PLANET_ORDER) {
+      const p = kundali.planets?.[name];
+      if (!p) continue;
+      const y = doc.y;
+      if (alt) doc.rect(L, y, pageW, 21).fill(C.creamAlt);
+      alt = !alt;
+      const retro = p.retrograde ? ' (R)' : '';
+      const cols = [name + retro, p.rashi || '—', p.nakshatra || '—', `${(p.degree || 0).toFixed(2)}°`, `${p.houseNumber || '—'}`, p.navamsaSign || '—'];
+      let tx = L;
+      cols.forEach((v, i) => {
+        doc.font(i === 0 ? SANS_B : SANS).fontSize(9).fillColor(i === 0 ? C.maroon : C.ink)
+           .text(v, tx + 6, y + 6, { width: pw[i] - 8 });
+        tx += pw[i];
       });
-      doc.y = adY + 18;
+      doc.y = y + 21;
     }
-  }
+    doc.lineWidth(0.8).strokeColor(C.gold).moveTo(L, doc.y).lineTo(L + pageW, doc.y).stroke();
 
-  // ─── PAGE 6+: LIFE ANALYSIS ───────────────────────────────────────────────
-  const sections: Array<{ title: string; key: keyof IKundali['interpretations'] }> = [
-    { title: 'PERSONALITY ANALYSIS', key: 'personality' },
-    { title: 'CAREER & PROFESSION', key: 'career' },
-    { title: 'FINANCIAL OUTLOOK', key: 'finance' },
-    { title: 'MARRIAGE & RELATIONSHIPS', key: 'marriage' },
-    { title: 'HEALTH & WELL-BEING', key: 'health' },
-    { title: 'EDUCATION & INTELLECT', key: 'education' },
-    { title: 'CHILDREN & CREATIVITY', key: 'children' },
-    { title: 'SPIRITUALITY & LIBERATION', key: 'spirituality' },
-  ];
+    doc.moveDown(1.2);
+    sectionHeader(doc, L, pageW, 'HOUSE PLACEMENTS');
+    doc.moveDown(0.3);
+    const hw = [70, 110, pageW - 180];
+    tableHeader(doc, L, pageW, ['House', 'Sign', 'Planets'], hw);
+    alt = false;
+    for (const h of housesArr) {
+      const y = doc.y;
+      if (alt) doc.rect(L, y, pageW, 19).fill(C.creamAlt);
+      alt = !alt;
+      doc.font(SANS_B).fontSize(8.5).fillColor(C.ink).text(`House ${h.number}`, L + 6, y + 5, { width: hw[0] - 8 });
+      doc.font(SANS).fontSize(8.5).fillColor(C.ink).text(h.sign, L + hw[0] + 6, y + 5, { width: hw[1] - 8 });
+      doc.font(SANS).fontSize(8.5).fillColor(C.maroon).text(h.planets?.join(', ') || '—', L + hw[0] + hw[1] + 6, y + 5, { width: hw[2] - 8 });
+      doc.y = y + 19;
+    }
 
-  const interp = kundali.interpretations as any;
+    /* ── PAGE 4: YOGAS & DOSHAS ────────────────────────────────────────── */
+    doc.addPage();
+    contentHeader(doc, L, pageW, 'YOGAS  &  DOSHAS');
+    pageFrame(doc);
+    doc.y = 66;
 
-  doc.addPage();
-  doc.rect(0, 0, doc.page.width, 40).fillColor(DARK_MAROON).fill();
-  doc.font('Helvetica-Bold').fontSize(14).fillColor(WHITE)
-     .text('LIFE ANALYSIS & INSIGHTS', L, 12, { width: pageW, align: 'center' });
-  doc.y = 55;
-
-  for (const { title, key } of sections) {
-    const text = interp?.[key] || '';
-    if (!text) continue;
-
-    ensureSpace(doc, 80);
-    drawSectionHeader(doc, title);
-    doc.y += 8;
-    doc.font('Helvetica').fontSize(9.5).fillColor(TEXT_DARK).lineGap(3)
-       .text(text, L, doc.y, { width: pageW, align: 'justify' });
-    doc.moveDown(0.8);
-  }
-
-  // Strengths & Challenges
-  ensureSpace(doc, 100);
-  drawSectionHeader(doc, 'STRENGTHS & CHALLENGES');
-  doc.y += 8;
-
-  const midX = L + pageW / 2 + 10;
-  const startY = doc.y;
-
-  doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#1A5C1A').text('Natural Strengths', L, doc.y);
-  doc.y += 16;
-  for (const s of (interp?.strengths || [])) {
-    doc.font('Helvetica').fontSize(9).fillColor(TEXT_DARK).text(`✓  ${s}`, L + 8, doc.y, { width: pageW / 2 - 20 });
+    sectionHeader(doc, L, pageW, 'AUSPICIOUS YOGAS');
     doc.moveDown(0.4);
-  }
+    const yogas = (kundali.yogas || []).filter((y: any) => y.isPresent);
+    if (!yogas.length) {
+      doc.font(SERIF).fontSize(10).fillColor(C.muted)
+         .text('No major yogas are formed in this chart; the energies are balanced and steady.', L + 4, doc.y, { width: pageW - 8 });
+      doc.moveDown(1);
+    } else {
+      for (const yg of yogas) {
+        ensureSpace(doc, 64, () => { contentHeader(doc, L, pageW, 'YOGAS  &  DOSHAS  (cont.)'); pageFrame(doc); doc.y = 66; });
+        const top = doc.y;
+        doc.font(SERIF_B).fontSize(11).fillColor(C.maroon).text(yg.name, L + 6, top, { continued: true })
+           .font(SANS_B).fontSize(8).fillColor(C.goldDeep).text(`    ${yg.strength.toUpperCase()}`);
+        star(doc, L, top + 5, 4, C.gold, 6);
+        doc.y = top + 16;
+        doc.font(SERIF).fontSize(9.5).fillColor(C.inkSoft).lineGap(2)
+           .text(yg.description, L + 14, doc.y, { width: pageW - 20, align: 'justify' });
+        doc.moveDown(0.4);
+        divider(doc, cx, doc.y + 2, pageW / 2 - 6, C.rule);
+        doc.moveDown(0.5);
+      }
+    }
 
-  const endY = doc.y;
-  doc.y = startY;
-  doc.font('Helvetica-Bold').fontSize(9.5).fillColor('#8B0000').text('Areas to Work On', midX, doc.y);
-  doc.y += 16;
-  for (const c of (interp?.challenges || [])) {
-    doc.font('Helvetica').fontSize(9).fillColor(TEXT_DARK).text(`→  ${c}`, midX + 8, doc.y, { width: pageW / 2 - 20 });
+    doc.moveDown(0.3);
+    sectionHeader(doc, L, pageW, 'DOSHAS & KARMIC PATTERNS', undefined, '#7A2433');
     doc.moveDown(0.4);
-  }
-  doc.y = Math.max(doc.y, endY) + 10;
+    const doshas = (kundali.doshas || []).filter((d: any) => d.isPresent);
+    if (!doshas.length) {
+      doc.font(SERIF).fontSize(10).fillColor(C.muted)
+         .text('No significant doshas were found — an auspicious indication.', L + 4, doc.y, { width: pageW - 8 });
+    } else {
+      for (const ds of doshas) {
+        ensureSpace(doc, 88, () => { contentHeader(doc, L, pageW, 'YOGAS  &  DOSHAS  (cont.)'); pageFrame(doc); doc.y = 66; });
+        const sev = ds.severity === 'High' ? C.red : ds.severity === 'Medium' ? '#9A5A00' : C.goldDeep;
+        const top = doc.y;
+        doc.roundedRect(L, top, pageW, 18, 3).fill('#FBEEEE');
+        doc.rect(L, top, 3.5, 18).fill(sev);
+        doc.font(SERIF_B).fontSize(10).fillColor(sev).text(ds.name, L + 12, top + 4, { continued: true })
+           .font(SANS_B).fontSize(7.5).text(`     SEVERITY: ${ds.severity.toUpperCase()}`);
+        doc.y = top + 22;
+        doc.font(SERIF).fontSize(9.5).fillColor(C.inkSoft).lineGap(2)
+           .text(ds.description, L + 12, doc.y, { width: pageW - 18, align: 'justify' });
+        if (ds.remedy) {
+          doc.moveDown(0.3);
+          doc.font(SANS_B).fontSize(8.5).fillColor(C.green).text('Remedy   ', L + 12, doc.y, { continued: true })
+             .font(SERIF_I).fontSize(9).fillColor(C.inkSoft).text(ds.remedy, { width: pageW - 60 });
+        }
+        doc.moveDown(0.7);
+      }
+    }
 
-  // ─── LAST PAGE: RECOMMENDATIONS ──────────────────────────────────────────
-  doc.addPage();
-  doc.rect(0, 0, doc.page.width, 40).fillColor(DARK_MAROON).fill();
-  doc.font('Helvetica-Bold').fontSize(14).fillColor(WHITE)
-     .text('VEDIC RECOMMENDATIONS', L, 12, { width: pageW, align: 'center' });
-  doc.y = 55;
+    /* ── PAGE 5: DASHA ─────────────────────────────────────────────────── */
+    doc.addPage();
+    contentHeader(doc, L, pageW, 'VIMSHOTTARI DASHA ANALYSIS');
+    pageFrame(doc);
+    doc.y = 66;
 
-  const recSections = [
-    { title: '✦ MANTRAS', items: interp?.mantras || [], note: 'Chant 108 times daily or on the prescribed day.' },
-    { title: '◈ GEMSTONES', items: interp?.gemstones || [], note: 'Wear after proper energization by a learned astrologer. Consult before wearing.' },
-    { title: '✧ FASTING RECOMMENDATIONS', items: interp?.fastingDays || [], note: 'Observing fast invokes planetary blessings.' },
-    { title: '❋ CHARITY & SERVICE', items: interp?.charities || [], note: 'Regular charity neutralizes negative karmic patterns.' },
-  ];
+    const d = kundali.dasha;
+    doc.roundedRect(L, doc.y, pageW, 78, 5).fill(C.card);
+    doc.lineWidth(1).strokeColor(C.gold).roundedRect(L, doc.y, pageW, 78, 5).stroke();
+    const by = doc.y + 10;
+    doc.font(SERIF_B).fontSize(10.5).fillColor(C.maroon)
+       .text('Current Planetary Periods', L, by, { width: pageW, align: 'center' });
+    const periods: [string, string][] = [
+      ['Mahadasha', `${d.currentMahadasha}   (${d.mahadashaStartDate} – ${d.mahadashaEndDate})`],
+      ['Antardasha', `${d.currentAntardasha}   (${d.antardashaStartDate} – ${d.antardashaEndDate})`],
+    ];
+    if (d.currentPratyantar) periods.push(['Pratyantar', `${d.currentPratyantar}   (ends ${d.pratyantarEndDate})`]);
+    periods.forEach((pr, i) => {
+      const ry = by + 22 + i * 15;
+      doc.font(SANS_B).fontSize(9).fillColor(C.goldDeep).text(pr[0], L + 16, ry, { width: 80 });
+      doc.font(SANS).fontSize(9).fillColor(C.ink).text(pr[1], L + 96, ry, { width: pageW - 110 });
+    });
+    doc.y += 90;
 
-  for (const { title, items, note } of recSections) {
-    ensureSpace(doc, 80);
-    drawSectionHeader(doc, title);
-    doc.y += 8;
-    doc.font('Helvetica-Oblique').fontSize(8.5).fillColor(TEXT_MUTED).text(note, L, doc.y, { width: pageW });
+    sectionHeader(doc, L, pageW, 'MAHADASHA TIMELINE');
+    doc.moveDown(0.3);
+    const mw = [pageW - 80 - 80 - 64 - 56, 80, 80, 64, 56];
+    tableHeader(doc, L, pageW, ['Mahadasha', 'Start', 'End', 'Duration', 'Status'], mw);
+    alt = false;
+    for (const md of (d.timeline || []).slice(0, 18)) {
+      ensureSpace(doc, 19, () => { contentHeader(doc, L, pageW, 'VIMSHOTTARI DASHA  (cont.)'); pageFrame(doc); doc.y = 66; });
+      const y = doc.y;
+      if (md.isCurrent) doc.rect(L, y, pageW, 19).fill('#FBF1D8');
+      else if (alt) doc.rect(L, y, pageW, 19).fill(C.creamAlt);
+      alt = !alt;
+      if (md.isCurrent) doc.rect(L, y, 3, 19).fill(C.gold);
+      const yrs = Math.round((new Date(md.endDate).getTime() - new Date(md.startDate).getTime()) / (365.25 * 864e5));
+      const cells = [md.planet, md.startDate, md.endDate, `${yrs} yrs`, md.isCurrent ? 'Active' : ''];
+      let tx = L;
+      cells.forEach((v, i) => {
+        doc.font(md.isCurrent ? SANS_B : SANS).fontSize(8.5).fillColor(md.isCurrent ? C.maroon : C.ink)
+           .text(v, tx + 6, y + 5, { width: mw[i] - 8 });
+        tx += mw[i];
+      });
+      doc.y = y + 19;
+    }
+
+    const curMD = (d.timeline || []).find((m: any) => m.isCurrent);
+    if (curMD?.antardashas?.length) {
+      doc.moveDown(1);
+      ensureSpace(doc, 140, () => { contentHeader(doc, L, pageW, 'VIMSHOTTARI DASHA  (cont.)'); pageFrame(doc); doc.y = 66; });
+      sectionHeader(doc, L, pageW, `ANTARDASHA WITHIN ${String(curMD.planet).toUpperCase()} MAHADASHA`);
+      doc.moveDown(0.3);
+      const aw = [pageW - 110 - 110 - 70, 110, 110, 70];
+      tableHeader(doc, L, pageW, ['Antardasha', 'Start', 'End', 'Status'], aw);
+      alt = false;
+      for (const ad of curMD.antardashas) {
+        ensureSpace(doc, 18, () => { contentHeader(doc, L, pageW, 'VIMSHOTTARI DASHA  (cont.)'); pageFrame(doc); doc.y = 66; });
+        const y = doc.y;
+        if (ad.isCurrent) doc.rect(L, y, pageW, 18).fill('#FBF1D8');
+        else if (alt) doc.rect(L, y, pageW, 18).fill(C.creamAlt);
+        alt = !alt;
+        if (ad.isCurrent) doc.rect(L, y, 3, 18).fill(C.gold);
+        const cells = [ad.planet, ad.startDate, ad.endDate, ad.isCurrent ? 'Active' : ''];
+        let tx = L;
+        cells.forEach((v, i) => {
+          doc.font(ad.isCurrent ? SANS_B : SANS).fontSize(8.5).fillColor(ad.isCurrent ? C.maroon : C.ink)
+             .text(v, tx + 6, y + 5, { width: aw[i] - 8 });
+          tx += aw[i];
+        });
+        doc.y = y + 18;
+      }
+    }
+
+    /* ── LIFE ANALYSIS ─────────────────────────────────────────────────── */
+    const sections: Array<{ title: string; key: string }> = [
+      { title: 'PERSONALITY', key: 'personality' },
+      { title: 'CAREER & PROFESSION', key: 'career' },
+      { title: 'FINANCIAL OUTLOOK', key: 'finance' },
+      { title: 'MARRIAGE & RELATIONSHIPS', key: 'marriage' },
+      { title: 'HEALTH & WELL-BEING', key: 'health' },
+      { title: 'EDUCATION & INTELLECT', key: 'education' },
+      { title: 'CHILDREN & CREATIVITY', key: 'children' },
+      { title: 'SPIRITUALITY & LIBERATION', key: 'spirituality' },
+    ];
+    const interp = kundali.interpretations || {};
+
+    doc.addPage();
+    contentHeader(doc, L, pageW, 'LIFE ANALYSIS & INSIGHTS');
+    pageFrame(doc);
+    doc.y = 66;
+
+    for (const s of sections) {
+      const text = interp[s.key];
+      if (!text) continue;
+      ensureSpace(doc, 76, () => { contentHeader(doc, L, pageW, 'LIFE ANALYSIS  (cont.)'); pageFrame(doc); doc.y = 66; });
+      sectionHeader(doc, L, pageW, s.title);
+      doc.moveDown(0.4);
+      doc.font(SERIF).fontSize(10).fillColor(C.ink).lineGap(3)
+         .text(text, L + 4, doc.y, { width: pageW - 8, align: 'justify' });
+      doc.moveDown(0.9);
+    }
+
+    // Strengths & challenges
+    ensureSpace(doc, 130, () => { contentHeader(doc, L, pageW, 'LIFE ANALYSIS  (cont.)'); pageFrame(doc); doc.y = 66; });
+    sectionHeader(doc, L, pageW, 'STRENGTHS & AREAS TO WORK ON');
     doc.moveDown(0.5);
-    for (const item of items) {
-      doc.font('Helvetica').fontSize(9.5).fillColor(TEXT_DARK).text(`•  ${item}`, L + 8, doc.y, { width: pageW - 16 });
+    const colGap = 16;
+    const colWid = (pageW - colGap) / 2;
+    const sxL = L, sxR = L + colWid + colGap;
+    const startY = doc.y;
+
+    doc.font(SERIF_B).fontSize(10).fillColor(C.green).text('Natural Strengths', sxL, startY);
+    let ly = startY + 16;
+    for (const s of (interp.strengths || [])) {
+      star(doc, sxL + 3, ly + 4, 3, C.green, 5);
+      doc.font(SERIF).fontSize(9.5).fillColor(C.ink).text(s, sxL + 12, ly, { width: colWid - 14 });
+      ly = doc.y + 5;
+    }
+    const leftEnd = ly;
+
+    doc.font(SERIF_B).fontSize(10).fillColor(C.red).text('Areas to Work On', sxR, startY);
+    ly = startY + 16;
+    for (const c of (interp.challenges || [])) {
+      diamondDot(doc, sxR + 3, ly + 4, 2.4, C.red);
+      doc.font(SERIF).fontSize(9.5).fillColor(C.ink).text(c, sxR + 12, ly, { width: colWid - 14 });
+      ly = doc.y + 5;
+    }
+    doc.y = Math.max(leftEnd, ly) + 6;
+
+    /* ── RECOMMENDATIONS ───────────────────────────────────────────────── */
+    doc.addPage();
+    contentHeader(doc, L, pageW, 'VEDIC RECOMMENDATIONS');
+    pageFrame(doc);
+    doc.y = 66;
+
+    const recs = [
+      { title: 'MANTRAS', items: interp.mantras || [], note: 'Chant 108 times daily or on the prescribed day for best effect.' },
+      { title: 'GEMSTONES', items: interp.gemstones || [], note: 'Wear only after energisation; consult a learned astrologer before wearing.' },
+      { title: 'FASTING', items: interp.fastingDays || [], note: 'Observing the fast invokes the blessings of the ruling planet.' },
+      { title: 'CHARITY & SERVICE', items: interp.charities || [], note: 'Regular charity helps neutralise challenging karmic patterns.' },
+    ];
+    for (const r of recs) {
+      ensureSpace(doc, 76, () => { contentHeader(doc, L, pageW, 'VEDIC RECOMMENDATIONS  (cont.)'); pageFrame(doc); doc.y = 66; });
+      sectionHeader(doc, L, pageW, r.title);
+      doc.moveDown(0.35);
+      doc.font(SERIF_I).fontSize(8.5).fillColor(C.muted).text(r.note, L + 4, doc.y, { width: pageW - 8 });
       doc.moveDown(0.5);
+      for (const it of r.items) {
+        diamondDot(doc, L + 6, doc.y + 5, 2.4, C.gold);
+        doc.font(SERIF).fontSize(10).fillColor(C.ink).text(it, L + 16, doc.y, { width: pageW - 22 });
+        doc.moveDown(0.45);
+      }
+      doc.moveDown(0.4);
     }
+
+    // Disclaimer
+    ensureSpace(doc, 70);
     doc.moveDown(0.5);
-  }
+    const dy = doc.y;
+    doc.roundedRect(L, dy, pageW, 56, 5).fill(C.creamAlt);
+    doc.lineWidth(0.8).strokeColor(C.gold).roundedRect(L, dy, pageW, 56, 5).stroke();
+    doc.font(SANS_B).fontSize(8).fillColor(C.maroon)
+       .text('IMPORTANT DISCLAIMER', L + 12, dy + 9, { width: pageW - 24, align: 'center', characterSpacing: 1 });
+    doc.font(SERIF).fontSize(8.5).fillColor(C.inkSoft).lineGap(1.5)
+       .text('This report is provided for spiritual guidance and self-understanding only. It is not medical, financial, or legal advice. Astrological interpretations are symbolic and traditional in nature; VedicScan does not guarantee outcomes based on this report.',
+         L + 14, dy + 22, { width: pageW - 28, align: 'center' });
 
-  // Disclaimer
-  doc.moveDown(1);
-  doc.rect(L, doc.y, pageW, 50).fillColor('#F5EDE0').fill().strokeColor(BORDER).lineWidth(0.5).stroke();
-  doc.font('Helvetica-Bold').fontSize(8).fillColor(DARK_MAROON)
-     .text('IMPORTANT DISCLAIMER', L + 10, doc.y + 8, { width: pageW - 20, align: 'center' });
-  doc.font('Helvetica').fontSize(7.5).fillColor(TEXT_MUTED)
-     .text('This Kundali report is provided for spiritual guidance and self-understanding only. It is NOT medical advice, financial advice, or legal advice. Astrological interpretations are symbolic and traditional in nature. VedicScan does not guarantee outcomes based on this report.', L + 10, doc.y + 20, { width: pageW - 20, align: 'center' });
+    /* ── FOOTERS (all content pages) ───────────────────────────────────── */
+    const range = doc.bufferedPageRange();
+    const total = range.count;
+    for (let i = 1; i < total; i++) { // skip cover (page 0)
+      doc.switchToPage(i);
+      doc.page.margins.bottom = 0; // prevent text-flow from adding new pages
+      const fy = PH - 34;
+      doc.lineWidth(0.6).strokeColor(C.rule).moveTo(L, fy).lineTo(L + pageW, fy).stroke();
+      diamondDot(doc, cx, fy, 2, C.gold);
+      doc.font(SERIF_I).fontSize(8).fillColor(C.muted)
+         .text('VedicScan  ·  Personal Kundali Report', L, fy + 6, { width: pageW / 2, align: 'left', lineBreak: false });
+      doc.font(SANS).fontSize(8).fillColor(C.muted)
+         .text(`Page ${i + 1} of ${total}`, L + pageW / 2, fy + 6, { width: pageW / 2, align: 'right', lineBreak: false });
+    }
 
-  doc.on('end', () => resolve(Buffer.concat(buffers)));
-  doc.end();
-  }); // end Promise
+    doc.on('end', () => resolve(Buffer.concat(buffers)));
+    doc.end();
+  });
 }
