@@ -35,7 +35,7 @@ function drawNorthIndianChart(
   x: number,
   y: number,
   size: number,
-  lagnaSign: string,
+  _lagnaSign: string,
   houses: Array<{ number: number; sign: string; planets: string[] }>,
   title: string
 ) {
@@ -121,7 +121,7 @@ function drawSectionHeader(doc: PDFKit.PDFDocument, title: string, y?: number) {
   doc.moveDown(0.5);
 }
 
-function drawKeyValue(doc: PDFKit.PDFDocument, label: string, value: string, col1X: number, col2X: number) {
+function _drawKeyValue(doc: PDFKit.PDFDocument, label: string, value: string, col1X: number, col2X: number) {
   const y = doc.y;
   doc.font('Helvetica-Bold').fontSize(9.5).fillColor(TEXT_MUTED)
      .text(label, col1X, y, { continued: false });
@@ -136,8 +136,13 @@ function ensureSpace(doc: PDFKit.PDFDocument, neededPx: number) {
   }
 }
 
-export function generateKundaliPDF(kundali: IKundali): Promise<Buffer> {
+export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
   return new Promise((resolve, reject) => {
+  // Serialize through toJSON then back to a plain JS object.
+  // This converts Mongoose Maps → plain objects and resolves all getters,
+  // so the rest of the function can use simple property access safely.
+  const kundali: any = JSON.parse(JSON.stringify(rawKundali));
+
   const doc = new PDFDocument({
     size: 'A4',
     margins: { top: 40, bottom: 40, left: 45, right: 45 },
@@ -247,7 +252,7 @@ export function generateKundaliPDF(kundali: IKundali): Promise<Buffer> {
     const signIdx = (navLagnaIdx + h - 1) % 12;
     const sign = rashis[signIdx];
     const planetsInHouse = navamsa?.planets
-      ? Object.entries(navamsa.planets as any).filter(([, p]: any) => p.houseNumber === h).map(([name]) => name)
+      ? Object.entries(navamsa.planets as any).filter(([, p]: any) => p != null && p.houseNumber === h).map(([name]) => name)
       : [];
     navHouses.push({ number: h, sign, planets: planetsInHouse });
   }
@@ -346,7 +351,7 @@ export function generateKundaliPDF(kundali: IKundali): Promise<Buffer> {
   // Yogas
   drawSectionHeader(doc, '✦ AUSPICIOUS YOGAS IN YOUR CHART');
   doc.y += 8;
-  const presentYogas = kundali.yogas.filter(y => y.isPresent);
+  const presentYogas = kundali.yogas.filter((y: any) => y.isPresent);
   if (presentYogas.length === 0) {
     doc.font('Helvetica').fontSize(9.5).fillColor(TEXT_MUTED)
        .text('No major yogas are formed in your birth chart. The chart shows a balanced energy.', L, doc.y, { width: pageW });
@@ -370,7 +375,7 @@ export function generateKundaliPDF(kundali: IKundali): Promise<Buffer> {
   drawSectionHeader(doc, '⚠ DOSHAS & KARMIC PATTERNS');
   doc.y += 8;
 
-  const presentDoshas = kundali.doshas.filter(d => d.isPresent);
+  const presentDoshas = kundali.doshas.filter((d: any) => d.isPresent);
   if (presentDoshas.length === 0) {
     doc.font('Helvetica').fontSize(9.5).fillColor(TEXT_MUTED)
        .text('No significant doshas found in your chart. This is a highly auspicious indication.', L, doc.y, { width: pageW });
@@ -462,7 +467,7 @@ export function generateKundaliPDF(kundali: IKundali): Promise<Buffer> {
   }
 
   // Current MD Antardasha table
-  const currentMD = d.timeline?.find(m => m.isCurrent);
+  const currentMD = d.timeline?.find((m: any) => m.isCurrent);
   if (currentMD?.antardashas?.length) {
     doc.moveDown(1);
     ensureSpace(doc, 200);
