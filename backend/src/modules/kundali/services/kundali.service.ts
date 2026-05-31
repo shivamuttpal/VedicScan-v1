@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import { Kundali, IKundali } from '../model/kundali.model';
 import { detectYogas } from './yoga.service';
 import { detectDoshas } from './dosha.service';
-import { generateInterpretations } from './interpretation.service';
+import { generateInterpretations, generateInterpretationsHi } from './interpretation.service';
 
 const KUNDALI_BRIDGE = path.join(process.cwd(), 'astrologyCalculation', 'kundali_bridge.py');
 const PYTHON_CMD = process.platform === 'win32' ? 'python' : 'python3';
@@ -141,19 +141,17 @@ export const kundaliService = {
     const yogas = detectYogas(planetForRules, lagnaSign, houses);
     const doshas = detectDoshas(planetForRules, lagnaSign, houses);
 
-    // Generate interpretations
-    const interpretations = generateInterpretations(
-      name,
-      lagnaSign,
-      moon?.rashi || 'Aries',
-      moon?.nakshatra || 'Ashwini',
-      sun?.rashi || 'Aries',
+    // Generate interpretations in both languages
+    const sharedArgs: [string, string, string, string, string, Record<string, { rashi: string; houseNumber: number }>, string, string, any[], any[]] = [
+      name, lagnaSign,
+      moon?.rashi || 'Aries', moon?.nakshatra || 'Ashwini', sun?.rashi || 'Aries',
       planetForRules,
       dasha_data.current_mahadasha || 'Jupiter',
       dasha_data.current_antardasha || 'Jupiter',
-      yogas,
-      doshas
-    );
+      yogas, doshas,
+    ];
+    const interpretations = generateInterpretations(...sharedArgs);
+    const interpretationsHi = generateInterpretationsHi(...sharedArgs);
 
     // Build dasha document
     const dasha = {
@@ -199,6 +197,7 @@ export const kundaliService = {
       doshas,
       dasha,
       interpretations,
+      interpretationsHi,
     });
 
     await kundali.save();
@@ -206,16 +205,56 @@ export const kundaliService = {
   },
 
   async getById(kundaliId: string, userId: string): Promise<IKundali | null> {
-    return Kundali.findOne({
+    const kundali = await Kundali.findOne({
       _id: new mongoose.Types.ObjectId(kundaliId),
       userId: new mongoose.Types.ObjectId(userId),
     });
+
+    // Lazily generate Hindi interpretations for older kundalis that were saved before
+    // the Hindi generation was added.
+    if (kundali && !(kundali as any).interpretationsHi) {
+      try {
+        const plain = kundali.toObject() as any;
+        const planetsMap = plain.planets || {};
+        const planetForRules: Record<string, { rashi: string; houseNumber: number }> = {};
+        for (const [name, data] of Object.entries(planetsMap)) {
+          planetForRules[name] = {
+            rashi: (data as any).rashi || 'Aries',
+            houseNumber: (data as any).houseNumber || 1,
+          };
+        }
+
+        const interpretationsHi = generateInterpretationsHi(
+          plain.name,
+          plain.lagna?.sign || 'Aries',
+          plain.moonSign || 'Aries',
+          plain.moonNakshatra || 'Ashwini',
+          plain.sunSign || 'Aries',
+          planetForRules,
+          plain.dasha?.currentMahadasha || 'Jupiter',
+          plain.dasha?.currentAntardasha || 'Jupiter',
+          plain.yogas || [],
+          plain.doshas || [],
+        );
+
+        await Kundali.updateOne(
+          { _id: kundali._id },
+          { $set: { interpretationsHi } }
+        );
+        (kundali as any).interpretationsHi = interpretationsHi;
+      } catch (e) {
+        // Non-fatal: Hindi interpretations will be generated on next fetch
+        console.warn('[kundali] lazy Hindi generation failed:', (e as any).message);
+      }
+    }
+
+    return kundali;
   },
 
   async getByUser(userId: string): Promise<IKundali[]> {
     return Kundali.find({ userId: new mongoose.Types.ObjectId(userId) })
       .sort({ createdAt: -1 })
-      .select('-dasha.timeline -interpretations');
+      .select('-dasha.timeline -interpretations -interpretationsHi');
   },
 
   async deleteById(kundaliId: string, userId: string): Promise<boolean> {

@@ -100,6 +100,7 @@ export interface IKundali extends Document {
   doshas: IDosha[];
   dasha: IDasha;
   interpretations: IInterpretations;
+  interpretationsHi?: IInterpretations;
 }
 
 const PlanetDataSchema = new Schema<IPlanetData>({
@@ -164,6 +165,7 @@ const KundaliSchema = new Schema<IKundali>(
     doshas: [DoshaSchema],
     dasha: { type: Schema.Types.Mixed },
     interpretations: { type: Schema.Types.Mixed },
+    interpretationsHi: { type: Schema.Types.Mixed },
   },
   {
     timestamps: true,
