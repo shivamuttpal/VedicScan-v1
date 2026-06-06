@@ -271,16 +271,14 @@ function pageFrame(doc: Doc) {
 
 function sectionHeader(doc: Doc, L: number, pageW: number, title: string, y?: number, accent = C.maroon) {
   const yPos = y ?? doc.y + 10;
-  // gradient bar
   const g = doc.linearGradient(L, yPos, L + pageW, yPos + 24);
   g.stop(0, accent).stop(1, C.maroonDeep);
   doc.rect(L, yPos, pageW, 25).fill(g);
   doc.rect(L, yPos, 3.5, 25).fill(C.gold);
   doc.font(SERIF_B).fontSize(11.5).fillColor(C.white)
-     .text(title, L + 14, yPos + 7, { width: pageW - 28, characterSpacing: 0.5 });
+     .text(title, L + 14, yPos + 7, { width: pageW - 28, characterSpacing: 0.5, lineBreak: false });
   diamondDot(doc, L + pageW - 12, yPos + 12.5, 2.6, C.goldLight);
-  doc.y = yPos + 25;
-  doc.moveDown(0.5);
+  doc.y = yPos + 32;
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -512,21 +510,23 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     const yogas = (kundali.yogas || []).filter((y: any) => y.isPresent);
     if (!yogas.length) {
       doc.font(SERIF).fontSize(10).fillColor(C.muted)
-         .text('No major yogas are formed in this chart; the energies are balanced and steady.', L + 4, doc.y, { width: pageW - 8 });
-      doc.moveDown(1);
+         .text('No major yogas are formed in this chart; the energies are balanced and steady.', L + 6, doc.y, { width: pageW - 12 });
+      doc.moveDown(1.2);
     } else {
       for (const yg of yogas) {
-        ensureSpace(doc, 64, () => { contentHeader(doc, L, pageW, 'YOGAS  &  DOSHAS  (cont.)'); pageFrame(doc); doc.y = 66; });
+        ensureSpace(doc, 80, () => { contentHeader(doc, L, pageW, 'YOGAS  &  DOSHAS  (cont.)'); pageFrame(doc); doc.y = 66; });
         const top = doc.y;
-        doc.font(SERIF_B).fontSize(11).fillColor(C.maroon).text(yg.name, L + 6, top, { continued: true })
-           .font(SANS_B).fontSize(8).fillColor(C.goldDeep).text(`    ${yg.strength.toUpperCase()}`);
-        star(doc, L, top + 5, 4, C.gold, 6);
-        doc.y = top + 16;
+        star(doc, L + 4, top + 6, 4, C.gold, 6);
+        doc.font(SERIF_B).fontSize(11).fillColor(C.maroon)
+           .text(yg.name, L + 14, top, { width: pageW - 100, lineBreak: false });
+        doc.font(SANS_B).fontSize(8).fillColor(C.goldDeep)
+           .text((yg.strength || '').toUpperCase(), L + pageW - 80, top + 2, { width: 76, align: 'right', lineBreak: false });
+        doc.y = top + 18;
         doc.font(SERIF).fontSize(9.5).fillColor(C.inkSoft).lineGap(2)
-           .text(yg.description, L + 14, doc.y, { width: pageW - 20, align: 'justify' });
-        doc.moveDown(0.4);
-        divider(doc, cx, doc.y + 2, pageW / 2 - 6, C.rule);
+           .text(yg.description || '', L + 14, doc.y, { width: pageW - 20, align: 'justify' });
         doc.moveDown(0.5);
+        divider(doc, cx, doc.y + 2, pageW / 2 - 6, C.rule);
+        doc.moveDown(0.7);
       }
     }
 
@@ -536,25 +536,29 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     const doshas = (kundali.doshas || []).filter((d: any) => d.isPresent);
     if (!doshas.length) {
       doc.font(SERIF).fontSize(10).fillColor(C.muted)
-         .text('No significant doshas were found — an auspicious indication.', L + 4, doc.y, { width: pageW - 8 });
+         .text('No significant doshas were found — an auspicious indication.', L + 6, doc.y, { width: pageW - 12 });
     } else {
       for (const ds of doshas) {
-        ensureSpace(doc, 88, () => { contentHeader(doc, L, pageW, 'YOGAS  &  DOSHAS  (cont.)'); pageFrame(doc); doc.y = 66; });
-        const sev = ds.severity === 'High' ? C.red : ds.severity === 'Medium' ? '#9A5A00' : C.goldDeep;
+        ensureSpace(doc, 100, () => { contentHeader(doc, L, pageW, 'YOGAS  &  DOSHAS  (cont.)'); pageFrame(doc); doc.y = 66; });
+        const sev = ds.severity === 'High' ? C.red : ds.severity === 'Moderate' ? '#9A5A00' : C.goldDeep;
         const top = doc.y;
-        doc.roundedRect(L, top, pageW, 18, 3).fill('#FBEEEE');
-        doc.rect(L, top, 3.5, 18).fill(sev);
-        doc.font(SERIF_B).fontSize(10).fillColor(sev).text(ds.name, L + 12, top + 4, { continued: true })
-           .font(SANS_B).fontSize(7.5).text(`     SEVERITY: ${ds.severity.toUpperCase()}`);
-        doc.y = top + 22;
+        doc.roundedRect(L, top, pageW, 20, 3).fill('#FBEEEE');
+        doc.rect(L, top, 4, 20).fill(sev);
+        doc.font(SERIF_B).fontSize(10).fillColor(sev)
+           .text(ds.name || '', L + 14, top + 5, { width: pageW - 120, lineBreak: false });
+        doc.font(SANS_B).fontSize(7.5).fillColor(sev)
+           .text(`SEVERITY: ${(ds.severity || '').toUpperCase()}`, L + pageW - 100, top + 6, { width: 96, align: 'right', lineBreak: false });
+        doc.y = top + 24;
         doc.font(SERIF).fontSize(9.5).fillColor(C.inkSoft).lineGap(2)
-           .text(ds.description, L + 12, doc.y, { width: pageW - 18, align: 'justify' });
+           .text(ds.description || '', L + 14, doc.y, { width: pageW - 20, align: 'justify' });
         if (ds.remedy) {
-          doc.moveDown(0.3);
-          doc.font(SANS_B).fontSize(8.5).fillColor(C.green).text('Remedy   ', L + 12, doc.y, { continued: true })
-             .font(SERIF_I).fontSize(9).fillColor(C.inkSoft).text(ds.remedy, { width: pageW - 60 });
+          doc.moveDown(0.4);
+          doc.font(SANS_B).fontSize(8.5).fillColor(C.green)
+             .text('Remedy:', L + 14, doc.y, { width: 52, lineBreak: false });
+          doc.font(SERIF_I).fontSize(9).fillColor(C.inkSoft)
+             .text(ds.remedy, L + 68, doc.y, { width: pageW - 76, lineGap: 1 });
         }
-        doc.moveDown(0.7);
+        doc.moveDown(0.9);
       }
     }
 
@@ -576,11 +580,11 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     ];
     if (d.currentPratyantar) periods.push(['Pratyantar', `${d.currentPratyantar}   (ends ${d.pratyantarEndDate})`]);
     periods.forEach((pr, i) => {
-      const ry = by + 22 + i * 15;
-      doc.font(SANS_B).fontSize(9).fillColor(C.goldDeep).text(pr[0], L + 16, ry, { width: 80 });
-      doc.font(SANS).fontSize(9).fillColor(C.ink).text(pr[1], L + 96, ry, { width: pageW - 110 });
+      const ry = by + 24 + i * 17;
+      doc.font(SANS_B).fontSize(9).fillColor(C.goldDeep).text(pr[0], L + 16, ry, { width: 90, lineBreak: false });
+      doc.font(SANS).fontSize(9).fillColor(C.ink).text(pr[1], L + 108, ry, { width: pageW - 120, lineBreak: false });
     });
-    doc.y += 90;
+    doc.y += 92;
 
     sectionHeader(doc, L, pageW, 'MAHADASHA TIMELINE');
     doc.moveDown(0.3);
@@ -653,40 +657,46 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     for (const s of sections) {
       const text = interp[s.key];
       if (!text) continue;
-      ensureSpace(doc, 76, () => { contentHeader(doc, L, pageW, 'LIFE ANALYSIS  (cont.)'); pageFrame(doc); doc.y = 66; });
+      // Ensure room for the header bar + at least 3 lines of body text before adding
+      ensureSpace(doc, 100, () => { contentHeader(doc, L, pageW, 'LIFE ANALYSIS  (cont.)'); pageFrame(doc); doc.y = 66; });
       sectionHeader(doc, L, pageW, s.title);
-      doc.moveDown(0.4);
       doc.font(SERIF).fontSize(10).fillColor(C.ink).lineGap(3)
-         .text(text, L + 4, doc.y, { width: pageW - 8, align: 'justify' });
-      doc.moveDown(0.9);
+         .text(text, L + 6, doc.y, { width: pageW - 12, align: 'justify' });
+      doc.moveDown(1.2);
     }
 
     // Strengths & challenges
-    ensureSpace(doc, 130, () => { contentHeader(doc, L, pageW, 'LIFE ANALYSIS  (cont.)'); pageFrame(doc); doc.y = 66; });
+    const strCount = (interp.strengths || []).length + (interp.challenges || []).length;
+    ensureSpace(doc, 60 + strCount * 18, () => { contentHeader(doc, L, pageW, 'LIFE ANALYSIS  (cont.)'); pageFrame(doc); doc.y = 66; });
     sectionHeader(doc, L, pageW, 'STRENGTHS & AREAS TO WORK ON');
-    doc.moveDown(0.5);
-    const colGap = 16;
+    doc.moveDown(0.4);
+    const colGap = 20;
     const colWid = (pageW - colGap) / 2;
     const sxL = L, sxR = L + colWid + colGap;
     const startY = doc.y;
 
-    doc.font(SERIF_B).fontSize(10).fillColor(C.green).text('Natural Strengths', sxL, startY);
-    let ly = startY + 16;
+    // Left column — strengths
+    doc.font(SERIF_B).fontSize(10).fillColor(C.green).text('Natural Strengths', sxL, startY, { width: colWid });
+    let ly = startY + 18;
     for (const s of (interp.strengths || [])) {
-      star(doc, sxL + 3, ly + 4, 3, C.green, 5);
-      doc.font(SERIF).fontSize(9.5).fillColor(C.ink).text(s, sxL + 12, ly, { width: colWid - 14 });
-      ly = doc.y + 5;
+      star(doc, sxL + 4, ly + 5, 3, C.green, 5);
+      doc.font(SERIF).fontSize(9.5).fillColor(C.ink)
+         .text(s, sxL + 14, ly, { width: colWid - 18, lineGap: 1 });
+      ly = doc.y + 4;
     }
     const leftEnd = ly;
 
-    doc.font(SERIF_B).fontSize(10).fillColor(C.red).text('Areas to Work On', sxR, startY);
-    ly = startY + 16;
+    // Right column — challenges (rendered at same startY, independent cursor)
+    doc.font(SERIF_B).fontSize(10).fillColor(C.red).text('Areas to Work On', sxR, startY, { width: colWid });
+    ly = startY + 18;
     for (const c of (interp.challenges || [])) {
-      diamondDot(doc, sxR + 3, ly + 4, 2.4, C.red);
-      doc.font(SERIF).fontSize(9.5).fillColor(C.ink).text(c, sxR + 12, ly, { width: colWid - 14 });
-      ly = doc.y + 5;
+      diamondDot(doc, sxR + 4, ly + 5, 2.4, C.red);
+      doc.font(SERIF).fontSize(9.5).fillColor(C.ink)
+         .text(c, sxR + 14, ly, { width: colWid - 18, lineGap: 1 });
+      ly = doc.y + 4;
     }
-    doc.y = Math.max(leftEnd, ly) + 6;
+    // Advance past whichever column is taller
+    doc.y = Math.max(leftEnd, ly) + 10;
 
     /* ── RECOMMENDATIONS ───────────────────────────────────────────────── */
     doc.addPage();
@@ -701,17 +711,22 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       { title: 'CHARITY & SERVICE', items: interp.charities || [], note: 'Regular charity helps neutralise challenging karmic patterns.' },
     ];
     for (const r of recs) {
-      ensureSpace(doc, 76, () => { contentHeader(doc, L, pageW, 'VEDIC RECOMMENDATIONS  (cont.)'); pageFrame(doc); doc.y = 66; });
+      if (!r.items.length) continue;
+      // Ensure enough room for the header + note + at least one item before starting the section
+      ensureSpace(doc, 110, () => { contentHeader(doc, L, pageW, 'VEDIC RECOMMENDATIONS  (cont.)'); pageFrame(doc); doc.y = 66; });
       sectionHeader(doc, L, pageW, r.title);
-      doc.moveDown(0.35);
-      doc.font(SERIF_I).fontSize(8.5).fillColor(C.muted).text(r.note, L + 4, doc.y, { width: pageW - 8 });
-      doc.moveDown(0.5);
+      doc.font(SERIF_I).fontSize(9).fillColor(C.muted)
+         .text(r.note, L + 6, doc.y, { width: pageW - 12, lineGap: 1 });
+      doc.moveDown(0.6);
       for (const it of r.items) {
-        diamondDot(doc, L + 6, doc.y + 5, 2.4, C.gold);
-        doc.font(SERIF).fontSize(10).fillColor(C.ink).text(it, L + 16, doc.y, { width: pageW - 22 });
-        doc.moveDown(0.45);
+        ensureSpace(doc, 28, () => { contentHeader(doc, L, pageW, 'VEDIC RECOMMENDATIONS  (cont.)'); pageFrame(doc); doc.y = 66; });
+        const iy = doc.y;
+        diamondDot(doc, L + 7, iy + 6, 2.8, C.gold);
+        doc.font(SERIF).fontSize(10).fillColor(C.ink)
+           .text(String(it), L + 18, iy, { width: pageW - 26, lineGap: 2 });
+        doc.moveDown(0.5);
       }
-      doc.moveDown(0.4);
+      doc.moveDown(0.6);
     }
 
     // Disclaimer
