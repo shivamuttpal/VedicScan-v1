@@ -20,10 +20,15 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from vedic_engine import VedicEngine
-    from sade_sati import SadeSatiEngine
 except Exception as exc:
     print(json.dumps({"status": "error", "message": f"Import error: {exc}"}))
     sys.exit(1)
+
+# Sade Sati engine is optional — import failure must never break the main chart.
+try:
+    from sade_sati import SadeSatiEngine as _SadeSatiEngine
+except Exception:
+    _SadeSatiEngine = None  # type: ignore[assignment,misc]
 
 
 def main() -> None:
@@ -50,9 +55,11 @@ def main() -> None:
 
         # Sade Sati — computed from Moon's rashi_id and Julian birth date
         try:
+            if _SadeSatiEngine is None:
+                raise RuntimeError("Sade Sati engine unavailable")
             moon_sign_id = result["chart_data"]["Planets"]["Moon"]["rashi_id"]
             jd_birth     = result["meta"]["julian_day_ut"]
-            result["sade_sati_data"] = SadeSatiEngine().analyse(moon_sign_id, jd_birth)
+            result["sade_sati_data"] = _SadeSatiEngine().analyse(moon_sign_id, jd_birth)
         except Exception as ss_err:
             result["sade_sati_data"] = {"status": "error", "message": str(ss_err)}
 

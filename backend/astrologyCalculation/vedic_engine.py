@@ -106,6 +106,17 @@ NATURAL_FRIENDS = {
 NAK_LEN = 360.0 / 27.0        # 13deg 20'
 PADA_LEN = NAK_LEN / 4.0      # 3deg 20'
 
+# Ephemeris flag used by satellite engines (sade_sati.py etc.)
+# FLG_SWIEPH (2) requests Swiss Ephemeris files; swisseph transparently falls
+# back to the built-in Moshier tables if the .se1 files are absent.
+_EPHE_FLAG: int = swe.FLG_SWIEPH
+
+
+def jd_to_date(jd: float) -> str:
+    """Convert a Julian Day Number (UT) to a 'YYYY-MM-DD' string."""
+    y, m, d, _ = swe.revjul(jd)
+    return f"{int(y):04d}-{int(m):02d}-{int(d):02d}"
+
 
 class VedicEngine:
     """Sidereal (Lahiri) Vedic chart engine. One instance is reusable."""
