@@ -111,12 +111,15 @@ class VedicEngine:
     """Sidereal (Lahiri) Vedic chart engine. One instance is reusable."""
 
     def __init__(self, ayanamsa: int = swe.SIDM_LAHIRI,
-                 node: str = "mean", ephe_path: str | None = None):
+                 node: str = "true", ephe_path: str | None = None):
         if ephe_path:
             swe.set_ephe_path(ephe_path)
         swe.set_sid_mode(ayanamsa)
-        self.node_const = swe.MEAN_NODE if node == "mean" else swe.TRUE_NODE
-        self.node_is_retro = True  # both mean and (almost always) true node move backwards
+        # True Node matches Jagannatha Hora, AstroSage, Parashara Light default.
+        # Mean Node gives slightly smoother dasha calculations but can differ by ~1°.
+        self.node_const = swe.TRUE_NODE if node == "true" else swe.MEAN_NODE
+        self.node_type  = "True Node" if node == "true" else "Mean Node"
+        self.node_is_retro = True  # both true and mean node always move retrograde
 
     # ------------------------------------------------------------------ #
     #  Low-level helpers
@@ -127,10 +130,18 @@ class VedicEngine:
 
     @staticmethod
     def to_julian_day(dob: str, tob: str, tz_offset: float) -> float:
-        """Local civil time -> Julian Day (UT)."""
-        dt = datetime.strptime(f"{dob} {tob}", "%Y-%m-%d %H:%M")
-        ut_hour = dt.hour + dt.minute / 60.0 + dt.second / 3600.0 - tz_offset
-        return swe.julday(dt.year, dt.month, dt.day, ut_hour)
+        """Local civil time -> Julian Day (UT).
+
+        Uses timedelta subtraction so midnight crossings (e.g., 00:30 IST)
+        correctly roll back to the previous calendar date in UTC, rather than
+        passing a negative hour to swe.julday() which, while technically
+        handled by SwissEph, is fragile across month/year boundaries.
+        """
+        local_dt = datetime.strptime(f"{dob} {tob}", "%Y-%m-%d %H:%M")
+        # Subtract timezone offset to get UTC datetime (handles date rollover)
+        utc_dt = local_dt - timedelta(hours=tz_offset)
+        ut_hour = utc_dt.hour + utc_dt.minute / 60.0 + utc_dt.second / 3600.0
+        return swe.julday(utc_dt.year, utc_dt.month, utc_dt.day, ut_hour)
 
     def _nakshatra(self, lon: float) -> dict:
         idx = int(lon / NAK_LEN) % 27
@@ -222,11 +233,26 @@ class VedicEngine:
         return out
 
     def _lagna(self, jd: float, lat: float, lon: float) -> dict:
-        """Sidereal Ascendant. swe.houses() gives TROPICAL cusps; we convert."""
-        _cusps, ascmc = swe.houses(jd, lat, lon, b"W")  # 'W' = Whole Sign
-        trop_asc = ascmc[0]
+        """
+        Sidereal Ascendant using the proper sidereal house API.
+
+        swe.houses_ex() with FLG_SIDEREAL applies the Lahiri ayanamsa
+        internally and returns sidereal cusps directly — no manual subtraction
+        required. House system 'W' = Whole Sign (standard Parashari).
+
+        Fallback: if houses_ex is unavailable in the installed pyswisseph build,
+        we fall back to manually subtracting the ayanamsa from the tropical ASC.
+        Both methods are mathematically equivalent; houses_ex is the canonical one.
+        """
         ayan = swe.get_ayanamsa_ut(jd)
-        sid_asc = self._norm(trop_asc - ayan)
+        try:
+            _, ascmc = swe.houses_ex(jd, lat, lon, b"W", swe.FLG_SIDEREAL)
+            sid_asc = self._norm(ascmc[0])
+        except Exception:
+            # Fallback for older pyswisseph builds
+            _, ascmc = swe.houses(jd, lat, lon, b"W")
+            sid_asc = self._norm(ascmc[0] - ayan)
+
         sign = int(sid_asc // 30)
         result = {
             "absolute_degree": round(sid_asc, 4),
@@ -416,7 +442,7 @@ class VedicEngine:
                 "ayanamsa": lagna["ayanamsa"],
                 "ayanamsa_system": "Lahiri (Chitrapaksha)",
                 "house_system": "Whole Sign (Bhava)",
-                "node_type": "Mean Node",
+                "node_type": self.node_type,
                 "julian_day_ut": round(jd, 6),
                 "note": "Sidereal positions. Use current_date as the reference for timing queries.",
             },
