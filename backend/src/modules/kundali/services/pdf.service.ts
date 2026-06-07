@@ -769,10 +769,10 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     // Available vertical space: ~742 pts (below header 48 → above footer 808).
     // Title draws at y-20, so gap must be >20 to avoid overlap with chart above.
     // Layout: d1Y(62) + chartSz + gap(28) + d9Y + chartSz + gap(14) + summary(86) + legend(20) ≤ 800
-    const chartSz  = 274;
+    const chartSz  = 270;
     const chartX   = L + (pageW - chartSz) / 2;   // centered horizontally
-    const d1Y      = 62;
-    const d9Y      = d1Y + chartSz + 28;            // 28pt: 8pt clearance below D1 + 20pt title height
+    const d1Y      = 76;   // title at y=56, safely below the 46pt maroon header band
+    const d9Y      = d1Y + chartSz + 28;  // D9 title at d1Bottom+8, 8pt clear of D1 box
 
     // D1 — Rashi Birth Chart
     const housesArr: any[] = Array.isArray(kundali.houses)
@@ -808,8 +808,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       ["Navamsa Lagna",      nav?.lagnaSign || "N/A"],
       ["Moon Sign",          `${kundali.moonSign}`],
       ["Moon Nakshatra",     `${kundali.moonNakshatra} (Pada ${kundali.moonPada})`],
-      ["Sun Sign",           `${kundali.sunSign}`],
-      ["Ayanamsa",           `Lahiri  23.89°`],
+      // ["Sun Sign",           `${kundali.sunSign}`],
     ];
     sumPairs.forEach((pr, i) => {
       const colx = L + 14 + (i % 2) * (pageW / 2);
@@ -1062,50 +1061,80 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     doc.y = 66;
 
     const d = kundali.dasha;
-    doc.roundedRect(L, doc.y, pageW, 78, 5).fill(C.card);
-    doc
-      .lineWidth(1)
-      .strokeColor(C.gold)
-      .roundedRect(L, doc.y, pageW, 78, 5)
-      .stroke();
-    const by = doc.y + 10;
-    doc
-      .font(SERIF_B)
-      .fontSize(10.5)
-      .fillColor(C.maroon)
-      .text("Current Planetary Periods", L, by, {
-        width: pageW,
-        align: "center",
-      });
-    const periods: [string, string][] = [
-      [
-        "Mahadasha",
-        `${d.currentMahadasha}   (${d.mahadashaStartDate} – ${d.mahadashaEndDate})`,
-      ],
-      [
-        "Antardasha",
-        `${d.currentAntardasha}   (${d.antardashaStartDate} – ${d.antardashaEndDate})`,
-      ],
+
+    // Build period cards data
+    const periodCards: Array<{ label: string; planet: string; range: string; accent: string }> = [
+      { label: 'MAHADASHA',  planet: d.currentMahadasha,  range: `${d.mahadashaStartDate}  –  ${d.mahadashaEndDate}`,    accent: C.maroon   },
+      { label: 'ANTARDASHA', planet: d.currentAntardasha, range: `${d.antardashaStartDate}  –  ${d.antardashaEndDate}`,  accent: C.goldDeep },
     ];
-    if (d.currentPratyantar)
-      periods.push([
-        "Pratyantar",
-        `${d.currentPratyantar}   (ends ${d.pratyantarEndDate})`,
-      ]);
-    periods.forEach((pr, i) => {
-      const ry = by + 24 + i * 17;
-      doc
-        .font(SANS_B)
-        .fontSize(9)
-        .fillColor(C.goldDeep)
-        .text(pr[0], L + 16, ry, { width: 90, lineBreak: false });
-      doc
-        .font(SANS)
-        .fontSize(9)
-        .fillColor(C.ink)
-        .text(pr[1], L + 108, ry, { width: pageW - 120, lineBreak: false });
+    if (d.currentPratyantar) {
+      periodCards.push({ label: 'PRATYANTAR', planet: d.currentPratyantar, range: `Ends  ${d.pratyantarEndDate}`, accent: '#3B6E2A' });
+    }
+
+    const nPeriods   = periodCards.length;
+    const dpHdrH     = 34;
+    const dpSubH     = 72;
+    const dpSubGap   = 10;
+    const dpSubPad   = 8;
+    const dpCardH    = dpHdrH + dpSubPad + dpSubH + dpSubPad + 4;
+    const dpSubW     = (pageW - dpSubGap * (nPeriods - 1)) / nPeriods;
+    const dpCardY    = doc.y;
+
+    // 1. Outer card (cream bg)
+    doc.roundedRect(L, dpCardY, pageW, dpCardH, 7).fill(C.card);
+
+    // 2. Maroon header strip — clipped to rounded card shape
+    doc.save();
+    doc.roundedRect(L, dpCardY, pageW, dpCardH, 7).clip();
+    doc.rect(L, dpCardY, pageW, dpHdrH).fill(C.maroon);
+    doc.restore();
+
+    // 3. Card border
+    doc.lineWidth(1.2).strokeColor(C.gold).roundedRect(L, dpCardY, pageW, dpCardH, 7).stroke();
+
+    // 4. Header text
+    doc.font(SANS_B).fontSize(9.5).fillColor(C.goldLight)
+      .text('CURRENT PLANETARY PERIODS', L, dpCardY + 11, { width: pageW, align: 'center', characterSpacing: 1.2 });
+
+    // Thin gold rule below header
+    doc.lineWidth(0.7).strokeColor(C.gold)
+      .moveTo(L + 20, dpCardY + dpHdrH).lineTo(L + pageW - 20, dpCardY + dpHdrH).stroke();
+
+    // 5. Sub-cards (one per period)
+    const dpSubY = dpCardY + dpHdrH + dpSubPad;
+    periodCards.forEach(({ label, planet, range, accent }, i) => {
+      const sx  = L + i * (dpSubW + dpSubGap);
+      const iX  = sx + 12;
+      const iW  = dpSubW - 16;
+
+      // Sub-card bg + border
+      doc.roundedRect(sx, dpSubY, dpSubW, dpSubH, 5).fill('#FFFFFF');
+      doc.lineWidth(0.6).strokeColor(C.rule).roundedRect(sx, dpSubY, dpSubW, dpSubH, 5).stroke();
+
+      // Left accent bar clipped to sub-card shape
+      doc.save();
+      doc.roundedRect(sx, dpSubY, dpSubW, dpSubH, 5).clip();
+      doc.rect(sx, dpSubY, 4, dpSubH).fill(accent);
+      doc.restore();
+
+      // Period label (small caps style)
+      doc.font(SANS_B).fontSize(6.5).fillColor(accent)
+        .text(label, iX, dpSubY + 9, { width: iW, characterSpacing: 0.9, lineBreak: false });
+
+      // Planet name (large serif)
+      doc.font(SERIF_B).fontSize(15).fillColor(C.ink)
+        .text(planet, iX, dpSubY + 20, { width: iW, lineBreak: false });
+
+      // Thin rule
+      doc.lineWidth(0.5).strokeColor(C.rule)
+        .moveTo(iX, dpSubY + 42).lineTo(sx + dpSubW - 6, dpSubY + 42).stroke();
+
+      // Date range
+      doc.font(SANS).fontSize(7).fillColor(C.muted)
+        .text(range, iX, dpSubY + 47, { width: iW, lineBreak: false });
     });
-    doc.y += 92;
+
+    doc.y = dpCardY + dpCardH + 14;
 
     sectionHeader(doc, L, pageW, "MAHADASHA TIMELINE");
     doc.moveDown(0.3);
