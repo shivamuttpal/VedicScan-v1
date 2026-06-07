@@ -337,7 +337,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     if (LOGO_PATH) {
       doc.on('pageAdded', () => {
         doc.save();
-        (doc as any).opacity(0.055); // ~5.5% — visible but non-intrusive
+        (doc as any).opacity(0.075); // ~5.5% — visible but non-intrusive
         const wmSize = 190;
         const wmX = (doc.page.width  - wmSize) / 2;
         const wmY = (doc.page.height - wmSize) / 2;
@@ -367,7 +367,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     cornerFlourish(doc, PW - 38, PH - 38, 22, 'br');
 
     // ── Logo medallion: image clipped inside double golden rings ────────────
-    const logoCY = 132, outerR = 56, innerR = 47;
+    const logoCY = 118, outerR = 56, innerR = 47;
     if (LOGO_PATH) {
       // 1. Clip image to circle and fill the medallion
       doc.save();
@@ -398,7 +398,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     doc.font(SERIF_B).fontSize(30).fillColor(C.white)
        .text('Personal Kundali Report', L, 218, { width: pageW, align: 'center' });
     doc.font(SERIF_I).fontSize(11.5).fillColor(C.goldLight)
-       .text('ॐ  —  Ancient Wisdom · Precise Calculations · Modern Insights  —  ॐ', L, 258, { width: pageW, align: 'center' });
+       .text('—  Ancient Wisdom · Precise Calculations · Modern Insights  —', L, 258, { width: pageW, align: 'center' });
     divider(doc, cx, 286, 150);
 
     // Name
