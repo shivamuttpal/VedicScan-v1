@@ -333,6 +333,19 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     doc.on('data', (c: Buffer) => buffers.push(c));
     doc.on('error', reject);
 
+    // ── Watermark: drawn first on each content page so it sits under all content ─
+    if (LOGO_PATH) {
+      doc.on('pageAdded', () => {
+        doc.save();
+        (doc as any).opacity(0.055); // ~5.5% — visible but non-intrusive
+        const wmSize = 190;
+        const wmX = (doc.page.width  - wmSize) / 2;
+        const wmY = (doc.page.height - wmSize) / 2;
+        doc.image(LOGO_PATH!, wmX, wmY, { width: wmSize, height: wmSize });
+        doc.restore();
+      });
+    }
+
     const L = doc.page.margins.left;
     const R = doc.page.margins.right;
     const pageW = doc.page.width - L - R;
@@ -353,12 +366,32 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     cornerFlourish(doc, 38, PH - 38, 22, 'bl');
     cornerFlourish(doc, PW - 38, PH - 38, 22, 'br');
 
+    // ── Logo medallion: image clipped inside double golden rings ────────────
+    const logoCY = 132, outerR = 56, innerR = 47;
     if (LOGO_PATH) {
-      const logoSize = 92;
-      doc.image(LOGO_PATH, cx - logoSize / 2, 86, { width: logoSize, height: logoSize });
+      // 1. Clip image to circle and fill the medallion
+      doc.save();
+      doc.circle(cx, logoCY, innerR - 1).clip();
+      doc.image(LOGO_PATH, cx - (innerR - 1), logoCY - (innerR - 1),
+        { width: (innerR - 1) * 2, height: (innerR - 1) * 2 });
+      doc.restore();
     } else {
-      mandala(doc, cx, 132, 46);
+      mandala(doc, cx, logoCY, innerR);
     }
+    // 2. Outer thick gold ring
+    doc.lineWidth(2.2).strokeColor(C.gold).circle(cx, logoCY, outerR).stroke();
+    // 3. Inner thinner ring (sits just outside the clipped logo edge)
+    doc.lineWidth(1).strokeColor(C.goldDeep).circle(cx, logoCY, innerR).stroke();
+    // 4. Tiny tick marks around the outer ring for detail
+    doc.lineWidth(0.6).strokeColor(C.gold);
+    for (let i = 0; i < 36; i++) {
+      const a = (Math.PI * 2 / 36) * i;
+      const r1 = outerR + 3, r2 = outerR + 7;
+      doc.moveTo(cx + Math.cos(a) * r1, logoCY + Math.sin(a) * r1)
+         .lineTo(cx + Math.cos(a) * r2, logoCY + Math.sin(a) * r2).stroke();
+    }
+    // 5. Outermost decorative circle enclosing the ticks
+    doc.lineWidth(0.5).strokeColor(C.goldDeep).circle(cx, logoCY, outerR + 8).stroke();
 
     doc.font(SERIF).fontSize(12).fillColor(C.gold)
        .text('V E D I C S C A N', L, 196, { width: pageW, align: 'center', characterSpacing: 3 });
