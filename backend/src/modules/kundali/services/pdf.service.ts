@@ -1,5 +1,16 @@
 import PDFDocument from 'pdfkit';
+import path from 'path';
+import fs from 'fs';
 import { IKundali } from '../model/kundali.model';
+
+// Logo image — prefer PNG (transparent), fall back to JPEG
+const LOGO_PATH = (() => {
+  const png  = path.join(__dirname, '../../../../assets/logo.png');
+  const jpeg = path.join(__dirname, '../../../../assets/logo.jpeg');
+  if (fs.existsSync(png))  return png;
+  if (fs.existsSync(jpeg)) return jpeg;
+  return null;
+})();
 
 /* ────────────────────────────────────────────────────────────────────────
    VedicScan — Kundali Report Generator (v2)
@@ -342,14 +353,19 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     cornerFlourish(doc, 38, PH - 38, 22, 'bl');
     cornerFlourish(doc, PW - 38, PH - 38, 22, 'br');
 
-    mandala(doc, cx, 132, 46);
+    if (LOGO_PATH) {
+      const logoSize = 92;
+      doc.image(LOGO_PATH, cx - logoSize / 2, 86, { width: logoSize, height: logoSize });
+    } else {
+      mandala(doc, cx, 132, 46);
+    }
 
     doc.font(SERIF).fontSize(12).fillColor(C.gold)
        .text('V E D I C S C A N', L, 196, { width: pageW, align: 'center', characterSpacing: 3 });
     doc.font(SERIF_B).fontSize(30).fillColor(C.white)
        .text('Personal Kundali Report', L, 218, { width: pageW, align: 'center' });
     doc.font(SERIF_I).fontSize(11.5).fillColor(C.goldLight)
-       .text('Vedic Astrology  ·  Lahiri Ayanamsa  ·  Swiss Ephemeris', L, 258, { width: pageW, align: 'center' });
+       .text('ॐ  —  Ancient Wisdom · Precise Calculations · Modern Insights  —  ॐ', L, 258, { width: pageW, align: 'center' });
     divider(doc, cx, 286, 150);
 
     // Name
