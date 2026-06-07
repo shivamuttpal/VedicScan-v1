@@ -8,11 +8,18 @@ export interface IPlanetData {
   pada: number | null;
   houseNumber: number;
   navamsaSign: string;
+  // Extended fields from updated engine
+  isRetrograde?: boolean;
+  dignity?: string;          // Exalted | Debilitated | Moolatrikona | Own Sign | Friendly Sign | Enemy Sign | Neutral Sign
+  nakshatraLord?: string;
+  rashiLord?: string;
+  dms?: string;              // Degree°Minute'Second" string for display
 }
 
 export interface IHouse {
   number: number;
   sign: string;
+  signLord?: string;
   planets: string[];
 }
 
@@ -111,11 +118,17 @@ const PlanetDataSchema = new Schema<IPlanetData>({
   pada: Number,
   houseNumber: Number,
   navamsaSign: String,
+  isRetrograde: Boolean,
+  dignity: String,
+  nakshatraLord: String,
+  rashiLord: String,
+  dms: String,
 }, { _id: false });
 
 const HouseSchema = new Schema<IHouse>({
   number: Number,
   sign: String,
+  signLord: String,
   planets: [String],
 }, { _id: false });
 
