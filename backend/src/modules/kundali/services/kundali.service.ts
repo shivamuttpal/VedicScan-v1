@@ -162,7 +162,7 @@ export const kundaliService = {
     }
 
     // Step 3 — unpack engine output
-    const { chart_data, navamsa_data, dasha_data } = pyResult;
+    const { chart_data, navamsa_data, dasha_data, sade_sati_data } = pyResult;
     const rawPlanets = chart_data.Planets as Record<string, any>;
     const planets    = normalizePlanets(rawPlanets);
 
@@ -267,6 +267,7 @@ export const kundaliService = {
       yogas,
       doshas,
       dasha,
+      sadeSati: sade_sati_data?.status === 'success' ? sade_sati_data : undefined,
       interpretations,
       interpretationsHi,
     });

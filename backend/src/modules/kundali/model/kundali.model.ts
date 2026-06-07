@@ -82,6 +82,58 @@ export interface IInterpretations {
   charities: string[];
 }
 
+export interface ISadeSatiPhase {
+  phase: string;
+  phase_sanskrit: string;
+  sign: string;
+  startDate: string;
+  endDate: string;
+  retrograde_passes: number;
+  significance: string;
+}
+
+export interface ISadeSatiCycle {
+  cycle_number: number;
+  startDate: string;
+  endDate: string;
+  approx_years: number;
+  is_current: boolean;
+  is_past: boolean;
+  phases: ISadeSatiPhase[];
+}
+
+export interface ISadeSatiDhaiyaPeriod {
+  startDate: string;
+  endDate: string;
+  is_current: boolean;
+}
+
+export interface ISadeSati {
+  moon_sign: string;
+  moon_sign_sanskrit: string;
+  sade_sati_signs: { twelfth_from_moon: string; moon_sign: string; second_from_moon: string };
+  dhaiya_signs: { kantaka_shani_4th: string; ashtama_shani_8th: string };
+  saturn_now: { sign: string; degree_in_sign: number; retrograde: boolean; as_of: string };
+  current_status: {
+    in_sade_sati: boolean;
+    phase?: string;
+    phase_sanskrit?: string;
+    phase_end_date?: string;
+    cycle_start_date?: string;
+    cycle_end_date?: string;
+    significance?: string;
+    next_cycle_start_date?: string;
+    next_cycle_end_date?: string;
+    in_dhaiya?: { type: string; startDate: string; endDate: string } | null;
+  };
+  cycles: ISadeSatiCycle[];
+  dhaiya: {
+    kantaka_shani_4th: ISadeSatiDhaiyaPeriod[];
+    ashtama_shani_8th: ISadeSatiDhaiyaPeriod[];
+    current: { type: string; startDate: string; endDate: string } | null;
+  };
+}
+
 export interface IKundali extends Document {
   userId: mongoose.Types.ObjectId;
   name: string;
@@ -106,6 +158,7 @@ export interface IKundali extends Document {
   yogas: IYoga[];
   doshas: IDosha[];
   dasha: IDasha;
+  sadeSati?: ISadeSati;
   interpretations: IInterpretations;
   interpretationsHi?: IInterpretations;
 }
@@ -177,6 +230,7 @@ const KundaliSchema = new Schema<IKundali>(
     yogas: [YogaSchema],
     doshas: [DoshaSchema],
     dasha: { type: Schema.Types.Mixed },
+    sadeSati: { type: Schema.Types.Mixed },
     interpretations: { type: Schema.Types.Mixed },
     interpretationsHi: { type: Schema.Types.Mixed },
   },
