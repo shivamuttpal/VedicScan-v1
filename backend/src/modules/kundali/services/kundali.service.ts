@@ -7,8 +7,9 @@ import { detectYogas } from './yoga.service';
 import { detectDoshas } from './dosha.service';
 import { generateInterpretations, generateInterpretationsHi } from './interpretation.service';
 
-const KUNDALI_BRIDGE = path.join(process.cwd(), 'astrologyCalculation', 'kundali_bridge.py');
-const PYTHON_CMD     = process.platform === 'win32' ? 'python' : 'python3';
+const KUNDALI_BRIDGE   = path.join(process.cwd(), 'astrologyCalculation', 'kundali_bridge.py');
+const SADE_SATI_BRIDGE = path.join(process.cwd(), 'astrologyCalculation', 'sade_sati.py');
+const PYTHON_CMD       = process.platform === 'win32' ? 'python' : 'python3';
 
 // In-memory geocode cache — avoids hammering Nominatim on repeated requests
 const geocodeCache = new Map<string, { lat: number; lon: number }>();
@@ -96,6 +97,30 @@ function runKundaliBridge(input: object): Promise<any> {
       } catch {
         reject(new Error('Invalid JSON from engine: ' + stdout.slice(0, 300)));
       }
+    });
+  });
+}
+
+// ── Sade Sati bridge — lightweight call using only moon_sign_id + dob ─────────
+function runSadeSatiBridge(moonSignId: number, dob: string, tob: string, tzOffset: number): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(PYTHON_CMD, [SADE_SATI_BRIDGE]);
+    let stdout = '';
+    let stderr = '';
+
+    proc.stdin.write(JSON.stringify({ moon_sign_id: moonSignId, dob, tob, tz_offset: tzOffset }));
+    proc.stdin.end();
+
+    proc.stdout.on('data', (d) => (stdout += d));
+    proc.stderr.on('data', (d) => (stderr += d));
+
+    const timer = setTimeout(() => { proc.kill(); resolve(null); }, 45000);
+
+    proc.on('close', (code) => {
+      clearTimeout(timer);
+      if (code !== 0) { resolve(null); return; }
+      try { resolve(JSON.parse(stdout)); }
+      catch { resolve(null); }
     });
   });
 }
@@ -312,6 +337,31 @@ export const kundaliService = {
         (kundali as any).interpretationsHi = interpretationsHi;
       } catch (e) {
         console.warn('[kundali] lazy Hindi generation failed:', (e as any).message);
+      }
+    }
+
+    // Lazily compute Sade Sati for kundalis created before this feature was added
+    if (kundali && !(kundali as any).sadeSati) {
+      try {
+        const plain = kundali.toObject() as any;
+        // Moon's rashi_id: index in RASHIS array (1-based)
+        const RASHIS_ORDER = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo',
+                              'Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+        const moonSignId = RASHIS_ORDER.indexOf(plain.moonSign) + 1;
+        if (moonSignId > 0) {
+          const ssData = await runSadeSatiBridge(
+            moonSignId,
+            plain.dateOfBirth,
+            plain.timeOfBirth || '12:00',
+            plain.timezoneOffset ?? 5.5,
+          );
+          if (ssData?.status === 'success') {
+            await Kundali.updateOne({ _id: kundali._id }, { $set: { sadeSati: ssData } });
+            (kundali as any).sadeSati = ssData;
+          }
+        }
+      } catch (e) {
+        console.warn('[kundali] lazy Sade Sati generation failed:', (e as any).message);
       }
     }
 

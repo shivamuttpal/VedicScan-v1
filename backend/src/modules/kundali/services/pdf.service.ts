@@ -767,11 +767,12 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
 
     // Two charts stacked vertically — size chosen so both + summary fit on one page.
     // Available vertical space: ~742 pts (below header 48 → above footer 808).
-    // Layout: d1Y(62) + chartSz + gap(16) + d9Y + chartSz + gap(14) + summary(86) + legend(20) ≤ 800
-    const chartSz  = 278;
+    // Title draws at y-20, so gap must be >20 to avoid overlap with chart above.
+    // Layout: d1Y(62) + chartSz + gap(28) + d9Y + chartSz + gap(14) + summary(86) + legend(20) ≤ 800
+    const chartSz  = 274;
     const chartX   = L + (pageW - chartSz) / 2;   // centered horizontally
     const d1Y      = 62;
-    const d9Y      = d1Y + chartSz + 16;
+    const d9Y      = d1Y + chartSz + 28;            // 28pt: 8pt clearance below D1 + 20pt title height
 
     // D1 — Rashi Birth Chart
     const housesArr: any[] = Array.isArray(kundali.houses)
