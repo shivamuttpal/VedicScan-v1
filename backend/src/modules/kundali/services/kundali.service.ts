@@ -212,8 +212,16 @@ export const kundaliService = {
     const interpretations   = generateInterpretations(...sharedArgs);
     const interpretationsHi = generateInterpretationsHi(...sharedArgs);
 
-    // Step 6 — build dasha document
-    // The updated engine already computes mahadasha_start_date / antardasha_start_date.
+    // Step 6 — build dasha document.
+    // The first mahadasha may have started before birth (birth balance residual).
+    // Trim its display start to actual birth date so the PDF shows "from birth" not a pre-birth year.
+    const rawTimeline: any[] = dasha_data.timeline || [];
+    const timeline = rawTimeline.map((md: any, idx: number) => {
+      if (idx === 0 && md.startDate && md.startDate < dateOfBirth) {
+        return { ...md, startDate: dateOfBirth, isBalanceAtBirth: true };
+      }
+      return md;
+    });
     const dasha = {
       currentMahadasha:  dasha_data.current_mahadasha  || '',
       mahadashaStartDate: dasha_data.mahadasha_start_date || '',
@@ -223,7 +231,7 @@ export const kundaliService = {
       antardashaEndDate: dasha_data.antardasha_end_date  || '',
       currentPratyantar: dasha_data.current_pratyantar  ?? null,
       pratyantarEndDate: dasha_data.pratyantar_end_date ?? null,
-      timeline:          dasha_data.timeline            || [],
+      timeline,
     };
 
     // Step 7 — persist to MongoDB

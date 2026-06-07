@@ -171,6 +171,111 @@ const LAGNA_RULER: Record<string, string> = {
   Sagittarius: 'Jupiter', Capricorn: 'Saturn', Aquarius: 'Saturn', Pisces: 'Jupiter',
 };
 
+// Lagna-specific gemstone recommendations based on house lordship analysis
+const LAGNA_GEMS: Record<string, { recommend: string[]; avoid: string[] }> = {
+  Aries:       { recommend: ['Red Coral (Moonga) — Mars, Lagna lord', 'Yellow Sapphire (Pukhraj) — Jupiter, 9th lord', 'Ruby (Manikya) — Sun, 5th lord'], avoid: ['Diamond — Venus rules 2nd and 7th (maraka)'] },
+  Taurus:      { recommend: ['Diamond or White Sapphire — Venus, Lagna lord', 'Blue Sapphire (Neelam) — Saturn, 9th lord (Yogakaraka)', 'Emerald (Panna) — Mercury, 2nd and 5th lord'], avoid: ['Red Coral — Mars rules 7th and 12th', 'Yellow Sapphire — Jupiter rules 8th and 11th'] },
+  Gemini:      { recommend: ['Emerald (Panna) — Mercury, Lagna lord', 'Diamond or White Sapphire — Venus, 5th lord'], avoid: ['Yellow Sapphire — Jupiter rules 7th (maraka) and 10th'] },
+  Cancer:      { recommend: ['Pearl (Moti) — Moon, Lagna lord', 'Red Coral (Moonga) — Mars, 5th lord', 'Yellow Sapphire (Pukhraj) — Jupiter, 9th lord'], avoid: ['Blue Sapphire — Saturn rules 7th and 8th'] },
+  Leo:         { recommend: ['Ruby (Manikya) — Sun, Lagna lord', 'Red Coral (Moonga) — Mars, 9th lord', 'Yellow Sapphire (Pukhraj) — Jupiter, 5th lord'], avoid: ['Blue Sapphire — Saturn rules 6th and 7th (maraka)', 'Diamond — Venus rules 3rd and 10th (maraka)'] },
+  Virgo:       { recommend: ['Emerald (Panna) — Mercury, Lagna lord', 'Diamond or White Sapphire — Venus, 2nd and 9th lord'], avoid: ['Yellow Sapphire — Jupiter rules 4th and 7th (maraka)', 'Red Coral — Mars rules 3rd and 8th'] },
+  Libra:       { recommend: ['Diamond or White Sapphire — Venus, Lagna lord', 'Blue Sapphire (Neelam) — Saturn, 4th and 5th lord (Yogakaraka)', 'Emerald (Panna) — Mercury, 9th lord'], avoid: ['Red Coral — Mars rules 2nd and 7th (double maraka)', 'Yellow Sapphire — Jupiter rules 3rd and 6th'] },
+  Scorpio:     { recommend: ['Yellow Sapphire (Pukhraj) — Jupiter, 2nd and 5th lord (most beneficial)', 'Pearl (Moti) — Moon, 9th lord', 'Red Coral (Moonga) — Mars, Lagna lord'], avoid: ['Emerald — Mercury rules 8th and 11th; not recommended for Scorpio lagna', 'Diamond — Venus rules 7th (maraka) and 12th'] },
+  Sagittarius: { recommend: ['Yellow Sapphire (Pukhraj) — Jupiter, Lagna lord', 'Red Coral (Moonga) — Mars, 5th lord', 'Ruby (Manikya) — Sun, 9th lord'], avoid: ['Emerald — Mercury rules 7th (maraka) and 10th', 'Diamond — Venus rules 6th and 11th'] },
+  Capricorn:   { recommend: ['Blue Sapphire (Neelam) — Saturn, Lagna lord', 'Diamond or White Sapphire — Venus, 5th and 10th lord (Yogakaraka)', 'Emerald (Panna) — Mercury, 9th lord'], avoid: ['Red Coral — Mars rules 4th and 11th', 'Yellow Sapphire — Jupiter rules 3rd and 12th'] },
+  Aquarius:    { recommend: ['Blue Sapphire (Neelam) — Saturn, Lagna lord', 'Diamond or White Sapphire — Venus, 4th and 9th lord', 'Emerald (Panna) — Mercury, 5th lord'], avoid: ['Yellow Sapphire — Jupiter rules 2nd and 11th (maraka)', 'Red Coral — Mars rules 3rd and 10th'] },
+  Pisces:      { recommend: ['Yellow Sapphire (Pukhraj) — Jupiter, Lagna lord', 'Red Coral (Moonga) — Mars, 2nd and 9th lord', 'Pearl (Moti) — Moon, 5th lord'], avoid: ['Emerald — Mercury rules 4th and 7th (maraka)', 'Blue Sapphire — Saturn rules 11th and 12th'] },
+};
+
+const SIGN_LORDS_INTERP: Record<string, string> = {
+  Aries: 'Mars', Taurus: 'Venus', Gemini: 'Mercury', Cancer: 'Moon',
+  Leo: 'Sun', Virgo: 'Mercury', Libra: 'Venus', Scorpio: 'Mars',
+  Sagittarius: 'Jupiter', Capricorn: 'Saturn', Aquarius: 'Saturn', Pisces: 'Jupiter',
+};
+
+const RASHIS_LIST = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+
+function buildCareerInsights(
+  planets: Record<string, { rashi: string; houseNumber: number }>,
+  lagnaSign: string,
+  yogas: IYoga[]
+): string {
+  const parts: string[] = [];
+  const j  = planets['Jupiter'];
+  const me = planets['Mercury'];
+  const v  = planets['Venus'];
+  const su = planets['Sun'];
+
+  const in9th  = Object.entries(planets).filter(([, p]) => p.houseNumber === 9).map(([n]) => n);
+  const in10th = Object.entries(planets).filter(([, p]) => p.houseNumber === 10).map(([n]) => n);
+
+  if (in9th.length >= 3) {
+    parts.push(`A powerful 9th house stellium (${in9th.join(', ')}) indicates high achiever energy — career driven by expertise, authority, and ethical principles. Consulting, academia, finance, law, and entrepreneurship are natural fits.`);
+  }
+  if (j && j.rashi === 'Cancer' && j.houseNumber === 9) {
+    parts.push('Exalted Jupiter in the 9th house is a supreme placement — teaching, law, consulting, philosophy, finance, and international opportunities are natural vocational fits. This brings respected, authoritative positions.');
+  } else if (j && j.houseNumber === 10) {
+    parts.push('Jupiter in the 10th house grants authority and recognition in education, law, finance, and advisory roles.');
+  }
+  if (me && (me.houseNumber === 9 || me.houseNumber === 10)) {
+    parts.push(`Mercury in the ${me.houseNumber}th house strongly supports technology, data science, analytics, research, writing, and communication-intensive careers.`);
+  }
+  if (v && v.houseNumber === 10) {
+    parts.push('Venus in the 10th house (Amala Yoga) brings sustained recognition in business, luxury industries, finance, creative management, and public-facing roles.');
+  }
+  if (su && su.houseNumber === 10) {
+    parts.push('Sun in the 10th house gives strong career authority and is excellent for government, administration, and leadership.');
+  }
+  const lagnaLord = SIGN_LORDS_INTERP[lagnaSign];
+  if (lagnaLord && planets[lagnaLord]) {
+    const llH = planets[lagnaLord].houseNumber;
+    if (llH === 9) parts.push(`${lagnaLord} (Lagna lord) in the 9th house directs personal drive toward dharma, fortune, and a career with strong ethical foundations.`);
+    else if (llH === 10) parts.push(`${lagnaLord} (Lagna lord) in the 10th house makes career a central life focus with strong drive toward professional achievement.`);
+  }
+  if (yogas.find(y => y.name === 'Guru-Mangal Yoga' && y.isPresent)) {
+    parts.push('Guru-Mangal Yoga also favors engineering, medicine, military, project management, and high-energy entrepreneurial ventures.');
+  }
+  return parts.join(' ');
+}
+
+function buildMarriageInsights(
+  planets: Record<string, { rashi: string; houseNumber: number }>,
+  lagnaSign: string
+): string {
+  const parts: string[] = [];
+  const lagnaIdx = RASHIS_LIST.indexOf(lagnaSign);
+  if (lagnaIdx === -1) return '';
+
+  const house7Sign = RASHIS_LIST[(lagnaIdx + 6) % 12];
+  const lord7 = SIGN_LORDS_INTERP[house7Sign];
+  const lord7Info = lord7 ? planets[lord7] : null;
+  const in7th = Object.entries(planets).filter(([, p]) => p.houseNumber === 7).map(([n]) => n);
+
+  if (in7th.includes('Rahu')) {
+    parts.push('Rahu in the 7th house brings attraction toward unconventional or cross-cultural partners. The relationship journey may involve confusion and delay before settling, but ultimately creates a transformative partnership. A love-cum-arranged marriage blending is most likely. Avoid rushing into commitment due to intense early attraction.');
+  }
+  if (in7th.includes('Ketu')) {
+    parts.push('Ketu in the 7th house brings a spiritually nuanced view of relationships. Past-life connections with the spouse are indicated. Contentment in marriage grows with spiritual maturity.');
+  }
+  if (in7th.includes('Jupiter')) {
+    parts.push('Jupiter in the 7th house is highly auspicious — spouse is likely wise, educated, and generous. Marriage brings expansion and good fortune.');
+  }
+  if (in7th.includes('Saturn')) {
+    parts.push('Saturn in the 7th often delays marriage timing but brings a responsible, stable, and mature spouse.');
+  }
+  if (in7th.includes('Venus')) {
+    parts.push('Venus in the 7th (own kendra placement) is ideal — a romantic, attractive, and artistically inclined spouse is indicated.');
+  }
+  if (lord7Info) {
+    const h = lord7Info.houseNumber;
+    if (h === 10) parts.push(`The 7th lord (${lord7}) in the 10th house suggests a career-oriented or professionally accomplished spouse, possibly met in a work environment.`);
+    else if (h === 9) parts.push(`The 7th lord (${lord7}) in the 9th house points toward a spouse from a different region or cultural background with strong values and a philosophical outlook.`);
+    else if (h === 5) parts.push(`The 7th lord (${lord7}) in the 5th house strongly favors a love marriage arising from a romantic connection.`);
+    else if (h === 1) parts.push(`The 7th lord (${lord7}) in the Lagna creates a strong personality influence from the spouse — marriage deeply shapes the native's identity.`);
+  }
+  return parts.join(' ');
+}
+
 const CHARITY_BY_PLANET: Record<string, string> = {
   Sun: 'Donate wheat, jaggery, or copper on Sundays',
   Moon: 'Donate milk, rice, or white cloth on Mondays',
@@ -474,11 +579,19 @@ export function generateInterpretationsHi(
       'ॐ नमो नारायणाय (सम्पूर्ण सुरक्षा के लिए)',
       'गायत्री मंत्र (ज्ञान और स्पष्टता के लिए)',
     ],
-    gemstones: [
-      `प्राथमिक: ${PLANET_GEMSTONES_HI[lagnaRuler]} (लग्नेश ${lagnaRulerHi} के लिए)`,
-      `द्वितीयक: ${PLANET_GEMSTONES_HI['Moon']} (चंद्रमा के लिए)`,
-      `दशा रत्न: ${PLANET_GEMSTONES_HI[currentMahadasha] || 'पुखराज'} (${mdHi} महादशा के लिए)`,
-    ],
+    gemstones: (() => {
+      const lagnaGems = LAGNA_GEMS[lagnaSign];
+      if (lagnaGems) {
+        const gems = lagnaGems.recommend.map(g => `अनुशंसित: ${g}`);
+        if (lagnaGems.avoid.length > 0) gems.push(`सावधानी — ${lagnaGems.avoid[0]}`);
+        return gems;
+      }
+      return [
+        `प्राथमिक: ${PLANET_GEMSTONES_HI[lagnaRuler]} (लग्नेश ${lagnaRulerHi} के लिए)`,
+        `द्वितीयक: ${PLANET_GEMSTONES_HI['Moon']} (चंद्रमा के लिए)`,
+        `दशा रत्न: ${PLANET_GEMSTONES_HI[currentMahadasha] || 'पुखराज'} (${mdHi} महादशा के लिए)`,
+      ];
+    })(),
     fastingDays: [
       `${DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Sunday' ? 'रविवार' : DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Monday' ? 'सोमवार' : DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Tuesday' ? 'मंगलवार' : DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Wednesday' ? 'बुधवार' : DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Thursday' ? 'गुरुवार' : DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Friday' ? 'शुक्रवार' : 'शनिवार'} — ${mdHi} महादशा के लाभ के लिए`,
       'सोमवार — चंद्रमा के लिए (मन और भावनात्मक संतुलन)',
@@ -521,10 +634,11 @@ export function generateInterpretations(
     presentYogas !== 'None major' ? `Special yogas in your chart (${presentYogas}) further elevate your natural gifts.` : '',
   ].filter(Boolean).join(' ');
 
+  const positionCareer = buildCareerInsights(planets, lagnaSign, yogas);
   const career = [
-    moonData.career,
-    `The ${currentMahadasha} Mahadasha currently influences career through: ${dashaData.theme}.`,
-    dashaData.guidance,
+    positionCareer || moonData.career,
+    positionCareer ? `Moon in ${moonSign} also contributes ${moonData.career.split('.')[0].toLowerCase()}.` : '',
+    `The ${currentMahadasha} Mahadasha currently influences career through: ${dashaData.theme}. ${dashaData.guidance}`,
     yogas.find(y => y.name === 'Budhaditya Yoga' && y.isPresent) ? 'Budhaditya Yoga blesses you with sharp intellect for administrative or intellectual roles.' : '',
     yogas.find(y => y.name === 'Saraswati Yoga' && y.isPresent) ? 'Saraswati Yoga grants exceptional aptitude for scholarly, artistic, and teaching careers.' : '',
   ].filter(Boolean).join(' ');
@@ -536,10 +650,11 @@ export function generateInterpretations(
     `During ${currentMahadasha} Mahadasha, financial opportunities related to ${dashaData.theme.toLowerCase()} will be prominent.`,
   ].filter(Boolean).join(' ');
 
+  const positionMarriage = buildMarriageInsights(planets, lagnaSign);
   const marriage = [
-    moonData.marriage,
-    `The 7th house and Venus position influence your marriage patterns.`,
-    doshas.find(d => d.name === 'Mangal Dosha' && d.isPresent) ? 'Mangal Dosha advises careful selection of a compatible partner; matching with another Mangalik is recommended.' : 'Your chart shows favorable conditions for a harmonious marriage.',
+    positionMarriage || moonData.marriage,
+    positionMarriage ? moonData.marriage : '',
+    doshas.find(d => d.name === 'Mangal Dosha' && d.isPresent) ? 'Mangal Dosha advises careful selection of a compatible partner; matching with another Mangalik is recommended.' : '',
     yogas.find(y => y.name === 'Gajakesari Yoga' && y.isPresent) ? 'Gajakesari Yoga blesses your relationships with wisdom and stability.' : '',
   ].filter(Boolean).join(' ');
 
@@ -588,11 +703,19 @@ export function generateInterpretations(
       `Om Namo Narayanaya (for overall protection)`,
       `Gayatri Mantra (for wisdom and clarity)`,
     ],
-    gemstones: [
-      `Primary: ${PLANET_GEMSTONES[lagnaRuler]} (for Lagna lord ${lagnaRuler})`,
-      `Secondary: ${PLANET_GEMSTONES['Moon']} (for Moon)`,
-      `Dasha gem: ${PLANET_GEMSTONES[currentMahadasha] || 'Yellow Sapphire'} (for ${currentMahadasha} Mahadasha)`,
-    ],
+    gemstones: (() => {
+      const lagnaGems = LAGNA_GEMS[lagnaSign];
+      if (lagnaGems) {
+        const gems = [...lagnaGems.recommend.map(g => `Recommended: ${g}`)];
+        if (lagnaGems.avoid.length > 0) gems.push(`Caution — ${lagnaGems.avoid[0]}`);
+        return gems;
+      }
+      return [
+        `Primary: ${PLANET_GEMSTONES[lagnaRuler]} (for Lagna lord ${lagnaRuler})`,
+        `Secondary: ${PLANET_GEMSTONES['Moon']} (for Moon)`,
+        `Dasha gem: ${PLANET_GEMSTONES[currentMahadasha] || 'Yellow Sapphire'} (for ${currentMahadasha} Mahadasha)`,
+      ];
+    })(),
     fastingDays: [
       `${dashaData.fasting} — for ${currentMahadasha} Mahadasha benefits`,
       `Monday — for Moon (mind and emotional balance)`,

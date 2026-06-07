@@ -52,11 +52,6 @@ function isInOwnSign(planet: string, rashi: string): boolean {
   return (OWN_SIGNS[planet] || []).includes(rashi);
 }
 
-function planetStrength(planet: string, info: PlanetInfo): 'strong' | 'neutral' | 'weak' {
-  if (isExalted(planet, info.rashi) || isInOwnSign(planet, info.rashi)) return 'strong';
-  return 'neutral';
-}
-
 function getHouseSign(houseNum: number, houses: Array<{ number: number; sign: string }>): string {
   return houses.find(h => h.number === houseNum)?.sign || 'Aries';
 }
@@ -145,7 +140,7 @@ export function detectYogas(
   });
 
   // ── Neecha Bhanga Raj Yoga ──
-  // A debilitated planet gains cancellation
+  // A debilitated planet gains cancellation via multiple classical rules
   const DEBILITATION: Record<string, string> = {
     Sun: 'Libra', Moon: 'Scorpio', Mars: 'Cancer', Mercury: 'Pisces',
     Jupiter: 'Capricorn', Venus: 'Virgo', Saturn: 'Aries',
@@ -155,12 +150,17 @@ export function detectYogas(
   for (const [planet, debRashi] of Object.entries(DEBILITATION)) {
     if (!planets[planet]) continue;
     if (planets[planet].rashi !== debRashi) continue;
-    // Cancellation: exalted lord of debilitation sign in kendra from lagna/moon
     const debSignLord = SIGN_LORDS[debRashi];
     const exaltLord = Object.entries(EXALTATION).find(([, r]) => r === debRashi)?.[0];
     const debLordPos = planets[debSignLord]?.houseNumber;
     const exaltLordPos = exaltLord ? planets[exaltLord]?.houseNumber : undefined;
-    if ((debLordPos && isKendra(debLordPos)) || (exaltLordPos && isKendra(exaltLordPos))) {
+    // Rule 1: debilitation sign lord or exaltation-sign planet in kendra
+    const rule1 = (debLordPos && isKendra(debLordPos)) || (exaltLordPos && isKendra(exaltLordPos));
+    // Rule 2: exalted planet is conjunct with the debilitated planet (same house)
+    const rule2 = exaltLord && planets[exaltLord] &&
+      planets[exaltLord].houseNumber === planets[planet].houseNumber &&
+      isExalted(exaltLord, planets[exaltLord].rashi);
+    if (rule1 || rule2) {
       nbryFound = true;
       nbryPlanet = planet;
       break;
@@ -171,8 +171,8 @@ export function detectYogas(
     strength: nbryFound ? 'Strong' : 'Weak',
     isPresent: nbryFound,
     description: nbryFound
-      ? `${nbryPlanet}'s debilitation is cancelled, transforming weakness into extraordinary strength. This yoga produces leaders who overcome great obstacles to achieve success.`
-      : 'No debilitated planet with full cancellation conditions found in your chart.',
+      ? `${nbryPlanet}'s debilitation is cancelled by an exalted planet's proximity or by the lord of the debilitation sign being in a Kendra, transforming weakness into extraordinary strength. This yoga produces leaders who overcome great obstacles to achieve success.`
+      : 'No debilitated planet with cancellation conditions found in your chart.',
   });
 
   // ── Lakshmi Yoga ──
@@ -231,6 +231,97 @@ export function detectYogas(
       strength: isPresent ? 'Strong' : 'Weak',
       isPresent,
       description: isPresent ? desc : `${planet} is not in its own sign or exaltation in a Kendra. ${name} is not formed.`,
+    });
+  }
+
+  // ── Guru-Mangal Yoga ──
+  // Jupiter and Mars conjunct in the same house
+  if (jupiter && mars) {
+    const isGuruMangal = jupiter.houseNumber === mars.houseNumber;
+    const jupExalted = isExalted('Jupiter', jupiter.rashi);
+    const inGoodHouse = isKendraOrTrikona(jupiter.houseNumber);
+    const strength = isGuruMangal
+      ? (jupExalted && inGoodHouse ? 'Strong' : inGoodHouse ? 'Moderate' : 'Moderate')
+      : 'Weak';
+    results.push({
+      name: 'Guru-Mangal Yoga',
+      strength,
+      isPresent: isGuruMangal,
+      description: isGuruMangal
+        ? `Jupiter and Mars are conjunct in the ${jupiter.houseNumber}th house, creating Guru-Mangal Yoga. This powerful combination generates high ambition, leadership, and the ability to execute grand plans with wisdom and courage. Favors engineering, medicine, management, military, sports, and entrepreneurship.${jupExalted ? ' With Jupiter exalted, this yoga is especially powerful and auspicious.' : ''}`
+        : 'Jupiter and Mars are not conjunct. Guru-Mangal Yoga is absent.',
+    });
+  }
+
+  // ── Amala Yoga ──
+  // A natural benefic (Moon, Mercury, Jupiter, Venus) in the 10th house from Lagna
+  const beneficsIn10th = (['Moon', 'Mercury', 'Jupiter', 'Venus'] as const)
+    .filter(b => planets[b]?.houseNumber === 10);
+  if (beneficsIn10th.length > 0) {
+    const strength = beneficsIn10th.some(b => b === 'Jupiter' || b === 'Venus') ? 'Strong' : 'Moderate';
+    results.push({
+      name: 'Amala Yoga',
+      strength,
+      isPresent: true,
+      description: `${beneficsIn10th.join(' and ')} in the 10th house (Amala Yoga) grants lasting fame, excellent professional reputation, and career success built on ethical foundations. Actions are remembered positively. Native earns wealth through righteous means.`,
+    });
+  }
+
+  // ── Dharma Karmadhipati Yoga ──
+  // 9th lord and 10th lord in conjunction or exchange (Parivartana)
+  const house9SignDK = getHouseSign(9, houses);
+  const house10SignDK = getHouseSign(10, houses);
+  const lord9DK = SIGN_LORDS[house9SignDK];
+  const lord10DK = SIGN_LORDS[house10SignDK];
+  if (lord9DK && lord10DK && lord9DK !== lord10DK && planets[lord9DK] && planets[lord10DK]) {
+    const l9 = planets[lord9DK];
+    const l10 = planets[lord10DK];
+    const conjunct = l9.houseNumber === l10.houseNumber;
+    const exchange = l9.rashi === house10SignDK && l10.rashi === house9SignDK;
+    if (conjunct || exchange) {
+      results.push({
+        name: 'Dharma Karmadhipati Yoga',
+        strength: 'Strong',
+        isPresent: true,
+        description: `The 9th lord (${lord9DK}) and 10th lord (${lord10DK}) are ${exchange ? 'in Parivartana (exchange)' : 'conjunct'}, forming Dharma Karmadhipati Yoga — one of the most powerful Raja Yogas. Career is built on dharmic purpose, bringing authority, public recognition, and lasting success aligned with higher principles.`,
+      });
+    }
+  }
+
+  // ── Lagna Lord in Bhagya / Karma Sthana ──
+  // Lagna lord in the 9th (fortune) or 10th (career) house — strong life direction
+  const lagnaLordName = SIGN_LORDS[lagnaSign];
+  if (lagnaLordName && planets[lagnaLordName]) {
+    const ll = planets[lagnaLordName];
+    if (ll.houseNumber === 9 || ll.houseNumber === 10 || ll.houseNumber === 5) {
+      const sthana = ll.houseNumber === 9 ? 'Bhagya (Fortune)' : ll.houseNumber === 10 ? 'Karma (Career)' : 'Putra (Intelligence)';
+      results.push({
+        name: `Lagna Lord in ${sthana} House`,
+        strength: ll.houseNumber === 9 || ll.houseNumber === 10 ? 'Strong' : 'Moderate',
+        isPresent: true,
+        description: `${lagnaLordName} (Lagna lord) in the ${ll.houseNumber}th house (${sthana}) is a highly auspicious placement. Native has strong personal drive toward achievement, good fortune, and a career aligned with their core identity. Life purpose and career tend to merge naturally.`,
+      });
+    }
+  }
+
+  // ── Rahu in Upachaya (3, 6, 10, 11) ──
+  // Rahu performs well in growth-oriented houses
+  if (rahu && [3, 6, 10, 11].includes(rahu.houseNumber)) {
+    results.push({
+      name: 'Rahu in Upachaya Yoga',
+      strength: rahu.houseNumber === 10 || rahu.houseNumber === 11 ? 'Strong' : 'Moderate',
+      isPresent: true,
+      description: `Rahu in the ${rahu.houseNumber}th house (an Upachaya — growth house) channels ambition constructively. Native gains through unconventional methods, foreign connections, technology, or cutting-edge fields. Results improve significantly after age 35.`,
+    });
+  }
+
+  // ── Shani-related: Saturn in Upachaya ──
+  if (saturn && [3, 6, 11].includes(saturn.houseNumber)) {
+    results.push({
+      name: 'Saturn in Upachaya',
+      strength: saturn.houseNumber === 11 ? 'Strong' : 'Moderate',
+      isPresent: true,
+      description: `Saturn in the ${saturn.houseNumber}th house (Upachaya) slowly builds strength over time. Obstacles in early life transform into assets. Native achieves sustained material success through disciplined effort, especially in the second half of life.`,
     });
   }
 

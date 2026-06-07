@@ -137,5 +137,39 @@ export function detectDoshas(
     });
   }
 
+  // ── Rahu-Ketu on 1/7 Axis (Relationship Karma) ──
+  // Rahu or Ketu in the 7th house creates unique relationship patterns
+  if (rahu && ketu) {
+    const rahuIn7 = rahu.houseNumber === 7;
+    const ketuIn7 = ketu.houseNumber === 7;
+    const onMarriageAxis = rahuIn7 || ketuIn7;
+    if (onMarriageAxis) {
+      const nodule = rahuIn7 ? 'Rahu' : 'Ketu';
+      const otherNode = rahuIn7 ? 'Ketu' : 'Rahu';
+      results.push({
+        name: `${nodule} in 7th House (Relationship Axis)`,
+        severity: 'Low',
+        isPresent: true,
+        description: rahuIn7
+          ? 'Rahu in the 7th house (house of marriage and partnerships) brings attraction to unconventional, foreign, or culturally different partners. There may be confusion or delay in settling into committed relationships, unusual relationship experiences, or a love-cum-arranged marriage dynamic. This is not a classical dosha but warrants mindful partner selection. The 1/7 nodal axis (Rahu in 7th, Ketu in 1st) creates strong desire for partnership alongside a simultaneous pull toward self-reliance.'
+          : 'Ketu in the 7th house brings a detached, spiritually oriented perspective on relationships. Past-life connections with the spouse are possible. Native may feel a sense of incompleteness or dissatisfaction in partnerships until spiritual evolution occurs.',
+        remedy: rahuIn7
+          ? 'Chant "Om Bhraam Bhreem Bhraum Sah Rahave Namah" 108 times on Saturdays. Choose partners based on long-term compatibility rather than intense initial attraction. Avoid hasty commitments before age 27.'
+          : 'Recite "Om Sraam Sreem Sraum Sah Ketave Namah" 108 times on Saturdays. Seek a spiritually compatible partner. Practice detachment in relationships without abandoning commitment.',
+      });
+    }
+  }
+
+  // ── Ketu in Lagna (1st House) ──
+  if (ketu && ketu.houseNumber === 1) {
+    results.push({
+      name: 'Ketu in Lagna',
+      severity: 'Low',
+      isPresent: true,
+      description: 'Ketu in the 1st house creates a spiritual, introspective personality. Native may have health sensitivity, a tendency toward self-doubt, or periods of withdrawal. However, this placement often grants deep wisdom, past-life intelligence, and a magnetic mystical aura. Physical vitality improves with spiritual practice.',
+      remedy: 'Recite Ketu Mantra: "Om Sraam Sreem Sraum Sah Ketave Namah" 108 times on Saturdays. Worship Ganesha regularly. Donate multi-colored items to the underprivileged.',
+    });
+  }
+
   return results;
 }
