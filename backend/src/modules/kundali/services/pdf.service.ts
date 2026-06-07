@@ -337,7 +337,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     if (LOGO_PATH) {
       doc.on('pageAdded', () => {
         doc.save();
-        (doc as any).opacity(0.075); // ~5.5% — visible but non-intrusive
+        (doc as any).opacity(0.20); // ~5.5% — visible but non-intrusive
         const wmSize = 190;
         const wmX = (doc.page.width  - wmSize) / 2;
         const wmY = (doc.page.height - wmSize) / 2;
