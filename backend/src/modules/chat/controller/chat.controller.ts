@@ -114,10 +114,14 @@ export const chatController = {
               sadeSati:          ki.sadeSati,
               sadeSatiPhase:     ki.sadeSatiPhase,
               // Extra context passed through to prompt for richer answers
-              _profileName:      profile.name,
-              _mahadashaEnd:     ki.mahadashaEndDate,
-              _antardashaEnd:    ki.antardashaEndDate,
-              _doshas:           ki.doshas || [],
+              _profileName:       profile.name,
+              _mahadashaEnd:      ki.mahadashaEndDate,
+              _antardashaEnd:     ki.antardashaEndDate,
+              _doshas:            ki.doshas || [],
+              // Transit data for timing-specific answers
+              _jupiterNow:        ki.jupiterTransitNow   || null,
+              _jupiterAhead:      ki.jupiterTransitAhead || [],
+              _waxingWindows:     ki.waxingMoonWindows   || [],
             };
           }
         } catch (profileErr: any) {

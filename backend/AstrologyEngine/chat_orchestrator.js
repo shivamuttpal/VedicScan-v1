@@ -56,6 +56,10 @@ function extractChartFacts(chartData) {
     kalsarpa:          chartData.kalsarpa            || false,
     sadeSati:          chartData.sadeSati            || false,
     sadeSatiPhase:     chartData.sadeSatiPhase       || null,
+    // Transit data — Jupiter transits + waxing moon windows
+    jupiterNow:        chartData._jupiterNow         || null,
+    jupiterAhead:      chartData._jupiterAhead       || [],
+    waxingWindows:     chartData._waxingWindows      || [],
   };
 }
 

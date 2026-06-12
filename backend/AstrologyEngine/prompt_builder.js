@@ -166,6 +166,25 @@ function buildInitialContext(themes, chartFacts) {
     if (chartFacts.doshas?.length) factLines.push(`Doshas: ${chartFacts.doshas.join(', ')}`);
     if (chartFacts.sadeSati)       factLines.push(`Sade Sati: active${chartFacts.sadeSatiPhase ? ` (${chartFacts.sadeSatiPhase} phase)` : ''}`);
 
+    // Jupiter transits — current + upcoming sign entries with house numbers
+    if (chartFacts.jupiterNow) {
+      factLines.push(`Jupiter transit now: ${chartFacts.jupiterNow.sign} (house ${chartFacts.jupiterNow.house} from natal lagna)`);
+    }
+    if (chartFacts.jupiterAhead?.length) {
+      const ahead = chartFacts.jupiterAhead.slice(0, 4)
+        .map(t => `enters ${t.sign} (house ${t.house}) on ${t.entryDate}`)
+        .join('; ');
+      factLines.push(`Jupiter upcoming: ${ahead}`);
+    }
+
+    // Waxing moon windows — favorable periods for new beginnings / actions
+    if (chartFacts.waxingWindows?.length) {
+      const wins = chartFacts.waxingWindows.slice(0, 4)
+        .map(w => `${w.start} to ${w.end}`)
+        .join(', ');
+      factLines.push(`Waxing moon windows (favorable for new starts): ${wins}`);
+    }
+
     if (factLines.length) {
       contextParts.push(`Chart facts:\n${factLines.join('\n')}`);
     }
@@ -224,6 +243,20 @@ function buildAstrologerPrompt({ userQuestion, themes, memoryContext, userMood, 
         ? `${chartFacts.currentAntardasha}${chartFacts.antardashaEnd ? ` until ${chartFacts.antardashaEnd}` : ''}`
         : '';
       contextParts.push(`Current dasha: ${md}${ad ? `, antardasha: ${ad}` : ''}`);
+    }
+
+    // Include transit timing for questions that benefit from planetary timing
+    const transitTypes = ['transit_specific_question', 'career_question', 'general_life_question', 'marriage_question'];
+    if (transitTypes.includes(questionType) && chartFacts?.jupiterNow) {
+      contextParts.push(`Jupiter transit: ${chartFacts.jupiterNow.sign} (house ${chartFacts.jupiterNow.house})`);
+      if (chartFacts.jupiterAhead?.length) {
+        const next = chartFacts.jupiterAhead[0];
+        contextParts.push(`Next Jupiter transit: enters ${next.sign} (house ${next.house}) on ${next.entryDate}`);
+      }
+      if (chartFacts.waxingWindows?.length) {
+        const wins = chartFacts.waxingWindows.slice(0, 2).map(w => `${w.start}–${w.end}`).join(', ');
+        contextParts.push(`Upcoming waxing moon: ${wins}`);
+      }
     }
 
     const parts = [];

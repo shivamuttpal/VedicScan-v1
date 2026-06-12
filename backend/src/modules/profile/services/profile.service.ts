@@ -1,5 +1,30 @@
+import { spawn } from 'child_process';
+import path from 'path';
 import { Profile, IProfile, IKundaliInsights } from '../model/profile.model';
 import { kundaliService } from '../../kundali/services/kundali.service';
+
+const TRANSIT_BRIDGE = path.join(process.cwd(), 'astrologyCalculation', 'transit_bridge.py');
+const PYTHON_CMD     = process.platform === 'win32' ? 'python' : 'python3';
+
+const RASHI_IDX: Record<string, number> = {
+  Aries: 0, Taurus: 1, Gemini: 2, Cancer: 3, Leo: 4, Virgo: 5,
+  Libra: 6, Scorpio: 7, Sagittarius: 8, Capricorn: 9, Aquarius: 10, Pisces: 11,
+};
+
+function runTransitBridge(lagnaSignIdx: number): Promise<any> {
+  return new Promise((resolve) => {
+    const proc = spawn(PYTHON_CMD, [TRANSIT_BRIDGE]);
+    let out = '';
+    proc.stdin.write(JSON.stringify({ lagna_sign_idx: lagnaSignIdx }));
+    proc.stdin.end();
+    proc.stdout.on('data', (d) => (out += d));
+    const timer = setTimeout(() => { proc.kill(); resolve(null); }, 30000);
+    proc.on('close', () => {
+      clearTimeout(timer);
+      try { resolve(JSON.parse(out)); } catch { resolve(null); }
+    });
+  });
+}
 
 // Fired asynchronously after profile create/update — never blocks the API response.
 async function computeAndSaveInsights(profileId: string, userId: string, profile: IProfile): Promise<void> {
@@ -58,6 +83,20 @@ async function computeAndSaveInsights(profileId: string, userId: string, profile
       sadeSatiPhase,
       computedAt: new Date(),
     };
+
+    // Transit data — Jupiter transits + waxing moon windows (current as of now)
+    const lagnaSignIdx = RASHI_IDX[insights.ascendant] ?? 0;
+    const transitResult = await runTransitBridge(lagnaSignIdx);
+    if (transitResult && !transitResult.error) {
+      insights.jupiterTransitNow = transitResult.jupiter_now || undefined;
+      // Normalise snake_case keys from Python to camelCase for the TS interface
+      insights.jupiterTransitAhead = (transitResult.jupiter_ahead || []).map((t: any) => ({
+        sign:      t.sign,
+        house:     t.house,
+        entryDate: t.entry_date,
+      }));
+      insights.waxingMoonWindows = transitResult.waxing_windows || [];
+    }
 
     await Profile.findByIdAndUpdate(profileId, { kundaliInsights: insights });
     console.log(`[profile] kundali insights saved for profile ${profileId}`);

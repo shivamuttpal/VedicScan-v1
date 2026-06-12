@@ -19,6 +19,10 @@ export interface IKundaliInsights {
   sadeSati: boolean;
   sadeSatiPhase?: string;
   computedAt: Date;
+  // Planetary transits (computed fresh at profile creation time)
+  jupiterTransitNow?: { sign: string; house: number };
+  jupiterTransitAhead?: Array<{ sign: string; house: number; entryDate: string }>;
+  waxingMoonWindows?: Array<{ start: string; end: string }>;
 }
 
 export interface IProfile extends Document {
@@ -59,8 +63,11 @@ const profileSchema = new Schema<IProfile>(
         manglik:          { type: Boolean },
         kalsarpa:         { type: Boolean },
         sadeSati:         { type: Boolean },
-        sadeSatiPhase:    { type: String },
-        computedAt:       { type: Date },
+        sadeSatiPhase:        { type: String },
+        computedAt:           { type: Date },
+        jupiterTransitNow:    { type: Schema.Types.Mixed },
+        jupiterTransitAhead:  { type: Schema.Types.Mixed },
+        waxingMoonWindows:    { type: Schema.Types.Mixed },
       }, { _id: false }),
       required: false,
     },
