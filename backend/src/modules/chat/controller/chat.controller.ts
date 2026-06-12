@@ -12,6 +12,8 @@ import { ChatSession } from '../model/chat.model';
 import { UserUsage } from '../../subscription/model/subscription.model';
 import { openaiService } from '../services/openai.service';
 import { PlanLimits } from '../../../config/plans';
+import { Profile } from '../../profile/model/profile.model';
+import { refreshKundaliInsights } from '../../profile/services/profile.service';
 import crypto from 'crypto';
 
 export const chatController = {
@@ -20,7 +22,7 @@ export const chatController = {
    */
   async handleMessage(req: AuthRequest, res: Response) {
     try {
-      const { message, conversationId, userProfile } = req.body;
+      const { message, conversationId, userProfile, profileId } = req.body;
       const userId = req.user!.userId;
       const userUsage = (req as any).userUsage as InstanceType<typeof UserUsage> | undefined;
       const planLimits = (req as any).planLimits as PlanLimits | undefined;
@@ -65,17 +67,61 @@ export const chatController = {
       // Add user message to local array (saved later)
       chat.messages.push({ role: 'user', content: message });
 
-      // ─── Parse chart data ───
+      // ─── Resolve kundali chart data ───────────────────────────────────────
+      // Priority: (1) structured JSON from client, (2) saved kundaliInsights
+      // on the user's profile (either a specific profileId or the default).
+      // Plain-text userProfile strings (legacy mobile format) are intentionally
+      // ignored — the server-side insights are richer and always structured.
       let chartData: any = null;
-      if (userProfile) {
-        if (typeof userProfile === 'string') {
-          try {
-            chartData = JSON.parse(userProfile);
-          } catch {
-            chartData = null;
+
+      if (userProfile && typeof userProfile === 'object' && Object.keys(userProfile).length > 0) {
+        chartData = userProfile;
+      }
+
+      if (!chartData) {
+        try {
+          let profile;
+          if (profileId) {
+            profile = await Profile.findOne({ _id: profileId, userId });
           }
-        } else if (typeof userProfile === 'object') {
-          chartData = userProfile;
+          if (!profile) {
+            profile = await Profile.findOne({ userId, isDefault: true });
+          }
+          if (!profile) {
+            profile = await Profile.findOne({ userId }).sort({ createdAt: 1 });
+          }
+          if (profile && !profile.kundaliInsights) {
+            // First chat for this profile — compute insights in the background.
+            // This message won't have chart context; the next one will.
+            refreshKundaliInsights(String(profile._id), userId, profile);
+          }
+          if (profile?.kundaliInsights) {
+            // Map stored insights to the shape interpretChart() expects
+            const ki = profile.kundaliInsights as any;
+            chartData = {
+              ascendant:         ki.ascendant,
+              moonSign:          ki.moonSign,
+              moonNakshatra:     ki.moonNakshatra,
+              sunSign:           ki.sunSign,
+              planetSigns:       ki.planetSigns   || {},
+              planetHouses:      ki.planetHouses  || {},
+              retrograde:        ki.retrograde     || {},
+              yogas:             ki.yogas          || [],
+              currentMahadasha:  ki.currentMahadasha,
+              currentAntardasha: ki.currentAntardasha,
+              manglik:           ki.manglik,
+              kalsarpa:          ki.kalsarpa,
+              sadeSati:          ki.sadeSati,
+              sadeSatiPhase:     ki.sadeSatiPhase,
+              // Extra context passed through to prompt for richer answers
+              _profileName:      profile.name,
+              _mahadashaEnd:     ki.mahadashaEndDate,
+              _antardashaEnd:    ki.antardashaEndDate,
+              _doshas:           ki.doshas || [],
+            };
+          }
+        } catch (profileErr: any) {
+          console.warn('[chat] profile insights lookup failed:', profileErr.message);
         }
       }
 
