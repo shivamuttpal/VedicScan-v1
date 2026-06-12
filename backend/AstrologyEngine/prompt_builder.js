@@ -24,19 +24,18 @@ const persona = require('./vedic-astrology-data/persona/astrologer_persona.json'
 // ─── Compressed System Prompt ─────────────────────────────────
 // This replaces the bloated persona.system_prompt (~500 tokens)
 // with a lean version (~280 tokens) that preserves all behavior.
-const COMPRESSED_SYSTEM_PROMPT = `You are Maharshi, a wise Vedic astrologer. You speak warmly like a trusted elder — calm, grounding, honest, never alarmist.
+const COMPRESSED_SYSTEM_PROMPT = `You are a warm, wise Vedic astrologer speaking to a person in a private session. You are specific, honest, and grounded — like a trusted guide who knows their chart deeply.
 
 Rules:
-- Describe energies in human emotional terms, never technical jargon (no planet names, no "Mahadasha", no house numbers) unless the user asks
-- Use "this phase", "this energy", "this period" instead of astrological terms
-- Frame challenges as growth, never as doom. Respect free will
+- Use the person's actual chart data: name the planets, mahadasha lord, house positions, and exact dates when provided
+- Reference specifics naturally: "Venus in your 10th house", "You are in Mercury mahadasha until 2030", "Jupiter antardasha running until April 2027"
+- Frame challenges as growth opportunities, never as doom
 - Never use bullet points, numbered lists, markdown, or bold text
-- Never say "based on your chart" or "according to the data"
-- You receive pre-interpreted themes about the user. Use them as inner knowing — don't list them back
-- Do not invent astrological details not in the context
-- 2-3 short paragraphs max. Under 120 words for casual questions, up to 200 for deep ones
-- End with a reflective thought, gentle question, or grounded hope
-- You are a real astrologer in private conversation, not an AI assistant`;
+- Never say "based on your chart" or "according to the data" — speak as if you already know this
+- 2-4 short paragraphs. Be specific and detailed, not vague
+- End with a practical suggestion, reflective thought, or timing guidance when relevant
+- Do not invent astrological details not in the context given to you
+- You are a real astrologer, not an AI assistant`;
 
 /**
  * Question type detection from user's message.
@@ -130,10 +129,49 @@ function buildSystemPrompt(questionType, userMood) {
  * @param {Object} themes - Output from aggregateThemes()
  * @returns {string} Context message for thread injection
  */
-function buildInitialContext(themes) {
+function buildInitialContext(themes, chartFacts) {
   const contextParts = [];
 
-  // Include ALL relevant themes in the initial context (the thread remembers this)
+  // ── Specific chart facts (dasha dates, planet positions, doshas, yogas) ──
+  if (chartFacts) {
+    const factLines = [];
+
+    if (chartFacts.personName)  factLines.push(`Name: ${chartFacts.personName}`);
+    if (chartFacts.ascendant)   factLines.push(`Lagna (Ascendant): ${chartFacts.ascendant}`);
+    if (chartFacts.moonSign)    factLines.push(`Moon: ${chartFacts.moonSign}${chartFacts.moonNakshatra ? ` in ${chartFacts.moonNakshatra} nakshatra` : ''}`);
+    if (chartFacts.sunSign)     factLines.push(`Sun: ${chartFacts.sunSign}`);
+
+    // Planet positions with house numbers
+    const ph = chartFacts.planetHouses || {};
+    const ps = chartFacts.planetSigns  || {};
+    const pr = chartFacts.retrograde   || {};
+    const pNames = Object.keys(ph);
+    if (pNames.length) {
+      const lines = pNames.map(p => {
+        const retro = pr[p] ? ' ℞' : '';
+        return `${p}: ${ps[p] || '?'} (house ${ph[p]})${retro}`;
+      });
+      factLines.push(`Planets:\n${lines.join('\n')}`);
+    }
+
+    // Dasha / Antardasha with end dates
+    if (chartFacts.currentMahadasha) {
+      factLines.push(`Mahadasha: ${chartFacts.currentMahadasha}${chartFacts.mahadashaEnd ? ` (until ${chartFacts.mahadashaEnd})` : ''}`);
+    }
+    if (chartFacts.currentAntardasha) {
+      factLines.push(`Antardasha: ${chartFacts.currentAntardasha}${chartFacts.antardashaEnd ? ` (until ${chartFacts.antardashaEnd})` : ''}`);
+    }
+
+    if (chartFacts.yogas?.length)  factLines.push(`Yogas: ${chartFacts.yogas.join(', ')}`);
+    if (chartFacts.doshas?.length) factLines.push(`Doshas: ${chartFacts.doshas.join(', ')}`);
+    if (chartFacts.sadeSati)       factLines.push(`Sade Sati: active${chartFacts.sadeSatiPhase ? ` (${chartFacts.sadeSatiPhase} phase)` : ''}`);
+
+    if (factLines.length) {
+      contextParts.push(`Chart facts:\n${factLines.join('\n')}`);
+    }
+  }
+
+  // ── Interpreted themes (emotional / life patterns) ──
   for (const [key, label] of Object.entries(THEME_LABELS)) {
     if (themes[key]?.length) {
       contextParts.push(`${label}: ${themes[key].join(', ')}`);
@@ -142,7 +180,7 @@ function buildInitialContext(themes) {
 
   if (!contextParts.length) return '';
 
-  return `Astrological reading context for this person:\n\n${contextParts.join('\n')}`;
+  return `Birth chart for this person:\n\n${contextParts.join('\n\n')}`;
 }
 
 /**
@@ -159,19 +197,17 @@ function buildInitialContext(themes) {
  * @param {boolean} [params.isFirstMessage] - Whether this is the first message
  * @returns {{ system: string, user: string, questionType: string, initialContext: string, suggestedMaxTokens: number }}
  */
-function buildAstrologerPrompt({ userQuestion, themes, memoryContext, userMood, isFirstMessage }) {
+function buildAstrologerPrompt({ userQuestion, themes, memoryContext, userMood, isFirstMessage, chartFacts }) {
   const questionType = detectQuestionType(userQuestion);
   const system = buildSystemPrompt(questionType, userMood);
 
-  // Build the user message
   let userMessage;
 
   if (isFirstMessage) {
-    // First message: context is injected separately via buildInitialContext()
-    // User message is just the question
+    // First message: full context injected via buildInitialContext()
     userMessage = userQuestion;
   } else {
-    // Follow-up: inject ONLY question-relevant themes (not everything)
+    // Follow-up: inject relevant themes + always include dasha timing for context
     const relevantKeys = QUESTION_THEME_MAP[questionType] || QUESTION_THEME_MAP.general_life_question;
     const contextParts = [];
 
@@ -181,14 +217,18 @@ function buildAstrologerPrompt({ userQuestion, themes, memoryContext, userMood, 
       }
     }
 
-    // Build compact follow-up prompt
+    // Always re-include current dasha timing so the AI can give specific date guidance
+    if (chartFacts?.currentMahadasha) {
+      const md = `${chartFacts.currentMahadasha}${chartFacts.mahadashaEnd ? ` until ${chartFacts.mahadashaEnd}` : ''}`;
+      const ad = chartFacts.currentAntardasha
+        ? `${chartFacts.currentAntardasha}${chartFacts.antardashaEnd ? ` until ${chartFacts.antardashaEnd}` : ''}`
+        : '';
+      contextParts.push(`Current dasha: ${md}${ad ? `, antardasha: ${ad}` : ''}`);
+    }
+
     const parts = [];
-    if (contextParts.length) {
-      parts.push(`Relevant context:\n${contextParts.join('\n')}`);
-    }
-    if (memoryContext) {
-      parts.push(`Context: ${memoryContext}`);
-    }
+    if (contextParts.length) parts.push(`Context:\n${contextParts.join('\n')}`);
+    if (memoryContext)        parts.push(`Memory: ${memoryContext}`);
     parts.push(`Question: "${userQuestion}"`);
 
     userMessage = parts.join('\n\n');
@@ -198,7 +238,7 @@ function buildAstrologerPrompt({ userQuestion, themes, memoryContext, userMood, 
     system,
     user: userMessage,
     questionType,
-    initialContext: isFirstMessage ? buildInitialContext(themes) : '',
+    initialContext: isFirstMessage ? buildInitialContext(themes, chartFacts) : '',
     suggestedMaxTokens: COMPLETION_TOKEN_MAP[questionType] || 400,
   };
 }

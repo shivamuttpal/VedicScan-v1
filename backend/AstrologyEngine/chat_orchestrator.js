@@ -30,26 +30,59 @@ const { getMemoryContext, updateMemory } = require('./conversation_memory');
  * @param {boolean} [params.isFirstMessage] - Whether this is the first message
  * @returns {{ prompt: Object, updatedMemory: Object }}
  */
+/**
+ * Extracts a compact "chart facts" object from the raw chartData.
+ * These are specific, concrete values (dasha dates, planet positions)
+ * that are injected verbatim into the prompt for specific, accurate answers.
+ */
+function extractChartFacts(chartData) {
+  if (!chartData || typeof chartData !== 'object' || !Object.keys(chartData).length) return null;
+  return {
+    personName:        chartData._profileName       || null,
+    ascendant:         chartData.ascendant          || null,
+    moonSign:          chartData.moonSign            || null,
+    moonNakshatra:     chartData.moonNakshatra       || null,
+    sunSign:           chartData.sunSign             || null,
+    planetSigns:       chartData.planetSigns         || {},
+    planetHouses:      chartData.planetHouses        || {},
+    retrograde:        chartData.retrograde          || {},
+    currentMahadasha:  chartData.currentMahadasha    || null,
+    mahadashaEnd:      chartData._mahadashaEnd       || null,
+    currentAntardasha: chartData.currentAntardasha   || null,
+    antardashaEnd:     chartData._antardashaEnd      || null,
+    yogas:             chartData.yogas               || [],
+    doshas:            chartData._doshas             || [],
+    manglik:           chartData.manglik             || false,
+    kalsarpa:          chartData.kalsarpa            || false,
+    sadeSati:          chartData.sadeSati            || false,
+    sadeSatiPhase:     chartData.sadeSatiPhase       || null,
+  };
+}
+
 function buildMaharshiPrompt({ userQuestion, chartData, memory, userMood, isFirstMessage = false }) {
-  // STEP 1 — Interpret chart into structured items
+  // STEP 1 — Extract concrete chart facts for specific, date-accurate answers
+  const chartFacts = extractChartFacts(chartData);
+
+  // STEP 2 — Interpret chart into structured items (themes)
   const interpretedData = interpretChart(chartData);
 
-  // STEP 2 — Aggregate into compressed emotional themes
+  // STEP 3 — Aggregate into compressed emotional themes
   const themes = aggregateThemes(interpretedData);
 
-  // STEP 3 — Retrieve conversation memory context
+  // STEP 4 — Retrieve conversation memory context
   const memoryContext = getMemoryContext(memory);
 
-  // STEP 4 — Build the final prompt
+  // STEP 5 — Build the final prompt (now with concrete facts + themes)
   const prompt = buildAstrologerPrompt({
     userQuestion,
     themes,
     memoryContext,
     userMood,
-    isFirstMessage
+    isFirstMessage,
+    chartFacts,
   });
 
-  // STEP 5 — Update memory for next turn
+  // STEP 6 — Update memory for next turn
   const updatedMemory = updateMemory(memory, userQuestion, prompt.questionType);
 
   return { prompt, updatedMemory };
