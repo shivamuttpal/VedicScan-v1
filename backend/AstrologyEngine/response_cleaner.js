@@ -21,6 +21,9 @@ function cleanResponse(text) {
   if (!text || typeof text !== 'string') return '';
 
   let cleaned = text
+    // Remove OpenAI Assistants citation annotations: 【8:4†source】 and [8:4†source]
+    .replace(/【[^】]*】/g, '')
+    .replace(/\[\d+:\d+[†:][^\]]*\]/g, '')
     // Remove markdown bold / italic
     .replace(/\*{1,3}([^*]+)\*{1,3}/g, '$1')
     // Remove markdown headings
@@ -52,6 +55,9 @@ function cleanResponse(text) {
 
   // Clean up any resulting double spaces
   cleaned = cleaned.replace(/  +/g, ' ');
+
+  // Fix spaces left before punctuation after stripping citations ("word ." → "word.")
+  cleaned = cleaned.replace(/\s+([.,;:!?])/g, '$1');
 
   // Collapse any newly created excessive newlines
   cleaned = cleaned.replace(/\n{3,}/g, '\n\n').trim();
