@@ -23,6 +23,9 @@ export interface IKundaliInsights {
   jupiterTransitNow?: { sign: string; house: number };
   jupiterTransitAhead?: Array<{ sign: string; house: number; entryDate: string }>;
   waxingMoonWindows?: Array<{ start: string; end: string }>;
+  // Upcoming Vimshottari sub-periods (antardashas) from now forward — the
+  // year-level timing driver ("which period is favourable and until when").
+  upcomingPeriods?: Array<{ lord: string; startDate: string; endDate: string }>;
 }
 
 export interface IProfile extends Document {
@@ -68,6 +71,7 @@ const profileSchema = new Schema<IProfile>(
         jupiterTransitNow:    { type: Schema.Types.Mixed },
         jupiterTransitAhead:  { type: Schema.Types.Mixed },
         waxingMoonWindows:    { type: Schema.Types.Mixed },
+        upcomingPeriods:      { type: Schema.Types.Mixed },
       }, { _id: false }),
       required: false,
     },

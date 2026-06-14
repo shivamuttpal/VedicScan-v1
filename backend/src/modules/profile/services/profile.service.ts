@@ -11,6 +11,28 @@ const RASHI_IDX: Record<string, number> = {
   Libra: 6, Scorpio: 7, Sagittarius: 8, Capricorn: 9, Aquarius: 10, Pisces: 11,
 };
 
+/**
+ * Flattens the dasha timeline into the upcoming antardasha sub-periods
+ * (current one onward). These give year-level timing — "this Mercury/Jupiter
+ * period runs until April 2027" — that powers specific, trackable answers.
+ */
+function extractUpcomingPeriods(
+  timeline: any[],
+  max = 6
+): Array<{ lord: string; startDate: string; endDate: string }> {
+  const now = Date.now();
+  const out: Array<{ lord: string; startDate: string; endDate: string }> = [];
+  for (const md of timeline || []) {
+    for (const ad of md.antardashas || []) {
+      if (!ad.endDate) continue;
+      if (new Date(ad.endDate).getTime() < now) continue; // skip finished periods
+      out.push({ lord: `${md.planet}/${ad.planet}`, startDate: ad.startDate, endDate: ad.endDate });
+      if (out.length >= max) return out;
+    }
+  }
+  return out;
+}
+
 function runTransitBridge(lagnaSignIdx: number): Promise<any> {
   return new Promise((resolve) => {
     const proc = spawn(PYTHON_CMD, [TRANSIT_BRIDGE]);
@@ -83,6 +105,10 @@ async function computeAndSaveInsights(profileId: string, userId: string, profile
       sadeSatiPhase,
       computedAt: new Date(),
     };
+
+    // Upcoming dasha sub-periods — year-level timing ("favourable until when")
+    const dashaTimeline = (kundali.dasha?.timeline as any[]) || [];
+    insights.upcomingPeriods = extractUpcomingPeriods(dashaTimeline);
 
     // Transit data — Jupiter transits + waxing moon windows (current as of now)
     const lagnaSignIdx = RASHI_IDX[insights.ascendant] ?? 0;

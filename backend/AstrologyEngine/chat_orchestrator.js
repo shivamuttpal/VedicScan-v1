@@ -60,6 +60,8 @@ function extractChartFacts(chartData) {
     jupiterNow:        chartData._jupiterNow         || null,
     jupiterAhead:      chartData._jupiterAhead       || [],
     waxingWindows:     chartData._waxingWindows      || [],
+    // Upcoming dasha sub-periods — year-level timing windows
+    upcomingPeriods:   chartData._upcomingPeriods    || [],
   };
 }
 

@@ -24,18 +24,21 @@ const persona = require('./vedic-astrology-data/persona/astrologer_persona.json'
 // ─── Compressed System Prompt ─────────────────────────────────
 // This replaces the bloated persona.system_prompt (~500 tokens)
 // with a lean version (~280 tokens) that preserves all behavior.
-const COMPRESSED_SYSTEM_PROMPT = `You are a warm, wise Vedic astrologer speaking to a person in a private session. You are specific, honest, and grounded — like a trusted guide who knows their chart deeply.
+const COMPRESSED_SYSTEM_PROMPT = `You are a warm, wise Vedic astrologer speaking to a person in a private session. You are specific, honest, and grounded — like a trusted guide who knows their chart deeply. The person is NOT an astrologer, so never leave them with work they cannot do.
 
 Rules:
-- Use the person's actual chart data: name the planets, mahadasha lord, house positions, and exact dates when provided
-- Reference specifics naturally: "Venus in your 10th house", "You are in Mercury mahadasha until 2030", "Jupiter antardasha running until April 2027"
-- Frame challenges as growth opportunities, never as doom
-- Never use bullet points, numbered lists, markdown, or bold text
-- Never say "based on your chart" or "according to the data" — speak as if you already know this
-- 2-4 short paragraphs. Be specific and detailed, not vague
-- End with a practical suggestion, reflective thought, or timing guidance when relevant
-- Do not invent astrological details not in the context given to you
-- You are a real astrologer, not an AI assistant`;
+- Use the person's actual chart data: name their planets, mahadasha and antardasha lords, house positions, and the exact dates provided. Anchor every claim to a specific factor in THEIR chart ("Rahu in your 7th house", "your Mercury–Jupiter period"), never generic astrology.
+- When the question involves timing or the future (marriage, career, money, health, a decision), you MUST give concrete, trackable timing instead of vague advice:
+   • Name a favourable WINDOW with real start and end dates or a month-and-year range, drawn from their dasha sub-periods, Jupiter transits, or the windows listed — e.g. "the strongest stretch is roughly March 2027 through August 2027".
+   • Give a YEARLY view: which upcoming period supports this and until when it lasts, and which stretch is quieter, so they know what each year holds.
+   • Add a near-term MONTHLY pointer they can act on soon.
+- NEVER tell the person to "watch the transits", "keep an eye on" planetary movements, or "observe these periods" — they have no way to track that. Do the tracking FOR them: state the dates yourself, then describe in plain, everyday language the real-life signs that the window is opening — how it may feel, what kinds of meetings, offers, or openings to say yes to.
+- If a chart factor delays or tests this area, say so honestly, frame it as preparation, and still give the date when the pressure eases and the favourable window begins.
+- Never use bullet points, numbered lists, markdown, or bold text — speak in flowing paragraphs.
+- Never say "based on your chart" or "according to the data" — speak as if you already know this.
+- 2-4 short paragraphs. Specific, warm, and concrete — never vague.
+- Do not invent dates, planets, or periods not given to you. If no timing data is provided for the topic, give the honest tendency from their chart rather than a made-up date.
+- You are a real astrologer, not an AI assistant.`;
 
 /**
  * Question type detection from user's message.
@@ -80,13 +83,13 @@ const QUESTION_THEME_MAP = {
 const COMPLETION_TOKEN_MAP = {
   daily_horoscope: 250,
   fear_or_anxiety: 400,
-  career_question: 400,
-  marriage_question: 400,
-  relationship_struggle: 450,
-  health_question: 350,
+  career_question: 550,
+  marriage_question: 600,
+  relationship_struggle: 550,
+  health_question: 450,
   spiritual_question: 500,
-  transit_specific_question: 500,
-  general_life_question: 400,
+  transit_specific_question: 600,
+  general_life_question: 500,
 };
 
 /**
@@ -160,6 +163,14 @@ function buildInitialContext(themes, chartFacts) {
     }
     if (chartFacts.currentAntardasha) {
       factLines.push(`Antardasha: ${chartFacts.currentAntardasha}${chartFacts.antardashaEnd ? ` (until ${chartFacts.antardashaEnd})` : ''}`);
+    }
+
+    // Upcoming dasha sub-periods — gives concrete year-level timing windows
+    if (chartFacts.upcomingPeriods?.length) {
+      const periods = chartFacts.upcomingPeriods.slice(0, 6)
+        .map(p => `${p.lord} (${p.startDate} to ${p.endDate})`)
+        .join('; ');
+      factLines.push(`Upcoming dasha periods (use these for year-level timing windows): ${periods}`);
     }
 
     if (chartFacts.yogas?.length)  factLines.push(`Yogas: ${chartFacts.yogas.join(', ')}`);
@@ -243,6 +254,14 @@ function buildAstrologerPrompt({ userQuestion, themes, memoryContext, userMood, 
         ? `${chartFacts.currentAntardasha}${chartFacts.antardashaEnd ? ` until ${chartFacts.antardashaEnd}` : ''}`
         : '';
       contextParts.push(`Current dasha: ${md}${ad ? `, antardasha: ${ad}` : ''}`);
+
+      // Upcoming sub-periods give the year-level windows for timing answers
+      if (chartFacts.upcomingPeriods?.length) {
+        const periods = chartFacts.upcomingPeriods.slice(0, 5)
+          .map(p => `${p.lord} (${p.startDate}→${p.endDate})`)
+          .join('; ');
+        contextParts.push(`Upcoming periods: ${periods}`);
+      }
     }
 
     // Include transit timing for questions that benefit from planetary timing

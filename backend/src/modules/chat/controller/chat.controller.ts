@@ -90,9 +90,10 @@ export const chatController = {
           if (!profile) {
             profile = await Profile.findOne({ userId }).sort({ createdAt: 1 });
           }
-          if (profile && !profile.kundaliInsights) {
-            // First chat for this profile — compute insights in the background.
-            // This message won't have chart context; the next one will.
+          if (profile && (!profile.kundaliInsights || !(profile.kundaliInsights as any).upcomingPeriods)) {
+            // First chat for this profile, or insights predating the timing
+            // upgrade — (re)compute in the background. This message may miss the
+            // newest timing data; the next one will have it.
             refreshKundaliInsights(String(profile._id), userId, profile);
           }
           if (profile?.kundaliInsights) {
@@ -122,6 +123,8 @@ export const chatController = {
               _jupiterNow:        ki.jupiterTransitNow   || null,
               _jupiterAhead:      ki.jupiterTransitAhead || [],
               _waxingWindows:     ki.waxingMoonWindows   || [],
+              // Upcoming dasha sub-periods — year-level timing windows
+              _upcomingPeriods:   ki.upcomingPeriods     || [],
             };
           }
         } catch (profileErr: any) {
