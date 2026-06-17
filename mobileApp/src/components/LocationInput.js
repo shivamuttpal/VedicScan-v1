@@ -6,12 +6,42 @@ import {
 import axios from 'axios';
 import { C, spacing, radius, fontSize, shadow } from '../theme';
 
-const LocationInput = ({ value, onChangeText, placeholder, style, onFocus }) => {
+const LocationInput = ({
+  value, onChangeText, placeholder, style, onFocus,
+  // optional dark-theme overrides
+  dark = false,
+}) => {
   const [query, setQuery] = useState(value || '');
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownAnim = React.useRef(new Animated.Value(0)).current;
+
+  const th = dark ? {
+    inputBg: 'rgba(255,255,255,0.05)',
+    inputBorder: 'rgba(200,164,90,0.3)',
+    inputText: '#FFFFFF',
+    inputPlaceholder: '#9A8878',
+    dropdownBg: '#1A0A14',
+    dropdownBorder: 'rgba(200,164,90,0.3)',
+    itemBorder: 'rgba(200,164,90,0.1)',
+    itemText: '#D4C4B0',
+    subtextColor: '#9A8878',
+    iconColor: '#C8A45A',
+    clearColor: '#9A8878',
+  } : {
+    inputBg: '#F7F1E5',
+    inputBorder: '#E8DCC2',
+    inputText: '#2D2A26',
+    inputPlaceholder: '#A08856',
+    dropdownBg: '#FFFDF8',
+    dropdownBorder: '#E8DCC2',
+    itemBorder: '#F0E8DE',
+    itemText: '#2D2A26',
+    subtextColor: '#A08856',
+    iconColor: '#C9A45A',
+    clearColor: '#A08856',
+  };
 
   useEffect(() => {
     setQuery(value || '');
@@ -75,14 +105,14 @@ const LocationInput = ({ value, onChangeText, placeholder, style, onFocus }) => 
 
   return (
     <View style={[styles.container, style]}>
-      <View style={styles.inputWrapper}>
-        <Text style={styles.searchIcon}>📍</Text>
+      <View style={[styles.inputWrapper, { backgroundColor: th.inputBg, borderColor: th.inputBorder }]}>
+        <Text style={[styles.searchIcon, { color: th.iconColor }]}>📍</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { color: th.inputText }]}
           value={query}
           onChangeText={searchLocations}
-          placeholder={placeholder || "Search city..."}
-          placeholderTextColor={C.textDim}
+          placeholder={placeholder || 'Search city...'}
+          placeholderTextColor={th.inputPlaceholder}
           onFocus={() => {
             if (onFocus) onFocus();
             if (query.length >= 3) setShowDropdown(true);
@@ -90,39 +120,43 @@ const LocationInput = ({ value, onChangeText, placeholder, style, onFocus }) => 
         />
         {query.length > 0 && (
           <TouchableOpacity onPress={clearSearch} style={styles.clearBtn}>
-            <Text style={styles.clearIcon}>✕</Text>
+            <Text style={[styles.clearIcon, { color: th.clearColor }]}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
-      
+
       {showDropdown && (query.length >= 3) && (
-        <Animated.View style={[styles.dropdown, { opacity: dropdownAnim, transform: [{ translateY: dropdownAnim.interpolate({ inputRange: [0, 1], outputRange: [-10, 0] }) }] }]}>
-          <ScrollView 
-            style={{ maxHeight: 220 }} 
+        <Animated.View style={[
+          styles.dropdown,
+          { backgroundColor: th.dropdownBg, borderColor: th.dropdownBorder },
+          { opacity: dropdownAnim, transform: [{ translateY: dropdownAnim.interpolate({ inputRange: [0, 1], outputRange: [-10, 0] }) }] },
+        ]}>
+          <ScrollView
+            style={{ maxHeight: 220 }}
             keyboardShouldPersistTaps="always"
             showsVerticalScrollIndicator={true}
           >
             {loading && suggestions.length === 0 ? (
               <View style={styles.centerBox}>
                 <ActivityIndicator color={C.saffron} size="small" />
-                <Text style={styles.subtext}>Searching locations...</Text>
+                <Text style={[styles.subtext, { color: th.subtextColor }]}>Searching locations...</Text>
               </View>
             ) : suggestions.length > 0 ? (
               <View>
                 {suggestions.map((item, index) => (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     key={`loc-${index}`}
-                    style={[styles.item, index === suggestions.length - 1 && { borderBottomWidth: 0 }]} 
+                    style={[styles.item, { borderBottomColor: th.itemBorder }, index === suggestions.length - 1 && { borderBottomWidth: 0 }]}
                     onPress={() => onSelect(item)}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.itemText} numberOfLines={2}>{item}</Text>
+                    <Text style={[styles.itemText, { color: th.itemText }]} numberOfLines={2}>{item}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
             ) : !loading && (
               <View style={styles.centerBox}>
-                <Text style={styles.subtext}>No matching locations found</Text>
+                <Text style={[styles.subtext, { color: th.subtextColor }]}>No matching locations found</Text>
               </View>
             )}
           </ScrollView>
@@ -155,6 +189,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: C.text,
     paddingVertical: 14,
+    paddingHorizontal: 4,
   },
   clearBtn: {
     padding: 8,
@@ -179,14 +214,14 @@ const styles = StyleSheet.create({
     elevation: 20,
   },
   item: {
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0E8DE',
   },
   itemText: {
     fontSize: 14,
-    color: C.text,
+    color: '#2D2A26',
     fontWeight: '500',
     lineHeight: 20,
   },

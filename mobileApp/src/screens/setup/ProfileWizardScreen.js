@@ -6,23 +6,32 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { VedicCard } from '../../components/VedicCard';
 import LocationInput from '../../components/LocationInput';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import api from '../../config/api';
 
-const GENDERS = ['Male', 'Female', 'Other'];
-const RELATIONSHIPS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Friend', 'Other'];
-const FEATURES = [
-  { id: 'chat', icon: '✨', title: 'AI Astrologer', desc: 'Chat with Maharshi' },
-  { id: 'baby', icon: '👶', title: 'Baby Naming', desc: 'Find auspicious names' },
-  { id: 'compat', icon: '💑', title: 'Kundali Match', desc: 'Check compatibility' },
-  { id: 'rashifal', icon: '🔮', title: 'Daily Rashifal', desc: 'Your daily forecast' }
-];
+// Parse a YYYY-MM-DD string as a LOCAL date (avoids UTC-midnight timezone shift)
+const parseDateLocal = (str) => {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+
+// Format a Date as YYYY-MM-DD using local time
+const formatLocalDate = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
 
 const ProfileWizardScreen = ({ navigation }) => {
   const { user, refreshProfileStatus } = useAuth();
-  const [step, setStep] = useState(1);
+  const { language, setLanguage, t } = useLanguage();
+
+  // step 0 = language selection, 1 = birth details, 2 = personal, 3 = welcome
+  const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -39,29 +48,28 @@ const ProfileWizardScreen = ({ navigation }) => {
   const nextStep = () => {
     if (step === 1) {
       if (!form.fullName.trim() || !form.dateOfBirth.trim() || !form.placeOfBirth.trim()) {
-        Alert.alert('Required Fields', 'Full Name, Date of Birth, and Place of Birth are required.');
+        Alert.alert(t('requiredFieldsTitle'), t('requiredFieldsMsg'));
         return;
       }
     }
     setStep(s => Math.min(s + 1, 3));
   };
 
-  const prevStep = () => setStep(s => Math.max(s - 1, 1));
+  const prevStep = () => setStep(s => Math.max(s - 1, 0));
 
   const onDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      setForm({ ...form, dateOfBirth: dateStr });
+      setForm({ ...form, dateOfBirth: formatLocalDate(selectedDate) });
     }
   };
 
   const onTimeChange = (event, selectedTime) => {
     setShowTimePicker(false);
     if (selectedTime) {
-      const hours = selectedTime.getHours().toString().padStart(2, '0');
-      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
-      setForm({ ...form, timeOfBirth: `${hours}:${minutes}` });
+      const h = selectedTime.getHours().toString().padStart(2, '0');
+      const m = selectedTime.getMinutes().toString().padStart(2, '0');
+      setForm({ ...form, timeOfBirth: `${h}:${m}` });
     }
   };
 
@@ -78,6 +86,7 @@ const ProfileWizardScreen = ({ navigation }) => {
       };
       const res = await api.post('/api/profiles', payload);
       if (res.data) {
+        setStep(3);
         await refreshProfileStatus();
       }
     } catch (err) {
@@ -85,6 +94,28 @@ const ProfileWizardScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
+
+  // Gender and relationship values map to translation keys
+  const GENDER_KEYS = [
+    { value: 'Male', key: 'genderMale' },
+    { value: 'Female', key: 'genderFemale' },
+    { value: 'Other', key: 'genderOther' },
+  ];
+  const REL_KEYS = [
+    { value: 'Self', key: 'relSelf' },
+    { value: 'Spouse', key: 'relSpouse' },
+    { value: 'Child', key: 'relChild' },
+    { value: 'Parent', key: 'relParent' },
+    { value: 'Sibling', key: 'relSibling' },
+    { value: 'Friend', key: 'relFriend' },
+    { value: 'Other', key: 'relOther' },
+  ];
+  const FEATURE_KEYS = [
+    { id: 'chat', icon: '✨', titleKey: 'featureAITitle', descKey: 'featureAIDesc' },
+    { id: 'baby', icon: '👶', titleKey: 'featureBabyTitle', descKey: 'featureBabyDesc' },
+    { id: 'compat', icon: '💑', titleKey: 'featureCompatTitle', descKey: 'featureCompatDesc' },
+    { id: 'rashifal', icon: '🔮', titleKey: 'featureRashiTitle', descKey: 'featureRashiDesc' },
+  ];
 
   const renderStepIndicator = () => (
     <View style={styles.stepperContainer}>
@@ -103,58 +134,102 @@ const ProfileWizardScreen = ({ navigation }) => {
     <View style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          
+
           <View style={styles.header}>
             <Text style={styles.brand}>Vedic<Text style={styles.brandAccent}>Scan</Text></Text>
-            <Text style={styles.subtitle}>Set up your cosmic profile</Text>
-            {renderStepIndicator()}
+            <Text style={styles.subtitle}>{t('cosmicProfileSetup')}</Text>
+            {step > 0 && renderStepIndicator()}
           </View>
 
           <VedicCard style={styles.card}>
-            {step === 1 && (
+
+            {/* ── STEP 0: Language Selection ── */}
+            {step === 0 && (
               <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>Birth Details</Text>
-                <Text style={styles.stepDesc}>Accurate birth info ensures precise readings</Text>
+                <Text style={styles.langStepIcon}>🌐</Text>
+                <Text style={styles.stepTitle}>{t('chooseLanguage')}</Text>
+                <Text style={styles.stepDesc}>{t('chooseLanguageDesc')}</Text>
 
-                <Text style={styles.label}>Full Name *</Text>
-                <TextInput 
-                  style={styles.input} 
-                  value={form.fullName} 
-                  onChangeText={t => setForm({...form, fullName: t})} 
-                  placeholder="John Doe" 
-                  placeholderTextColor={C.textDim} 
-                />
-
-                <Text style={styles.label}>Date of Birth *</Text>
                 <TouchableOpacity
-                  style={styles.input}
-                  onPress={() => setShowDatePicker(true)}
+                  style={[styles.langCard, language === 'en' && styles.langCardActive]}
+                  onPress={() => setLanguage('en')}
+                  activeOpacity={0.75}
                 >
-                  <Text style={[styles.inputText, !form.dateOfBirth && { color: C.textDim }]}>
-                    {form.dateOfBirth || 'Select Date (YYYY-MM-DD)'}
-                  </Text>
+                  <View style={styles.langCardInner}>
+                    <Text style={styles.langCardSymbol}>A</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.langCardTitle, language === 'en' && styles.langCardTitleActive]}>
+                        English
+                      </Text>
+                      <Text style={styles.langCardSub}>Continue in English</Text>
+                    </View>
+                    {language === 'en' && <Text style={styles.langCheckmark}>✓</Text>}
+                  </View>
                 </TouchableOpacity>
 
+                <TouchableOpacity
+                  style={[styles.langCard, language === 'hi' && styles.langCardActive]}
+                  onPress={() => setLanguage('hi')}
+                  activeOpacity={0.75}
+                >
+                  <View style={styles.langCardInner}>
+                    <Text style={styles.langCardSymbol}>अ</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.langCardTitle, language === 'hi' && styles.langCardTitleActive]}>
+                        हिंदी
+                      </Text>
+                      <Text style={styles.langCardSub}>हिंदी में जारी रखें</Text>
+                    </View>
+                    {language === 'hi' && <Text style={styles.langCheckmark}>✓</Text>}
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.primaryBtn} onPress={nextStep}>
+                  <LinearGradient colors={['#C9A45A', '#7B1A38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
+                    <Text style={styles.btnText}>{t('continueBtn')}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* ── STEP 1: Birth Details ── */}
+            {step === 1 && (
+              <View style={styles.stepContent}>
+                <Text style={styles.stepTitle}>{t('birthDetails')}</Text>
+                <Text style={styles.stepDesc}>{t('birthDetailsDesc')}</Text>
+
+                <Text style={styles.label}>{t('fullName')}</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.fullName}
+                  onChangeText={v => setForm({ ...form, fullName: v })}
+                  placeholder="John Doe"
+                  placeholderTextColor={C.textDim}
+                />
+
+                <Text style={styles.label}>{t('dateOfBirth')}</Text>
+                <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
+                  <Text style={[styles.inputText, !form.dateOfBirth && { color: C.textDim }]}>
+                    {form.dateOfBirth || t('selectDate')}
+                  </Text>
+                </TouchableOpacity>
                 {showDatePicker && (
                   <DateTimePicker
-                    value={form.dateOfBirth ? new Date(form.dateOfBirth) : new Date(2000, 0, 1)}
+                    value={form.dateOfBirth ? parseDateLocal(form.dateOfBirth) : new Date(1990, 0, 1)}
                     mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={onDateChange}
+                    display="spinner"
+                    minimumDate={new Date(1900, 0, 1)}
                     maximumDate={new Date()}
+                    onChange={onDateChange}
                   />
                 )}
 
-                <Text style={styles.label}>Time of Birth</Text>
-                <TouchableOpacity
-                  style={styles.input}
-                  onPress={() => setShowTimePicker(true)}
-                >
+                <Text style={styles.label}>{t('timeOfBirth')}</Text>
+                <TouchableOpacity style={styles.input} onPress={() => setShowTimePicker(true)}>
                   <Text style={[styles.inputText, !form.timeOfBirth && { color: C.textDim }]}>
-                    {form.timeOfBirth || 'Select Time (HH:MM)'}
+                    {form.timeOfBirth || t('selectTime')}
                   </Text>
                 </TouchableOpacity>
-
                 {showTimePicker && (
                   <DateTimePicker
                     value={(() => {
@@ -171,96 +246,115 @@ const ProfileWizardScreen = ({ navigation }) => {
                   />
                 )}
 
-                <Text style={styles.label}>Place of Birth *</Text>
-                <LocationInput 
-                  value={form.placeOfBirth} 
-                  onChangeText={t => setForm({...form, placeOfBirth: t})} 
-                  placeholder="City, State, Country" 
+                <Text style={styles.label}>{t('placeOfBirth')}</Text>
+                <LocationInput
+                  value={form.placeOfBirth}
+                  onChangeText={v => setForm({ ...form, placeOfBirth: v })}
+                  placeholder="City, State, Country"
                 />
 
                 <View style={styles.infoBox}>
-                  <Text style={styles.infoText}>💡 Time of birth is crucial for accurate Lagna (Ascendant) and house calculations. Provide as accurately as possible.</Text>
+                  <Text style={styles.infoText}>{t('infoTip')}</Text>
                 </View>
 
                 <TouchableOpacity style={styles.primaryBtn} onPress={nextStep}>
-                  <LinearGradient colors={['#D4760A', '#7B1A38']} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={styles.gradientBtn}>
-                    <Text style={styles.btnText}>Continue →</Text>
+                  <LinearGradient colors={['#C9A45A', '#7B1A38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
+                    <Text style={styles.btnText}>{t('continueBtn')}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
             )}
 
+            {/* ── STEP 2: Personal Details ── */}
             {step === 2 && (
               <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>Personal Details</Text>
-                <Text style={styles.stepDesc}>Help us personalize your experience</Text>
+                <Text style={styles.stepTitle}>{t('personalDetails')}</Text>
+                <Text style={styles.stepDesc}>{t('personalDetailsDesc')}</Text>
 
-                <Text style={styles.label}>Gender *</Text>
+                <Text style={styles.label}>{t('gender')}</Text>
                 <View style={styles.chipRow}>
-                  {GENDERS.map(g => (
-                    <TouchableOpacity key={g} style={[styles.chip, form.gender === g && styles.chipActive]} onPress={() => setForm({...form, gender: g})}>
-                      <Text style={[styles.chipText, form.gender === g && styles.chipTextActive]}>{g}</Text>
+                  {GENDER_KEYS.map(({ value, key }) => (
+                    <TouchableOpacity
+                      key={value}
+                      style={[styles.chip, form.gender === value && styles.chipActive]}
+                      onPress={() => setForm({ ...form, gender: value })}
+                    >
+                      <Text style={[styles.chipText, form.gender === value && styles.chipTextActive]}>
+                        {t(key)}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
 
-                <Text style={styles.label}>This profile is for</Text>
+                <Text style={styles.label}>{t('profileFor')}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.md }}>
                   <View style={styles.chipRow}>
-                    {RELATIONSHIPS.map(r => (
-                      <TouchableOpacity key={r} style={[styles.chip, form.relationship === r && styles.chipActive]} onPress={() => setForm({...form, relationship: r})}>
-                        <Text style={[styles.chipText, form.relationship === r && styles.chipTextActive]}>{r}</Text>
+                    {REL_KEYS.map(({ value, key }) => (
+                      <TouchableOpacity
+                        key={value}
+                        style={[styles.chip, form.relationship === value && styles.chipActive]}
+                        onPress={() => setForm({ ...form, relationship: value })}
+                      >
+                        <Text style={[styles.chipText, form.relationship === value && styles.chipTextActive]}>
+                          {t(key)}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                 </ScrollView>
 
                 <View style={styles.previewBox}>
-                  <Text style={styles.previewTitle}>YOUR VEDIC PROFILE PREVIEW</Text>
-                  <View style={{flexDirection: 'row', gap: 8, marginTop: 8}}>
-                    <View style={styles.previewBadge}><Text style={styles.badgeText}>🌙 Moon Sign Pending</Text></View>
-                    <View style={styles.previewBadge}><Text style={styles.badgeText}>☿️ Lagna Pending</Text></View>
+                  <Text style={styles.previewTitle}>{t('vedicProfilePreview')}</Text>
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                    <View style={styles.previewBadge}><Text style={styles.badgeText}>{t('moonSignPending')}</Text></View>
+                    <View style={styles.previewBadge}><Text style={styles.badgeText}>{t('lagnaSignPending')}</Text></View>
                   </View>
                 </View>
 
                 <View style={styles.btnRow}>
                   <TouchableOpacity style={styles.secondaryBtn} onPress={prevStep}>
-                    <Text style={styles.secondaryBtnText}>← Back</Text>
+                    <Text style={styles.secondaryBtnText}>{t('backBtn')}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.primaryBtn, { flex: 1, marginBottom: 0 }]} onPress={handleFinish} disabled={loading}>
-                    <LinearGradient colors={['#D4760A', '#7B1A38']} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={styles.gradientBtn}>
-                      <Text style={styles.btnText}>{loading ? 'Creating...' : 'Create Profile ✓'}</Text>
+                  <TouchableOpacity
+                    style={[styles.primaryBtn, { flex: 1, marginBottom: 0 }]}
+                    onPress={handleFinish}
+                    disabled={loading}
+                  >
+                    <LinearGradient colors={['#C9A45A', '#7B1A38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
+                      <Text style={styles.btnText}>{loading ? t('creating') : t('createProfile')}</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
               </View>
             )}
 
+            {/* ── STEP 3: Welcome ── */}
             {step === 3 && (
               <View style={[styles.stepContent, { alignItems: 'center' }]}>
                 <View style={styles.omCircle}>
                   <Text style={styles.omText}>🔱</Text>
                 </View>
-                <Text style={styles.welcomeTitle}>Welcome, {form.fullName.split(' ')[0]}!</Text>
-                <Text style={styles.welcomeDesc}>Your cosmic profile is ready. The stars have been charted and wisdom awaits you.</Text>
+                <Text style={styles.welcomeTitle}>{t('welcomeTitle')}, {form.fullName.split(' ')[0]}!</Text>
+                <Text style={styles.welcomeDesc}>{t('welcomeDesc')}</Text>
 
                 <View style={styles.grid}>
-                  {FEATURES.map(f => (
+                  {FEATURE_KEYS.map(f => (
                     <View key={f.id} style={styles.featureCard}>
                       <Text style={styles.fIcon}>{f.icon}</Text>
-                      <Text style={styles.fTitle}>{f.title}</Text>
-                      <Text style={styles.fDesc}>{f.desc}</Text>
+                      <Text style={styles.fTitle}>{t(f.titleKey)}</Text>
+                      <Text style={styles.fDesc}>{t(f.descKey)}</Text>
                     </View>
                   ))}
                 </View>
 
-                <TouchableOpacity style={[styles.primaryBtn, { width: '100%' }]} onPress={() => {}} >
-                  <LinearGradient colors={['#D4760A', '#7B1A38']} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={styles.gradientBtn}>
-                    <Text style={styles.btnText}>🚀 Start Exploring</Text>
+                <TouchableOpacity style={[styles.primaryBtn, { width: '100%' }]} onPress={() => {}}>
+                  <LinearGradient colors={['#C9A45A', '#7B1A38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
+                    <Text style={styles.btnText}>{t('startExploring')}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </View>
             )}
+
           </VedicCard>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -277,7 +371,7 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: fontSize.md, color: C.textMid, marginTop: 4 },
   stepperContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 20 },
   stepCircle: { width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center' },
-  stepActive: { backgroundColor: '#A03B2B' }, 
+  stepActive: { backgroundColor: '#A03B2B' },
   stepInactive: { backgroundColor: '#EADCD0' },
   stepText: { fontWeight: '700', fontSize: 16 },
   stepTextActive: { color: C.white },
@@ -285,19 +379,20 @@ const styles = StyleSheet.create({
   stepLine: { width: 40, height: 2, backgroundColor: '#EADCD0', marginHorizontal: 8 },
   stepLineActive: { backgroundColor: '#A03B2B' },
   card: { padding: spacing.lg, backgroundColor: C.white, borderRadius: radius.lg, ...shadow.lg },
+  stepContent: {},
   stepTitle: { fontSize: 24, fontWeight: '700', color: C.text, marginBottom: 4 },
   stepDesc: { fontSize: fontSize.sm, color: C.textMid, marginBottom: spacing.lg },
   label: { fontSize: fontSize.sm, fontWeight: '600', color: C.textMid, marginBottom: 6, marginTop: spacing.sm },
-  input: { 
-    backgroundColor: C.input, 
-    borderRadius: radius.sm, 
-    paddingHorizontal: spacing.md, 
-    paddingVertical: 14, 
-    fontSize: fontSize.md, 
+  input: {
+    backgroundColor: C.input,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    fontSize: fontSize.md,
     color: C.text,
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: C.border
+    borderColor: C.border,
   },
   inputText: { fontSize: fontSize.md, color: C.text },
   infoBox: { backgroundColor: C.saffronPale, padding: spacing.md, borderRadius: radius.sm, marginTop: spacing.lg, marginBottom: spacing.lg, borderLeftWidth: 3, borderLeftColor: C.saffron },
@@ -305,10 +400,9 @@ const styles = StyleSheet.create({
   primaryBtn: { borderRadius: radius.md, overflow: 'hidden', marginTop: spacing.md },
   gradientBtn: { paddingVertical: 16, alignItems: 'center' },
   btnText: { color: C.white, fontSize: fontSize.lg, fontWeight: '700' },
-  
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { backgroundColor: C.input, paddingVertical: 10, paddingHorizontal: 16, borderRadius: radius.sm },
-  chipActive: { backgroundColor: C.input, borderWidth: 1, borderColor: C.saffron }, 
+  chipActive: { backgroundColor: C.input, borderWidth: 1, borderColor: C.saffron },
   chipText: { color: C.textMid, fontWeight: '500' },
   chipTextActive: { color: C.text },
   previewBox: { backgroundColor: C.goldPale, borderRadius: radius.sm, padding: spacing.md, marginTop: spacing.xl, marginBottom: spacing.lg, borderWidth: 1, borderColor: C.borderGold },
@@ -318,7 +412,6 @@ const styles = StyleSheet.create({
   btnRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   secondaryBtn: { paddingVertical: 14, paddingHorizontal: 20, borderWidth: 1, borderColor: C.saffron, borderRadius: radius.md },
   secondaryBtnText: { color: C.saffron, fontWeight: '700', fontSize: fontSize.md },
-
   omCircle: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(212, 118, 10, 0.9)', justifyContent: 'center', alignItems: 'center', marginBottom: spacing.lg, ...shadow.gold },
   omText: { fontSize: 40, color: C.white },
   welcomeTitle: { fontSize: 28, fontWeight: '700', color: C.text, marginBottom: spacing.sm },
@@ -328,6 +421,33 @@ const styles = StyleSheet.create({
   fIcon: { fontSize: 24, marginBottom: 8 },
   fTitle: { fontSize: fontSize.sm, fontWeight: '700', color: C.text, marginBottom: 2 },
   fDesc: { fontSize: 11, color: C.textMuted },
+
+  // Language selection step
+  langStepIcon: { fontSize: 48, textAlign: 'center', marginBottom: spacing.md },
+  langCard: {
+    borderWidth: 2,
+    borderColor: C.border,
+    borderRadius: radius.md,
+    marginTop: spacing.md,
+    padding: spacing.md,
+    backgroundColor: C.input,
+  },
+  langCardActive: {
+    borderColor: C.saffron,
+    backgroundColor: '#FFFDF8',
+  },
+  langCardInner: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  langCardSymbol: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: C.maroon,
+    width: 44,
+    textAlign: 'center',
+  },
+  langCardTitle: { fontSize: 18, fontWeight: '700', color: C.text },
+  langCardTitleActive: { color: C.saffron },
+  langCardSub: { fontSize: 12, color: C.textMuted, marginTop: 2 },
+  langCheckmark: { fontSize: 20, color: C.saffron, fontWeight: '800' },
 });
 
 export default ProfileWizardScreen;

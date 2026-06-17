@@ -17,6 +17,17 @@ const BANNER = require('../../../assets/bannerbackground5.webp');
 const GENDERS = ['Male', 'Female', 'Other'];
 const RELATIONSHIPS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Friend', 'Other'];
 
+const parseDateLocal = (str) => {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+const formatLocalDate = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 const ProfileScreen = ({ route, navigation }) => {
   const { user, hasProfile, refreshProfileStatus, logout } = useAuth();
   const isSetup = route?.params?.setup || false;
@@ -151,8 +162,7 @@ const ProfileScreen = ({ route, navigation }) => {
   const onDateChange = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      setForm({ ...form, dateOfBirth: dateStr });
+      setForm({ ...form, dateOfBirth: formatLocalDate(selectedDate) });
     }
   };
 
@@ -186,7 +196,7 @@ const ProfileScreen = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={['#6C3FA0', '#4A2680']} style={styles.header}>
+      <LinearGradient colors={['#6A1039', '#6A1039']} style={styles.header}>
         <Image source={BANNER} style={styles.headerBannerOverlay} />
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
@@ -241,7 +251,7 @@ const ProfileScreen = ({ route, navigation }) => {
                   style={styles.setupBtn}
                   onPress={() => setShowForm(true)}
                 >
-                  <LinearGradient colors={['#D4760A', '#B8860B']} style={styles.gradBtn}>
+                  <LinearGradient colors={['#C9A45A', '#C9A45A']} style={styles.gradBtn}>
                     <Text style={styles.gradBtnText}>Create Profile</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -278,11 +288,12 @@ const ProfileScreen = ({ route, navigation }) => {
 
                 {showDatePicker && (
                   <DateTimePicker
-                    value={form.dateOfBirth ? new Date(form.dateOfBirth) : new Date(2000, 0, 1)}
+                    value={form.dateOfBirth ? parseDateLocal(form.dateOfBirth) : new Date(1990, 0, 1)}
                     mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={onDateChange}
+                    display="spinner"
+                    minimumDate={new Date(1900, 0, 1)}
                     maximumDate={new Date()}
+                    onChange={onDateChange}
                   />
                 )}
 
@@ -359,7 +370,7 @@ const ProfileScreen = ({ route, navigation }) => {
                     onPress={handleSubmit}
                     disabled={loading}
                   >
-                    <LinearGradient colors={['#D4760A', '#B8860B']} style={styles.gradBtn}>
+                    <LinearGradient colors={['#C9A45A', '#C9A45A']} style={styles.gradBtn}>
                       <Text style={styles.gradBtnText}>
                         {loading ? 'Saving...' : editingId ? 'Update' : 'Save Profile'}
                       </Text>
@@ -511,7 +522,7 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: fontSize.lg, fontWeight: '700', color: C.maroon },
   profileName: { fontSize: fontSize.lg, fontWeight: '700', color: C.text },
   profileRel: { fontSize: fontSize.sm, color: C.textMuted },
-  profileActions: { flexDirection: 'row', gap: 8 },
+  profileActions: { flexDirection: 'row', gap: 8, paddingTop: 30 },
   actionBtn: { padding: 6 },
   actionText: { fontSize: 16 },
   detailGrid: { flexDirection: 'row', flexWrap: 'wrap' },

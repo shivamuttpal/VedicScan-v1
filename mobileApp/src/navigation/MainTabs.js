@@ -1,12 +1,14 @@
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLanguage } from '../context/LanguageContext';
 
 import HomeScreen from '../screens/main/HomeScreen';
 import ChatScreen from '../screens/main/ChatScreen';
 import CompatibilityScreen from '../screens/main/CompatibilityScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import BabyNamingScreen from '../screens/main/BabyNamingScreen';
+import KundaliScreen from '../screens/main/KundaliScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -30,7 +32,7 @@ const TabIcon = ({ children, label, focused }) => (
   </View>
 );
 
-const MaharishiIcon = ({ focused }) => (
+const MaharishiIcon = ({ label, focused }) => (
   <View style={styles.centerWrapper}>
     <View style={[styles.centerBg, focused && styles.centerBgFocused]}>
       <MaterialCommunityIcons name="creation" size={26} color="#FFFFFF" />
@@ -42,32 +44,35 @@ const MaharishiIcon = ({ focused }) => (
       minimumFontScale={0.85}
       style={[styles.tabLabel, styles.centerLabel, focused && styles.tabLabelActive]}
     >
-      Maharishi
+      {label}
     </Text>
   </View>
 );
 
 // ─────────────────────────────────────
-const MainTabs = () => (
+const MainTabs = () => {
+  const { t } = useLanguage();
+
+  return (
   <Tab.Navigator
     screenOptions={{
-  headerShown: false,
-  tabBarStyle: styles.tabBar,
-  tabBarShowLabel: false,
-  tabBarHideOnKeyboard: true,
-  tabBarItemStyle: {
-    height: 64,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-}}
+      headerShown: false,
+      tabBarStyle: styles.tabBar,
+      tabBarShowLabel: false,
+      tabBarHideOnKeyboard: true,
+      tabBarItemStyle: {
+        height: 64,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+    }}
   >
     <Tab.Screen
       name="HomeTab"
       component={HomeScreen}
       options={{
         tabBarIcon: ({ focused }) => (
-          <TabIcon label="Home" focused={focused}>
+          <TabIcon label={t('tabHome')} focused={focused}>
             <Ionicons name={focused ? 'home' : 'home-outline'} size={23} color={focused ? ACTIVE : MUTED} />
           </TabIcon>
         ),
@@ -79,8 +84,8 @@ const MainTabs = () => (
       component={CompatibilityScreen}
       options={{
         tabBarIcon: ({ focused }) => (
-          <TabIcon label="Matching" focused={focused}>
-            <MaterialCommunityIcons name={focused ? "heart-multiple" : "heart-multiple-outline"} size={23} color={focused ? ACTIVE : MUTED} />
+          <TabIcon label={t('tabMatching')} focused={focused}>
+            <MaterialCommunityIcons name={focused ? 'heart-multiple' : 'heart-multiple-outline'} size={23} color={focused ? ACTIVE : MUTED} />
           </TabIcon>
         ),
       }}
@@ -90,17 +95,17 @@ const MainTabs = () => (
       name="Chat"
       component={ChatScreen}
       options={{
-        tabBarIcon: ({ focused }) => <MaharishiIcon focused={focused} />,
+        tabBarIcon: ({ focused }) => <MaharishiIcon label={t('tabMaharishi')} focused={focused} />,
       }}
     />
 
     <Tab.Screen
-      name="BabyNaming"
-      component={BabyNamingScreen}
+      name="KundaliTab"
+      component={KundaliScreen}
       options={{
         tabBarIcon: ({ focused }) => (
-          <TabIcon label="Baby" focused={focused}>
-            <MaterialCommunityIcons name="baby-face-outline" size={23} color={focused ? ACTIVE : MUTED} />
+          <TabIcon label={t('tabKundali')} focused={focused}>
+            <MaterialCommunityIcons name="zodiac-aries" size={23} color={focused ? ACTIVE : MUTED} />
           </TabIcon>
         ),
       }}
@@ -111,14 +116,15 @@ const MainTabs = () => (
       component={ProfileScreen}
       options={{
         tabBarIcon: ({ focused }) => (
-          <TabIcon label="Profile" focused={focused}>
+          <TabIcon label={t('tabProfile')} focused={focused}>
             <Ionicons name={focused ? 'person' : 'person-outline'} size={23} color={focused ? ACTIVE : MUTED} />
           </TabIcon>
         ),
       }}
     />
   </Tab.Navigator>
-);
+  );
+};
 
 // ─────────────────────────────────────
 // STYLES

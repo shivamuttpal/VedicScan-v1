@@ -7,14 +7,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { VedicCard, GoldBar } from '../../components/VedicCard';
 import api from '../../config/api';
+import { getCustomerInfo, hasPro, getActiveProductId, presentCustomerCenter, syncRevenueCatToBackend } from '../../config/revenuecat';
 
 const LOGO = require('../../../assets/logo.jpeg');
 const BANNER = require('../../../assets/bannerbackground5.webp');
 
 const PLAN_META = {
-  free: { label: 'Free', color: '#9A8878', bg: '#F8F5F1', border: '#E8DFD2', icon: '✨' },
-  standard: { label: 'Standard', color: '#D4760A', bg: '#FFF8F0', border: '#FFDAB9', icon: '👑' },
-  premium: { label: 'Premium', color: '#6C3FA0', bg: '#F5F0FF', border: '#DCD0FF', icon: '👑' },
+  free: { label: 'Free', color: '#A08856', bg: '#FFFDF8', border: '#F7F1E5', icon: '✨' },
+  standard: { label: 'Standard', color: '#C9A45A', bg: '#FFFDF8', border: '#FFDAB9', icon: '👑' },
+  premium: { label: 'Premium', color: '#6A1039', bg: '#F5F0FF', border: '#DCD0FF', icon: '👑' },
 };
 
 function daysUntil(dateStr) {
@@ -26,7 +27,7 @@ function daysUntil(dateStr) {
 const UsageBar = ({ label, used, limit, color }) => {
   const isUnlimited = limit >= 99999;
   const pct = isUnlimited ? 0 : Math.min(100, Math.round((used / limit) * 100));
-  const barColor = pct >= 90 ? '#D93025' : pct >= 70 ? '#D4760A' : '#188038';
+  const barColor = pct >= 90 ? '#D93025' : pct >= 70 ? '#C9A45A' : '#188038';
 
   return (
     <View style={styles.usageItem}>
@@ -47,16 +48,35 @@ const UsageBar = ({ label, used, limit, color }) => {
   );
 };
 
+const PRODUCT_LABEL = { monthly: 'Monthly', yearly: 'Yearly', lifetime: 'Lifetime' };
+
 const SubscriptionScreen = ({ navigation }) => {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
+  const [rcIsPro, setRcIsPro] = useState(false);
+  const [rcProduct, setRcProduct] = useState(null);
 
   const fetchStatus = async () => {
     try {
+      // 1. Check RevenueCat first
+      const rcInfo = await getCustomerInfo();
+
+      // 2. If RC shows an active subscription, push it to the backend before reading backend status.
+      //    This bridges the gap when the server-to-server webhook was delayed or missed.
+      if (rcInfo && hasPro(rcInfo)) {
+        await syncRevenueCatToBackend();
+      }
+
+      // 3. Now read the (potentially freshly updated) backend status
       const { data } = await api.get('/api/subscription/status');
       setStatus(data);
+
+      if (rcInfo) {
+        setRcIsPro(hasPro(rcInfo));
+        setRcProduct(getActiveProductId(rcInfo));
+      }
     } catch (err) {
       console.log('Error fetching subscription status:', err?.message);
     } finally {
@@ -107,7 +127,7 @@ const SubscriptionScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#6C3FA0', '#4A2680']} style={styles.header}>
+      <LinearGradient colors={['#6A1039', '#6A1039']} style={styles.header}>
         <Image source={BANNER} style={styles.headerBannerOverlay} />
         <View style={styles.headerTopRow}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -236,14 +256,31 @@ const SubscriptionScreen = ({ navigation }) => {
           </View>
         </VedicCard>
 
+        {/* RevenueCat Pro badge */}
+        {rcIsPro && (
+          <VedicCard style={styles.rcProCard}>
+            <View style={styles.rcProRow}>
+              <View style={styles.rcProInfo}>
+                <Text style={styles.rcProTitle}>
+                  ✦ VedicScan Pro{rcProduct ? ` — ${PRODUCT_LABEL[rcProduct] ?? rcProduct}` : ''}
+                </Text>
+                <Text style={styles.rcProSub}>Verified via App Store / Google Play</Text>
+              </View>
+            </View>
+            <TouchableOpacity style={styles.customerCenterBtn} onPress={presentCustomerCenter}>
+              <Text style={styles.customerCenterText}>Manage Subscription →</Text>
+            </TouchableOpacity>
+          </VedicCard>
+        )}
+
         {/* Upgrade CTA */}
-        {plan === 'free' && (
+        {!rcIsPro && plan === 'free' && (
           <TouchableOpacity
             style={styles.upgradeBtn}
             onPress={() => navigation.navigate('Pricing')}
           >
-            <LinearGradient colors={['#D4760A', '#B8860B']} style={styles.upgradeGrad}>
-              <Text style={styles.upgradeText}>🚀 Upgrade to Premium</Text>
+            <LinearGradient colors={['#C9A45A', '#C9A45A']} style={styles.upgradeGrad}>
+              <Text style={styles.upgradeText}>🚀 Unlock VedicScan Pro</Text>
             </LinearGradient>
           </TouchableOpacity>
         )}
@@ -310,11 +347,11 @@ const styles = StyleSheet.create({
   detailLabel: { fontSize: 10, fontWeight: '700', color: C.textMuted, textTransform: 'uppercase' },
   detailValue: { fontSize: 15, fontWeight: '700', color: C.text },
   warningBanner: {
-    backgroundColor: '#FFF8F0', padding: 12, borderTopWidth: 1, borderTopColor: '#FFDAB9',
+    backgroundColor: '#FFFDF8', padding: 12, borderTopWidth: 1, borderTopColor: '#FFDAB9',
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  warningText: { color: '#D4760A', fontWeight: '700', fontSize: 13 },
-  renewBtn: { backgroundColor: '#D4760A', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  warningText: { color: '#C9A45A', fontWeight: '700', fontSize: 13 },
+  renewBtn: { backgroundColor: '#C9A45A', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
   renewBtnText: { color: '#fff', fontWeight: '700', fontSize: 12 },
   card: { marginBottom: spacing.md },
   cardHeader: { padding: spacing.md },
@@ -338,7 +375,7 @@ const styles = StyleSheet.create({
   notifyTitle: { fontSize: 15, fontWeight: '700', color: C.text },
   notifyDesc: { fontSize: 12, color: C.textMuted, marginTop: 4, lineHeight: 18 },
   toggleBtn: {
-    backgroundColor: '#6C3FA0', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12,
+    backgroundColor: '#6A1039', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12,
     minWidth: 80, alignItems: 'center',
   },
   toggleBtnOff: { backgroundColor: '#188038' },
@@ -346,6 +383,20 @@ const styles = StyleSheet.create({
   upgradeBtn: { borderRadius: 16, overflow: 'hidden', marginTop: spacing.md },
   upgradeGrad: { paddingVertical: 18, alignItems: 'center' },
   upgradeText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  // RevenueCat Pro card
+  rcProCard: {
+    marginBottom: spacing.md, backgroundColor: '#1A1A2E',
+    borderWidth: 0, padding: spacing.lg,
+  },
+  rcProRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
+  rcProInfo: { flex: 1 },
+  rcProTitle: { fontSize: 15, fontWeight: '800', color: '#E2C07A' },
+  rcProSub: { fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 3 },
+  customerCenterBtn: {
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 10, paddingVertical: 10, alignItems: 'center',
+  },
+  customerCenterText: { color: 'rgba(255,255,255,0.7)', fontSize: 13, fontWeight: '700' },
 });
 
 export default SubscriptionScreen;

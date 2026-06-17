@@ -20,33 +20,20 @@ import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import api from '../../config/api';
-import { SIGNS } from '../../data/signs';
+import { SIGNS, LORD_HI, EL_HI } from '../../data/signs';
 
 const LOGO = require('../../../assets/logo.jpeg');
 const BANNER = require('../../../assets/bannerbackground5.webp');
 
 
-// ── Helper: Determine Rashi based on DOB (Sun sign ranges) ──
-const determineRashi = (dateStr) => {
-  if (!dateStr) return 'Mesh';
-  const date = new Date(dateStr);
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-
-  if ((m === 3 && d >= 21) || (m === 4 && d <= 19)) return 'Mesh';
-  if ((m === 4 && d >= 20) || (m === 5 && d <= 20)) return 'Vrishabh';
-  if ((m === 5 && d >= 21) || (m === 6 && d <= 20)) return 'Mithun';
-  if ((m === 6 && d >= 21) || (m === 7 && d <= 22)) return 'Kark';
-  if ((m === 7 && d >= 23) || (m === 8 && d <= 22)) return 'Simha';
-  if ((m === 8 && d >= 23) || (m === 9 && d <= 22)) return 'Kanya';
-  if ((m === 9 && d >= 23) || (m === 10 && d <= 22)) return 'Tula';
-  if ((m === 10 && d >= 23) || (m === 11 && d <= 21)) return 'Vrishchik';
-  if ((m === 11 && d >= 22) || (m === 12 && d <= 21)) return 'Dhanu';
-  if ((m === 12 && d >= 22) || (m === 1 && d <= 19)) return 'Makar';
-  if ((m === 1 && d >= 20) || (m === 2 && d <= 18)) return 'Kumbh';
-  if ((m === 2 && d >= 19) || (m === 3 && d <= 20)) return 'Meen';
-  return 'Mesh';
+// Maps English planet sign names (from vedic_engine.py) to Sanskrit Rashifal names
+const VEDIC_RASHI_MAP = {
+  'Aries': 'Mesh', 'Taurus': 'Vrishabh', 'Gemini': 'Mithun',
+  'Cancer': 'Kark', 'Leo': 'Simha', 'Virgo': 'Kanya',
+  'Libra': 'Tula', 'Scorpio': 'Vrishchik', 'Sagittarius': 'Dhanu',
+  'Capricorn': 'Makar', 'Aquarius': 'Kumbh', 'Pisces': 'Meen',
 };
 
 // ── Helper: format today's date as "THURSDAY 7 MAY" ──
@@ -58,59 +45,12 @@ const formatDate = () => {
   return `${weekday} ${day} ${month}`;
 };
 
-// ── Feature list items (list-style, not grid) ──
-const FEATURES = [
-  {
-    id: 'baby',
-    icon: '👶',
-    title: 'Baby Naming',
-    badge: 'Vedic + Modern',
-    badgeColor: '#0B7060',
-    badgeBg: '#D0F0EA',
-    desc: 'Discover auspicious names by Nakshatra & Rashi',
-    route: 'BabyNaming',
-    iconBg: '#D0F0EA',
-    iconColor: '#0B7060',
-  },
-  {
-    id: 'kundali',
-    icon: '💕',
-    title: 'Kundali Matching',
-    badge: '36 Gunas',
-    badgeColor: '#7B1A38',
-    badgeBg: '#F2D8E0',
-    desc: 'Ashtakoot compatibility & gun milan analysis',
-    route: 'CompatibilityTab',
-    iconBg: '#F2D8E0',
-    iconColor: '#7B1A38',
-  },
-  // { id: 'insights', icon: '📊', title: 'My Kundali', route: 'Insights' }, // hidden
-];
-
-const DRAWER_SECTIONS = [
-  {
-    title: 'FEATURES',
-    items: [
-      { icon: 'heart-outline', label: 'Kundali Matching', route: 'CompatibilityTab', color: '#7B1A38', iconBg: '#F2D8E0' },
-      // { icon: 'bar-chart-outline', label: 'My Kundali', route: 'Insights', color: '#6C3FA0', iconBg: '#EDE3F7' }, // hidden
-      { icon: 'happy-outline', label: 'Baby Naming', route: 'BabyNaming', color: '#0B7060', iconBg: '#D0F0EA' },
-      // { icon: 'compass-outline', label: 'Daily Rashifal', route: 'Rashifal', color: '#C8660A', iconBg: '#FFF7ED' }, // hidden
-      { icon: 'chatbubble-ellipses-outline', label: 'Ask Maharishi AI', route: 'Chat', color: '#7B1A38', iconBg: '#F2D8E0' },
-    ],
-  },
-  {
-    title: 'ACCOUNT',
-    items: [
-      { icon: 'star-outline', label: 'Unlock Premium', route: 'Pricing', color: '#B8860B', iconBg: '#FFF3C4', badge: 'PRO' },
-      { icon: 'card-outline', label: 'My Subscription', route: 'Subscription', color: '#2C6FAC', iconBg: '#D6E8F7' },
-      { icon: 'person-outline', label: 'Profile & Settings', route: 'ProfileTab', color: '#2C1E12', iconBg: '#F0E8DE' },
-    ],
-  },
-];
 
 const HomeScreen = ({ navigation }) => {
   const { user, hasProfile, isAuthenticated, refreshProfileStatus } = useAuth();
+  const { language, toggleLanguage, t } = useLanguage();
   const [predictions, setPredictions] = useState({});
+  const [predictionsHi, setPredictionsHi] = useState({});
   const [loadingPredictions, setLoadingPredictions] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSignName, setSelectedSignName] = useState('Mesh');
@@ -128,14 +68,21 @@ const HomeScreen = ({ navigation }) => {
       .start(() => setDrawerOpen(false));
   };
 
+  // Routes that live in the RootStack (above the tab bar) — everything else is a tab switch
+  const STACK_ROUTES = new Set(['Compatibility', 'BabyNaming', 'Kundali', 'Pricing', 'Subscription', 'PaymentSuccess']);
+
+  const goTo = (route) => {
+    const parent = navigation.getParent();
+    if (parent && STACK_ROUTES.has(route)) {
+      parent.navigate(route);
+    } else {
+      navigation.navigate(route);
+    }
+  };
+
   const navigateTo = (route) => {
     closeDrawer();
-    const parent = navigation.getParent();
-    if (parent && (route === 'Subscription' || route === 'Pricing' || route === 'Compatibility')) {
-      setTimeout(() => parent.navigate(route), 240);
-    } else {
-      setTimeout(() => navigation.navigate(route), 240);
-    }
+    setTimeout(() => goTo(route), 240);
   };
 
   useFocusEffect(
@@ -153,10 +100,13 @@ const HomeScreen = ({ navigation }) => {
       const res = await api.get('/api/rashifal');
       if (res.data?.success) {
         const predMap = {};
+        const predMapHi = {};
         res.data.data.forEach((p) => {
           predMap[p.sign] = p.prediction;
+          if (p.predictionHi) predMapHi[p.sign] = p.predictionHi;
         });
         setPredictions(predMap);
+        setPredictionsHi(predMapHi);
       }
     } catch (err) {
       console.log('Rashifal not available:', err?.message);
@@ -168,10 +118,23 @@ const HomeScreen = ({ navigation }) => {
   const fetchDefaultProfile = async () => {
     try {
       const res = await api.get('/api/profiles/default');
-      if (res.data) {
-        setDefaultProfile(res.data);
-        const rashi = determineRashi(res.data.dateOfBirth);
-        setSelectedSignName(rashi);
+      if (!res.data) return;
+      setDefaultProfile(res.data);
+
+      // Calculate true Vedic Janma Rashi (Moon sign, sidereal Lahiri Ayanamsa)
+      try {
+        const chartRes = await api.post('/api/chart/calculate', {
+          dateOfBirth: res.data.dateOfBirth,
+          timeOfBirth: res.data.timeOfBirth || '12:00',
+          placeOfBirth: res.data.placeOfBirth,
+          timezoneOffset: 5.5,
+        });
+        if (chartRes.data?.success) {
+          const rashiEN = chartRes.data.moon.sign_vedic;
+          setSelectedSignName(VEDIC_RASHI_MAP[rashiEN] || 'Mesh');
+        }
+      } catch {
+        // Fallback: keep default Mesh if chart calculation fails
       }
     } catch (err) {
       console.log('Failed to fetch default profile:', err?.message);
@@ -191,14 +154,22 @@ const HomeScreen = ({ navigation }) => {
       navigation.navigate('ProfileTab');
       return;
     }
-    navigation.navigate(route);
+    goTo(route);
   };
 
   const firstName = defaultProfile?.name || user?.firstName || 'Arjun';
   const selectedSign = SIGNS.find((s) => s.rashi === selectedSignName) || SIGNS[0];
-  const insightText =
-    predictions[selectedSignName] ||
-    'The alignment of the planets favors a balanced approach for your sign today. Trust your intuition.';
+  const isHindi = language === 'hi';
+
+  // Pick Hindi or English prediction text
+  const insightText = isHindi
+    ? (predictionsHi[selectedSignName] || predictions[selectedSignName] || 'ग्रहों की स्थिति आज आपके लिए संतुलित दृष्टिकोण का समर्थन करती है। अपनी अंतरात्मा पर भरोसा रखें।')
+    : (predictions[selectedSignName] || 'The alignment of the planets favors a balanced approach for your sign today. Trust your intuition.');
+
+  // Hindi display helpers
+  const rashiDisplayName = isHindi ? selectedSign.rashiDev : selectedSign.rashi;
+  const lordDisplay = isHindi ? (LORD_HI[selectedSign.lord] || selectedSign.lord) : selectedSign.lord;
+  const elDisplay = isHindi ? (EL_HI[selectedSign.el] || selectedSign.el) : selectedSign.el;
 
   return (
     <View style={styles.root}>
@@ -209,13 +180,13 @@ const HomeScreen = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#C8660A"
+            tintColor="#C9A45A"
           />
         }
       >
         {/* ── HERO ── */}
         <LinearGradient
-          colors={['#6E1532', '#7B1A38', '#8B2040']}
+          colors={['#6E1532', '#6A1039', '#8B2040']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.hero}
@@ -223,18 +194,25 @@ const HomeScreen = ({ navigation }) => {
           {/* Banner background overlay */}
           <Image source={BANNER} style={styles.heroBannerOverlay} />
 
-          {/* ── Top row: date pill + bell ── */}
+          {/* ── Top row: date pill + lang toggle + hamburger ── */}
           <View style={styles.heroTopRow}>
             <View style={styles.datePill}>
               <Text style={styles.datePillText}>• {formatDate()}</Text>
             </View>
-            <TouchableOpacity style={styles.bellBtn} onPress={openDrawer} activeOpacity={0.7}>
-              <Ionicons name="menu" size={26} color="rgba(255,255,255,0.88)" />
-            </TouchableOpacity>
+            <View style={styles.heroTopRight}>
+              <TouchableOpacity style={styles.langToggle} onPress={toggleLanguage} activeOpacity={0.75}>
+                <Text style={[styles.langOpt, language === 'en' && styles.langOptActive]}>A</Text>
+                <Text style={styles.langSep}>|</Text>
+                <Text style={[styles.langOpt, language === 'hi' && styles.langOptActive]}>अ</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.bellBtn} onPress={openDrawer} activeOpacity={0.7}>
+                <Ionicons name="menu" size={26} color="rgba(255,255,255,0.88)" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* ── Greeting ── */}
-          <Text style={styles.heroNamaste}>Namaste,</Text>
+          <Text style={styles.heroNamaste}>{t('namaste')}</Text>
           <View style={styles.greetingRow}>
             <Text style={styles.heroGreeting}>{firstName} {'🙏'}</Text>
             {user?.isSubscriber && (
@@ -243,7 +221,7 @@ const HomeScreen = ({ navigation }) => {
               </LinearGradient>
             )}
           </View>
-          <Text style={styles.heroTagline}>✦ Ancient wisdom for modern life</Text>
+          <Text style={styles.heroTagline}>{t('tagline')}</Text>
 
           {/* Profile setup warning */}
           {isAuthenticated && !hasProfile && (
@@ -254,10 +232,8 @@ const HomeScreen = ({ navigation }) => {
             >
               <Text style={styles.warningIcon}>{'⚠️'}</Text>
               <View style={styles.warningBody}>
-                <Text style={styles.warningTitle}>Profile setup required</Text>
-                <Text style={styles.warningDesc}>
-                  Create your birth profile to unlock all features
-                </Text>
+                <Text style={styles.warningTitle}>{t('profileWarningTitle')}</Text>
+                <Text style={styles.warningDesc}>{t('profileWarningDesc')}</Text>
               </View>
               <Text style={styles.warningArrow}>{'→'}</Text>
             </TouchableOpacity>
@@ -277,8 +253,8 @@ const HomeScreen = ({ navigation }) => {
                 />
               </View>
               <View style={styles.heroAiTextContent}>
-                <Text style={styles.heroAiBtnLabel}>DIVINE GUIDANCE</Text>
-                <Text style={styles.heroAiBtnTitle}>Ask Maharishi AI</Text>
+                <Text style={styles.heroAiBtnLabel}>{t('divineGuidance')}</Text>
+                <Text style={styles.heroAiBtnTitle}>{t('askMaharishi')}</Text>
               </View>
               <View style={styles.heroAiArrowBtn}>
                 <Text style={styles.heroAiArrow}>→</Text>
@@ -303,22 +279,22 @@ const HomeScreen = ({ navigation }) => {
               {/* Name + tags */}
               <View style={styles.rashiInfo}>
                 <View style={styles.rashiNameRow}>
-                  <Text style={styles.rashiName}>{selectedSign.rashi}</Text>
+                  <Text style={styles.rashiName}>{rashiDisplayName}</Text>
                   <Text style={styles.rashiDot}> · </Text>
                   <Text style={styles.rashiZodiac}>{selectedSign.zodiac}</Text>
                 </View>
                 <View style={styles.rashiTagRow}>
                   <View style={[styles.rashiTag, styles.rashiTagMars]}>
                     <Text style={[styles.rashiTagText, { color: '#C0392B' }]}>
-                      Lord: {selectedSign.lord}
+                      {t('lordLabel')} {lordDisplay}
                     </Text>
                   </View>
                   <View style={[styles.rashiTag, styles.rashiTagFire]}>
-                    <Text style={[styles.rashiTagText, { color: '#C8660A' }]}>
-                      {selectedSign.el} {selectedSign.icon}
+                    <Text style={[styles.rashiTagText, { color: '#C9A45A' }]}>
+                      {elDisplay} {selectedSign.icon}
                     </Text>
                   </View>
-                  <Text style={styles.rashiDev}>{selectedSign.rashiDev}</Text>
+                  {!isHindi && <Text style={styles.rashiDev}>{selectedSign.rashiDev}</Text>}
                 </View>
               </View>
             </View>
@@ -328,7 +304,7 @@ const HomeScreen = ({ navigation }) => {
 
             {/* Today's insight */}
             <View style={styles.insightBox}>
-              <Text style={styles.insightLabel}>• TODAY'S INSIGHT</Text>
+              <Text style={styles.insightLabel}>• {t('todaysInsight')}</Text>
               <Text style={styles.insightText}>{insightText}</Text>
             </View>
           </View>
@@ -338,7 +314,7 @@ const HomeScreen = ({ navigation }) => {
         {/* ── DAILY RASHIFAL ── */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionLabel}>— DAILY RASHIFAL</Text>
+            <Text style={styles.sectionLabel}>{t('dailyRashifal')}</Text>
           </View>
           <ScrollView
             horizontal
@@ -362,7 +338,7 @@ const HomeScreen = ({ navigation }) => {
                     selectedSignName === sg.rashi && styles.rashiChipNameActive,
                   ]}
                 >
-                  {sg.rashi}
+                  {isHindi ? sg.rashiDev : sg.rashi}
                 </Text>
                 <Text style={styles.rashiChipZodiac}>{sg.zodiac}</Text>
               </TouchableOpacity>
@@ -374,41 +350,52 @@ const HomeScreen = ({ navigation }) => {
 
         {/* ── EXPLORE FEATURES ── */}
         <View style={styles.section}>
-          <Text style={[styles.sectionLabel, { marginBottom: 12 }]}>EXPLORE FEATURES</Text>
+          <Text style={[styles.sectionLabel, { marginBottom: 12 }]}>{t('exploreFeatures')}</Text>
           <View style={styles.featureList}>
-            {FEATURES.map((f) => (
+            {[
+              {
+                id: 'baby',
+                icon: '👶',
+                titleKey: 'babyNaming',
+                badgeKey: 'babyNamingBadge',
+                badgeColor: '#0B7060',
+                badgeBg: '#D0F0EA',
+                descKey: 'babyNamingDesc',
+                route: 'BabyNaming',
+                iconBg: '#D0F0EA',
+              },
+              {
+                id: 'kundali',
+                icon: '💕',
+                titleKey: 'kundaliMatching',
+                badgeKey: 'kundali36Gunas',
+                badgeColor: '#6A1039',
+                badgeBg: '#F2D8E0',
+                descKey: 'kundaliDesc',
+                route: 'CompatibilityTab',
+                iconBg: '#F2D8E0',
+              },
+            ].map((f) => (
               <TouchableOpacity
                 key={f.id}
                 style={styles.featureRow}
                 onPress={() => handleFeaturePress(f.route)}
                 activeOpacity={0.78}
               >
-                {/* Icon */}
                 <View style={[styles.featureIcon, { backgroundColor: f.iconBg }]}>
                   <Text style={styles.featureIconText}>{f.icon}</Text>
                 </View>
-
-                {/* Text block */}
                 <View style={styles.featureTextBlock}>
                   <View style={styles.featureTitleRow}>
-                    <Text style={styles.featureTitle}>{f.title}</Text>
-                    <View
-                      style={[
-                        styles.featureBadge,
-                        { backgroundColor: f.badgeBg },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.featureBadgeText, { color: f.badgeColor }]}
-                      >
-                        {f.badge}
+                    <Text style={styles.featureTitle}>{t(f.titleKey)}</Text>
+                    <View style={[styles.featureBadge, { backgroundColor: f.badgeBg }]}>
+                      <Text style={[styles.featureBadgeText, { color: f.badgeColor }]}>
+                        {t(f.badgeKey)}
                       </Text>
                     </View>
                   </View>
-                  <Text style={styles.featureDesc}>{f.desc}</Text>
+                  <Text style={styles.featureDesc}>{t(f.descKey)}</Text>
                 </View>
-
-                {/* Arrow */}
                 <Text style={styles.featureArrow}>{'›'}</Text>
               </TouchableOpacity>
             ))}
@@ -423,17 +410,15 @@ const HomeScreen = ({ navigation }) => {
             style={styles.premiumBtn}
           >
             <LinearGradient
-              colors={['#7B1A38', '#4A0E22']}
+              colors={['#6A1039', '#4A0E22']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.premiumGrad}
             >
               <Text style={styles.premiumIcon}>{'👑'}</Text>
               <View style={styles.premiumText}>
-                <Text style={styles.premiumTitle}>Unlock Premium</Text>
-                <Text style={styles.premiumDesc}>
-                  Unlimited chats, detailed charts & more
-                </Text>
+                <Text style={styles.premiumTitle}>{t('unlockPremium')}</Text>
+                <Text style={styles.premiumDesc}>{t('premiumDesc')}</Text>
               </View>
               <Text style={styles.premiumArrow}>{'→'}</Text>
             </LinearGradient>
@@ -453,7 +438,7 @@ const HomeScreen = ({ navigation }) => {
 
           <Animated.View style={[styles.drawerPanel, { transform: [{ translateX: drawerAnim }] }]}>
             {/* Header */}
-            <LinearGradient colors={['#6E1532', '#7B1A38']} style={styles.drawerHeader}>
+            <LinearGradient colors={['#6E1532', '#6A1039']} style={styles.drawerHeader}>
               <View style={styles.drawerUserRow}>
                 <View style={styles.drawerAvatar}>
                   <Image source={LOGO} style={styles.drawerAvatarLogo} />
@@ -470,9 +455,27 @@ const HomeScreen = ({ navigation }) => {
 
             {/* Menu */}
             <ScrollView style={styles.drawerBody} showsVerticalScrollIndicator={false}>
-              {DRAWER_SECTIONS.map((section) => (
-                <View key={section.title} style={styles.drawerSection}>
-                  <Text style={styles.drawerSectionTitle}>{section.title}</Text>
+              {[
+                {
+                  titleKey: 'drawerFeatures',
+                  items: [
+                    { icon: 'heart-outline', labelKey: 'drawerKundaliMatching', route: 'CompatibilityTab', color: '#6A1039', iconBg: '#F2D8E0' },
+                    { icon: 'star-four-points-outline', labelKey: 'drawerKundaliGenerate', route: 'KundaliTab', color: '#6A1039', iconBg: '#EDE0F7' },
+                    { icon: 'happy-outline', labelKey: 'drawerBabyNaming', route: 'BabyNaming', color: '#0B7060', iconBg: '#D0F0EA' },
+                    { icon: 'chatbubble-ellipses-outline', labelKey: 'drawerAskMaharishi', route: 'Chat', color: '#6A1039', iconBg: '#F2D8E0' },
+                  ],
+                },
+                {
+                  titleKey: 'drawerAccount',
+                  items: [
+                    { icon: 'star-outline', labelKey: 'drawerUnlockPremium', route: 'Pricing', color: '#B8860B', iconBg: '#FFF3C4', badge: 'PRO' },
+                    { icon: 'card-outline', labelKey: 'drawerMySubscription', route: 'Subscription', color: '#2C6FAC', iconBg: '#D6E8F7' },
+                    { icon: 'person-outline', labelKey: 'drawerProfileSettings', route: 'ProfileTab', color: '#6A1039', iconBg: '#F0E8DE' },
+                  ],
+                },
+              ].map((section) => (
+                <View key={section.titleKey} style={styles.drawerSection}>
+                  <Text style={styles.drawerSectionTitle}>{t(section.titleKey)}</Text>
                   {section.items.map((item) => (
                     <TouchableOpacity
                       key={item.route}
@@ -483,7 +486,7 @@ const HomeScreen = ({ navigation }) => {
                       <View style={[styles.drawerItemIcon, { backgroundColor: item.iconBg }]}>
                         <Ionicons name={item.icon} size={19} color={item.color} />
                       </View>
-                      <Text style={styles.drawerItemLabel}>{item.label}</Text>
+                      <Text style={styles.drawerItemLabel}>{t(item.labelKey)}</Text>
                       {item.badge && (
                         <View style={styles.drawerBadge}>
                           <Text style={styles.drawerBadgeText}>{item.badge}</Text>
@@ -509,7 +512,7 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F9F3EB',
+    backgroundColor: '#FFFDF8',
   },
   scrollContent: {
     paddingBottom: 0,
@@ -548,6 +551,35 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.4,
   },
+  heroTopRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  langToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.22)',
+    gap: 3,
+  },
+  langOpt: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.45)',
+    fontWeight: '600',
+  },
+  langOptActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
+  langSep: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 12,
+  },
   bellBtn: {
     width: 38,
     height: 38,
@@ -557,7 +589,7 @@ const styles = StyleSheet.create({
 
   // Greeting
   heroNamaste: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '300',
     color: 'rgba(255,255,255,0.92)',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
@@ -565,7 +597,7 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   heroGreeting: {
-    fontSize: 34,
+    fontSize: 26,
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -0.5,
@@ -625,7 +657,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     overflow: 'hidden',
-    shadowColor: '#2C1E12',
+    shadowColor: '#6A1039',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -634,9 +666,9 @@ const styles = StyleSheet.create({
   rashiCardGoldBar: {
     height: 3,
     backgroundColor: 'transparent',
-    backgroundImage: 'linear-gradient(90deg, transparent, #D4BA80, #C8660A, #D4BA80, transparent)',
+    backgroundImage: 'linear-gradient(90deg, transparent, #C9A45A, #C9A45A, #C9A45A, transparent)',
     // For React Native, use a View with gold color:
-    backgroundColor: '#D4BA80',
+    backgroundColor: '#C9A45A',
   },
   rashiIdentityRow: {
     flexDirection: 'row',
@@ -670,16 +702,16 @@ const styles = StyleSheet.create({
   rashiName: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#2C1E12',
+    color: '#6A1039',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   rashiDot: {
     fontSize: 16,
-    color: '#9A8878',
+    color: '#A08856',
   },
   rashiZodiac: {
     fontSize: 14,
-    color: '#9A8878',
+    color: '#A08856',
     fontWeight: '400',
   },
   rashiTagRow: {
@@ -706,7 +738,7 @@ const styles = StyleSheet.create({
   rashiDev: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#C8660A',
+    color: '#C9A45A',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   rashiDivider: {
@@ -720,19 +752,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderLeftWidth: 3,
-    borderLeftColor: '#C8660A',
+    borderLeftColor: '#C9A45A',
   },
   insightLabel: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#C8660A',
+    color: '#C9A45A',
     letterSpacing: 1.2,
     marginBottom: 6,
     textTransform: 'uppercase',
   },
   insightText: {
     fontSize: 14,
-    color: '#2C1E12',
+    color: '#6A1039',
     lineHeight: 21,
     fontWeight: '400',
   },
@@ -758,7 +790,7 @@ const styles = StyleSheet.create({
   sectionViewAll: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#C8660A',
+    color: '#C9A45A',
   },
 
   // ── DAILY RASHIFAL HORIZONTAL SCROLL ──
@@ -784,7 +816,7 @@ const styles = StyleSheet.create({
   },
   rashiChipActive: {
     backgroundColor: '#FFF7ED',
-    borderColor: '#C8660A',
+    borderColor: '#C9A45A',
     borderWidth: 2,
   },
   rashiChipSym: {
@@ -794,20 +826,20 @@ const styles = StyleSheet.create({
   rashiChipName: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#2C1E12',
+    color: '#6A1039',
     marginBottom: 1,
   },
   rashiChipNameActive: {
-    color: '#C8660A',
+    color: '#C9A45A',
   },
   rashiChipZodiac: {
     fontSize: 10,
-    color: '#9A8878',
+    color: '#A08856',
     fontWeight: '400',
   },
   rashiGoldLine: {
     height: 2.5,
-    backgroundColor: '#D4BA80',
+    backgroundColor: '#C9A45A',
     borderRadius: 2,
     marginTop: 14,
     opacity: 0.5,
@@ -826,7 +858,7 @@ const styles = StyleSheet.create({
     gap: 16,
     borderWidth: 1,
     borderColor: '#E8DFD2',
-    shadowColor: '#2C1E12',
+    shadowColor: '#6A1039',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -856,7 +888,7 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#2C1E12',
+    color: '#6A1039',
   },
   featureBadge: {
     paddingHorizontal: 8,
@@ -870,7 +902,7 @@ const styles = StyleSheet.create({
   },
   featureDesc: {
     fontSize: 12,
-    color: '#9A8878',
+    color: '#A08856',
     lineHeight: 17,
   },
   featureArrow: {
@@ -908,7 +940,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   premiumArrow: {
-    color: '#D4BA80',
+    color: '#C9A45A',
     fontSize: 22,
     fontWeight: '600',
   },
@@ -954,14 +986,14 @@ const styles = StyleSheet.create({
   heroAiBtnTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#7B1A38',
+    color: '#6A1039',
     letterSpacing: 0.5,
   },
   heroAiArrowBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#7B1A38',
+    backgroundColor: '#6A1039',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
@@ -1048,7 +1080,7 @@ const styles = StyleSheet.create({
   drawerSectionTitle: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#9A8878',
+    color: '#A08856',
     letterSpacing: 1.5,
     marginBottom: 4,
     paddingLeft: 4,
@@ -1072,10 +1104,10 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    color: '#2C1E12',
+    color: '#6A1039',
   },
   drawerBadge: {
-    backgroundColor: '#7B1A38',
+    backgroundColor: '#6A1039',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,

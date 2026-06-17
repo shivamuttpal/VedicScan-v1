@@ -16,6 +16,24 @@ export const SIGNS = [
   { rashi: 'Meen', rashiDev: 'मीन', zodiac: 'Pisces', sym: '♓', icon: '🌊', lord: 'Jupiter', el: 'Water', date: 'Feb 19 – Mar 20' },
 ];
 
+// Hindi translations for planetary lords and elements
+export const LORD_HI = {
+  Mars: 'मंगल',
+  Venus: 'शुक्र',
+  Mercury: 'बुध',
+  Moon: 'चंद्र',
+  Sun: 'सूर्य',
+  Jupiter: 'बृहस्पति',
+  Saturn: 'शनि',
+};
+
+export const EL_HI = {
+  Fire: 'अग्नि',
+  Earth: 'पृथ्वी',
+  Air: 'वायु',
+  Water: 'जल',
+};
+
 export const sampleQuestions = [
   'When will I get married?',
   'Will I study abroad?',

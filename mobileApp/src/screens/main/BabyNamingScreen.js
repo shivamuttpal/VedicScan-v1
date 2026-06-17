@@ -26,7 +26,7 @@ const BabyNamingScreen = ({ navigation }) => {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [dateObj, setDateObj] = useState(new Date());
+  const [dateObj, setDateObj] = useState(new Date(1990, 0, 1));
   const [fetchingLocation, setFetchingLocation] = useState(false);
 
   // Modal State
@@ -137,7 +137,7 @@ const BabyNamingScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#5E1026', '#7A1731']} style={styles.header}>
+      <LinearGradient colors={['#6A1039', '#6A1039']} style={styles.header}>
         <Image source={BANNER} style={styles.headerBannerOverlay} />
         <View style={styles.headerTopRow}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -160,7 +160,7 @@ const BabyNamingScreen = ({ navigation }) => {
             style={[styles.textInput, { justifyContent: 'center' }]}
             onPress={() => setShowDatePicker(true)}
           >
-            <Text style={{ color: dateOfBirth ? '#2C1E12' : '#A88257', fontSize: 15 }}>
+            <Text style={{ color: dateOfBirth ? '#6A1039' : '#A88257', fontSize: 15 }}>
               {dateOfBirth || "DD-MM-YYYY"}
             </Text>
           </TouchableOpacity>
@@ -168,7 +168,9 @@ const BabyNamingScreen = ({ navigation }) => {
             <DateTimePicker
               value={dateObj}
               mode="date"
-              display="default"
+              display="spinner"
+              minimumDate={new Date(1900, 0, 1)}
+              maximumDate={new Date()}
               onChange={onDateChange}
             />
           )}
@@ -178,16 +180,23 @@ const BabyNamingScreen = ({ navigation }) => {
             style={[styles.textInput, { justifyContent: 'center' }]}
             onPress={() => setShowTimePicker(true)}
           >
-            <Text style={{ color: timeOfBirth ? '#2C1E12' : '#A88257', fontSize: 15 }}>
+            <Text style={{ color: timeOfBirth ? '#6A1039' : '#A88257', fontSize: 15 }}>
               {timeOfBirth || "HH:MM (24-hour)"}
             </Text>
           </TouchableOpacity>
           {showTimePicker && (
             <DateTimePicker
-              value={dateObj}
+              value={(() => {
+                const t = new Date();
+                if (timeOfBirth) {
+                  const [h, min] = timeOfBirth.split(':').map(Number);
+                  t.setHours(h, min, 0, 0);
+                }
+                return t;
+              })()}
               mode="time"
               is24Hour={true}
-              display="default"
+              display="spinner"
               onChange={onTimeChange}
             />
           )}
@@ -231,7 +240,7 @@ const BabyNamingScreen = ({ navigation }) => {
 
         {loading && (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator size="large" color="#5A182D" />
+            <ActivityIndicator size="large" color="#6A1039" />
             <Text style={styles.loadingText}>Consulting the stars for perfect names...</Text>
           </View>
         )}
@@ -243,18 +252,18 @@ const BabyNamingScreen = ({ navigation }) => {
             <View style={[styles.nameCard, { flexDirection: 'column', alignItems: 'stretch' }]}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <View>
-                  <Text style={{ fontSize: 13, color: '#6B5040', marginBottom: 4 }}>Moon Nakshatra</Text>
-                  <Text style={{ fontSize: 24, fontWeight: '700', color: '#2C1E12', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' }}>{result.nakshatra}</Text>
+                  <Text style={{ fontSize: 13, color: '#A08856', marginBottom: 4 }}>Moon Nakshatra</Text>
+                  <Text style={{ fontSize: 24, fontWeight: '700', color: '#6A1039', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' }}>{result.nakshatra}</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 13, color: '#6B5040', marginBottom: 4 }}>Pada</Text>
+                  <Text style={{ fontSize: 13, color: '#A08856', marginBottom: 4 }}>Pada</Text>
                   <View style={[styles.nakshatraPill, { paddingHorizontal: 12, paddingVertical: 6 }]}>
                     <Text style={[styles.nakshatraPillText, { fontSize: 16 }]}>{result.pada}</Text>
                   </View>
                 </View>
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
-                <Text style={{ fontSize: 13, color: '#6B5040', marginRight: 8 }}>Vedic Syllables:</Text>
+                <Text style={{ fontSize: 13, color: '#A08856', marginRight: 8 }}>Vedic Syllables:</Text>
                 {result.allowed_syllables?.map((syl, i) => (
                   <View key={i} style={[styles.nakshatraPill, { marginRight: 4 }]}>
                     <Text style={styles.nakshatraPillText}>{syl}</Text>
@@ -265,7 +274,7 @@ const BabyNamingScreen = ({ navigation }) => {
                 style={[styles.genBtn, { backgroundColor: '#E0D1D5', shadowOpacity: 0 }]}
                 onPress={() => setNamesModalVisible(true)}
               >
-                <Text style={[styles.genBtnText, { color: '#5A182D' }]}>View Generated Names</Text>
+                <Text style={[styles.genBtnText, { color: '#6A1039' }]}>View Generated Names</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -284,12 +293,12 @@ const BabyNamingScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <View>
                 <Text style={styles.modalTitle}>Auspicious Names</Text>
-                <Text style={{ fontSize: 13, color: '#6B5040', marginTop: 4 }}>
+                <Text style={{ fontSize: 13, color: '#A08856', marginTop: 4 }}>
                   {result?.nakshatra} • Syllables: {result?.allowed_syllables?.join(', ')}
                 </Text>
               </View>
               <TouchableOpacity onPress={() => setNamesModalVisible(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={24} color="#2C1E12" />
+                <Ionicons name="close" size={24} color="#6A1039" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
@@ -404,7 +413,7 @@ const BabyNamingScreen = ({ navigation }) => {
                 About "{selectedName?.name}"
               </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtn}>
-                <Ionicons name="close" size={24} color="#2C1E12" />
+                <Ionicons name="close" size={24} color="#6A1039" />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody}>
@@ -430,7 +439,7 @@ const BabyNamingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F3EB'
+    backgroundColor: '#FFFDF8'
   },
   header: {
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
@@ -471,7 +480,7 @@ const styles = StyleSheet.create({
   headerTag: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#D4BA80',
+    color: '#C9A45A',
     letterSpacing: 1.5,
     marginBottom: 4,
   },
@@ -496,19 +505,19 @@ const styles = StyleSheet.create({
   selectLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#2C1E12',
+    color: '#6A1039',
     marginBottom: 12
   },
   textInput: {
-    backgroundColor: '#F3E9DD',
+    backgroundColor: '#F7F1E5',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: '#2C1E12',
+    color: '#6A1039',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E8DFD2',
+    borderColor: '#F7F1E5',
     height: 48,
   },
   inputRow: {
@@ -517,12 +526,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   locationBtn: {
-    backgroundColor: '#F3E9DD',
+    backgroundColor: '#F7F1E5',
     padding: 12,
     borderRadius: 14,
     marginLeft: 12,
     borderWidth: 1,
-    borderColor: '#E8DFD2',
+    borderColor: '#F7F1E5',
     height: 48,
     width: 48,
     justifyContent: 'center',
@@ -530,16 +539,16 @@ const styles = StyleSheet.create({
   },
   chip: {
     paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20,
-    borderWidth: 1, borderColor: '#E8DFD2', backgroundColor: '#FFFFFF', marginRight: 8,
+    borderWidth: 1, borderColor: '#F7F1E5', backgroundColor: '#FFFFFF', marginRight: 8,
   },
   chipActive: {
-    backgroundColor: '#E0D1D5', borderColor: '#5A182D'
+    backgroundColor: '#E0D1D5', borderColor: '#6A1039'
   },
   chipText: {
-    fontSize: 14, fontWeight: '600', color: '#2C1E12'
+    fontSize: 14, fontWeight: '600', color: '#6A1039'
   },
   chipTextActive: {
-    color: '#5A182D'
+    color: '#6A1039'
   },
   genderRow: {
     flexDirection: 'row',
@@ -550,29 +559,29 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E8DFD2',
+    borderColor: '#F7F1E5',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     marginRight: 8,
   },
   genderChipActive: {
     backgroundColor: '#E0D1D5',
-    borderColor: '#5A182D',
+    borderColor: '#6A1039',
   },
   genderChipText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2C1E12',
+    color: '#6A1039',
   },
   genderChipTextActive: {
-    color: '#5A182D',
+    color: '#6A1039',
   },
   genBtn: {
-    backgroundColor: '#5A182D',
+    backgroundColor: '#6A1039',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#5A182D',
+    shadowColor: '#6A1039',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -585,7 +594,7 @@ const styles = StyleSheet.create({
     marginTop: 20, alignItems: 'center'
   },
   loadingText: {
-    marginTop: 12, color: '#6B5040', fontStyle: 'italic'
+    marginTop: 12, color: '#A08856', fontStyle: 'italic'
   },
   resultsSection: {
     marginTop: 8,
@@ -593,7 +602,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#6B5040',
+    color: '#A08856',
     letterSpacing: 1.4,
     textTransform: 'uppercase',
     marginBottom: 16,
@@ -605,7 +614,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#2C1E12',
+    shadowColor: '#6A1039',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,
@@ -623,7 +632,7 @@ const styles = StyleSheet.create({
   nameIconText: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#5A182D',
+    color: '#6A1039',
   },
   nameContent: {
     flex: 1,
@@ -636,7 +645,7 @@ const styles = StyleSheet.create({
   nameTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#2C1E12',
+    color: '#6A1039',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
     marginRight: 8,
   },
@@ -649,14 +658,14 @@ const styles = StyleSheet.create({
   nakshatraPillText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#5A182D',
+    color: '#6A1039',
   },
   nameMeaning: {
     fontSize: 13,
-    color: '#6B5040',
+    color: '#A08856',
   },
   rawText: {
-    fontSize: 14, color: '#2C1E12', lineHeight: 22
+    fontSize: 14, color: '#6A1039', lineHeight: 22
   },
   modalOverlay: {
     flex: 1,
@@ -664,7 +673,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FAF7F2',
+    backgroundColor: '#FFFDF8',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     height: '70%',
@@ -681,7 +690,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E8DFD2',
+    borderBottomColor: '#F7F1E5',
     paddingBottom: 16,
   },
   modalTitle: {
@@ -704,7 +713,7 @@ const styles = StyleSheet.create({
   },
   explanationText: {
     fontSize: 16,
-    color: '#6B5040',
+    color: '#A08856',
     lineHeight: 26,
   },
 });

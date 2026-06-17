@@ -15,6 +15,17 @@ import api from '../../config/api';
 const LOGO = require('../../../assets/logo.jpeg');
 const BANNER = require('../../../assets/bannerbackground5.webp');
 
+const parseDateLocal = (str) => {
+  const [y, m, d] = str.split('-').map(Number);
+  return new Date(y, m - 1, d);
+};
+const formatLocalDate = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 const getScoreColor = (score, maxScore) => {
   const percentage = (score / maxScore) * 100;
   if (percentage >= 75) return C.green;
@@ -34,7 +45,7 @@ const getSeverityColor = (severity) => {
 const getVerdictTheme = (verdict) => {
   const v = (verdict || '').toLowerCase();
   if (v.includes('excellent') || v.includes('very good')) return { color: '#2E7D32', bg: '#E8F5E9', icon: 'star-circle' };
-  if (v.includes('good') || v.includes('average')) return { color: '#A36A1C', bg: '#FFF8E1', icon: 'star-half-full' };
+  if (v.includes('good') || v.includes('average')) return { color: '#C9A45A', bg: '#FFF8E1', icon: 'star-half-full' };
   return { color: '#C62828', bg: '#FFEBEE', icon: 'alert-circle' };
 };
 
@@ -147,17 +158,17 @@ const CompatibilityScreen = ({ navigation }) => {
   const renderInputCard = (type, data, setData, showDatePicker, setShowDatePicker, showTimePicker, setShowTimePicker) => {
     const isBoy = type === 'Boy';
     return (
-      <VedicCard style={[styles.inputCard, { borderColor: isBoy ? '#D4AF37' : '#5E1026', borderWidth: 1, zIndex: isBoy ? 10 : 1 }]}>
+      <VedicCard style={[styles.inputCard, { borderColor: isBoy ? '#C9A45A' : '#6A1039', borderWidth: 1, zIndex: isBoy ? 10 : 1 }]}>
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderLeft}>
             <View style={[styles.genderIcon, { backgroundColor: isBoy ? '#FFF3E0' : '#FCE4EC' }]}>
               <MaterialCommunityIcons 
                 name={isBoy ? "gender-male" : "gender-female"} 
                 size={22} 
-                color={isBoy ? "#A36A1C" : "#5E1026"} 
+                color={isBoy ? "#C9A45A" : "#6A1039"} 
               />
             </View>
-            <Text style={[styles.cardTitle, { color: isBoy ? "#A36A1C" : "#5E1026" }]}>
+            <Text style={[styles.cardTitle, { color: isBoy ? "#C9A45A" : "#6A1039" }]}>
               {isBoy ? "Groom's Details" : "Bride's Details"}
             </Text>
           </View>
@@ -214,12 +225,14 @@ const CompatibilityScreen = ({ navigation }) => {
 
         {showDatePicker && (
           <DateTimePicker
-            value={data.dateOfBirth ? new Date(data.dateOfBirth) : new Date(2000, 0, 1)}
+            value={data.dateOfBirth ? parseDateLocal(data.dateOfBirth) : new Date(1990, 0, 1)}
             mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            display="spinner"
+            minimumDate={new Date(1900, 0, 1)}
+            maximumDate={new Date()}
             onChange={(e, date) => {
               setShowDatePicker(false);
-              if (date) setData({ ...data, dateOfBirth: date.toISOString().split('T')[0] });
+              if (date) setData({ ...data, dateOfBirth: formatLocalDate(date) });
             }}
           />
         )}
@@ -252,7 +265,7 @@ const CompatibilityScreen = ({ navigation }) => {
         <View style={styles.connectorLine}>
           <View style={styles.line} />
           <View style={styles.connectorCircle}>
-            <Ionicons name="heart" size={16} color="#A36A1C" />
+            <Ionicons name="heart" size={16} color="#C9A45A" />
           </View>
           <View style={styles.line} />
         </View>
@@ -265,7 +278,7 @@ const CompatibilityScreen = ({ navigation }) => {
         disabled={loading}
         activeOpacity={0.8}
       >
-        <LinearGradient colors={['#A36A1C', '#D4AF37']} start={{x:0, y:0}} end={{x:1, y:0}} style={styles.mainCheckBtnGrad}>
+        <LinearGradient colors={['#C9A45A', '#C9A45A']} start={{x:0, y:0}} end={{x:1, y:0}} style={styles.mainCheckBtnGrad}>
           {loading ? (
             <ActivityIndicator color={C.white} />
           ) : (
@@ -275,7 +288,7 @@ const CompatibilityScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       <View style={styles.infoBox}>
-        <Ionicons name="information-circle" size={18} color="#A36A1C" style={{ marginRight: 8 }} />
+        <Ionicons name="information-circle" size={18} color="#C9A45A" style={{ marginRight: 8 }} />
         <Text style={styles.infoText}>
           Compatibility matching in Vedic astrology is based on the 8 Kootas (Ashta Kootas) that influence a couple's marital life and harmony.
         </Text>
@@ -291,7 +304,7 @@ const CompatibilityScreen = ({ navigation }) => {
     return (
       <View style={styles.body}>
         <VedicCard style={styles.premiumResultCard}>
-          <LinearGradient colors={['#FFF', '#FFF9F0']} style={styles.premiumResultGrad}>
+          <LinearGradient colors={['#FFF', '#FFFDF8']} style={styles.premiumResultGrad}>
             <View style={styles.visualScoreSection}>
               <View style={styles.scoreRingContainer}>
                 <View style={[styles.scoreRingOuter, { borderColor: vTheme.bg }]}>
@@ -362,15 +375,15 @@ const CompatibilityScreen = ({ navigation }) => {
           )}
 
           <View style={styles.aiDashboardSection}>
-            <LinearGradient colors={['#FFF9F0', '#FFF']} style={styles.aiInsightBox}>
+            <LinearGradient colors={['#FFFDF8', '#FFF']} style={styles.aiInsightBox}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={styles.aiIconWrap}>
-                    <MaterialCommunityIcons name="auto-fix" size={16} color="#A36A1C" />
+                    <MaterialCommunityIcons name="auto-fix" size={16} color="#C9A45A" />
                   </View>
                   <Text style={styles.aiDashboardTitle}>MAHARSHI AI INSIGHT</Text>
                 </View>
-                {loadingAi && <ActivityIndicator size="small" color="#A36A1C" />}
+                {loadingAi && <ActivityIndicator size="small" color="#C9A45A" />}
               </View>
               
               {loadingAi && !aiExplanation ? (
@@ -408,7 +421,7 @@ const CompatibilityScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#5E1026', '#7A1731']} style={styles.header}>
+      <LinearGradient colors={['#6A1039', '#6A1039']} style={styles.header}>
         <Image source={BANNER} style={styles.headerBannerOverlay} />
         <View style={{ height: 40 }} /> 
         <View style={styles.headerTopRow}>
@@ -478,7 +491,7 @@ const styles = StyleSheet.create({
 
   cardBody: { gap: 10 },
   fieldGroup: { marginBottom: 4 },
-  fieldLabel: { fontSize: 10, fontWeight: '700', color: '#9A8878', textTransform: 'uppercase', marginBottom: 4, marginLeft: 2 },
+  fieldLabel: { fontSize: 10, fontWeight: '700', color: '#A08856', textTransform: 'uppercase', marginBottom: 4, marginLeft: 2 },
   compactInput: { 
     backgroundColor: '#FAFAFA', borderRadius: 10, padding: 10, fontSize: 13, color: C.text,
     borderWidth: 1, borderColor: '#EBEBEB',
@@ -489,7 +502,7 @@ const styles = StyleSheet.create({
   line: { width: 1, height: 10, backgroundColor: '#EBEBEB' },
   connectorCircle: { 
     width: 32, height: 32, borderRadius: 16, backgroundColor: '#FFF', 
-    borderWidth: 1, borderColor: '#F2EBE4', justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: '#F7F1E5', justifyContent: 'center', alignItems: 'center',
     elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2,
     zIndex: 10,
   },
@@ -498,7 +511,7 @@ const styles = StyleSheet.create({
   mainCheckBtnGrad: { paddingVertical: 15, alignItems: 'center' },
   mainCheckBtnText: { color: C.white, fontSize: 16, fontWeight: '800', letterSpacing: 0.5 },
 
-  infoBox: { flexDirection: 'row', marginTop: 24, padding: 14, backgroundColor: '#F8F3EA', borderRadius: 12, borderWidth: 1, borderColor: '#E8DCC8' },
+  infoBox: { flexDirection: 'row', marginTop: 24, padding: 14, backgroundColor: '#F7F1E5', borderRadius: 12, borderWidth: 1, borderColor: '#E8DCC8' },
   infoText: { flex: 1, fontSize: 11, color: '#7A5C45', lineHeight: 16, fontStyle: 'italic' },
 
   // Results Styles
@@ -534,8 +547,8 @@ const styles = StyleSheet.create({
 
   dashboardRow: { flexDirection: 'row', gap: 20, marginBottom: 20 },
   dashboardItem: { flex: 1, paddingLeft: 12, position: 'relative' },
-  sideIndicatorBoy: { position: 'absolute', left: 0, top: 4, bottom: 4, width: 3, backgroundColor: '#A36A1C', borderRadius: 2 },
-  sideIndicatorGirl: { position: 'absolute', left: 0, top: 4, bottom: 4, width: 3, backgroundColor: '#5E1026', borderRadius: 2 },
+  sideIndicatorBoy: { position: 'absolute', left: 0, top: 4, bottom: 4, width: 3, backgroundColor: '#C9A45A', borderRadius: 2 },
+  sideIndicatorGirl: { position: 'absolute', left: 0, top: 4, bottom: 4, width: 3, backgroundColor: '#6A1039', borderRadius: 2 },
   dashboardLabelSmall: { fontSize: 9, fontWeight: '800', color: '#999', marginBottom: 4 },
   dashboardValue: { fontSize: 15, fontWeight: '700', color: C.text },
   dashboardSubValue: { fontSize: 11, color: '#666', marginTop: 2 },
@@ -550,11 +563,11 @@ const styles = StyleSheet.create({
   aiDashboardSection: { marginTop: 20 },
   aiInsightBox: { padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#FDF0D5' },
   aiIconWrap: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', marginRight: 10, elevation: 1 },
-  aiDashboardTitle: { fontSize: 11, fontWeight: '800', color: '#A36A1C', letterSpacing: 1 },
-  aiDashboardBody: { fontSize: 13, color: '#5C4033', lineHeight: 22, fontStyle: 'italic' },
+  aiDashboardTitle: { fontSize: 11, fontWeight: '800', color: '#C9A45A', letterSpacing: 1 },
+  aiDashboardBody: { fontSize: 13, color: '#6A1039', lineHeight: 22, fontStyle: 'italic' },
   
   retryAiBtn: { marginTop: 12, paddingVertical: 8, alignItems: 'center', borderTopWidth: 1, borderTopColor: '#FDF0D5' },
-  retryAiText: { fontSize: 12, fontWeight: '700', color: '#A36A1C' },
+  retryAiText: { fontSize: 12, fontWeight: '700', color: '#C9A45A' },
 
   resetBtnDashboard: {
     marginTop: 25, paddingVertical: 14, borderRadius: 15,

@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api, { TOKEN_KEY } from '../config/api';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { loginRevenueCat, logoutRevenueCat, syncRevenueCatToBackend } from '../config/revenuecat';
 
 // IMPORTANT: Replace this with the "Web Client ID" from your new google-services.json (client_type: 3)
 const GOOGLE_WEB_CLIENT_ID = '556295205143-hbht1irra1a2lb2vnp2i34ko6ki3c5dr.apps.googleusercontent.com';
@@ -31,9 +32,15 @@ export const AuthProvider = ({ children }) => {
       const storedUser = await AsyncStorage.getItem(USER_KEY);
 
       if (storedToken && storedUser) {
+        const parsedUser = JSON.parse(storedUser);
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        setUser(parsedUser);
         setIsAuthenticated(true);
+
+        // Re-identify user in RevenueCat after app restart
+        if (parsedUser?._id) {
+          loginRevenueCat(parsedUser._id);
+        }
 
         // Check profile existence
         await refreshProfileStatus(storedToken);
@@ -52,6 +59,10 @@ export const AuthProvider = ({ children }) => {
           console.error('Token invalid, clearing session');
           await clearSession();
         }
+
+        // Sync RevenueCat → backend on every app start to catch any missed webhooks
+        syncRevenueCatToBackend().catch(() => {});
+
       }
     } catch (error) {
       console.error('Error loading session:', error);
@@ -78,8 +89,10 @@ export const AuthProvider = ({ children }) => {
       await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
       setToken(newToken);
       setUser(userData);
-      // Wait for profile status BEFORE removing loader
-      // and BEFORE signaling authentication to navigation
+      // Identify this user in RevenueCat so purchases are linked to their account
+      if (userData?._id) {
+        loginRevenueCat(userData._id);
+      }
       await refreshProfileStatus(newToken);
       setIsAuthenticated(true);
     } catch (error) {
@@ -139,8 +152,9 @@ export const AuthProvider = ({ children }) => {
     try {
       await GoogleSignin.signOut();
     } catch (e) {
-      // This might fail if the user is not signed in with Google, which is fine
+      // May fail if user didn't sign in with Google
     }
+    await logoutRevenueCat();
     await clearSession();
   };
 

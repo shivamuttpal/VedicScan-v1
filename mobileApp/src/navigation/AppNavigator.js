@@ -17,6 +17,8 @@ import CompatibilityScreen from '../screens/main/CompatibilityScreen';
 import PricingScreen from '../screens/main/PricingScreen';
 import SubscriptionScreen from '../screens/main/SubscriptionScreen';
 import PaymentSuccessScreen from '../screens/main/PaymentSuccessScreen';
+import KundaliScreen from '../screens/main/KundaliScreen';
+import BabyNamingScreen from '../screens/main/BabyNamingScreen';
 // import RashifalScreen from '../screens/main/RashifalScreen'; // hidden
 
 const Root = createNativeStackNavigator();
@@ -47,6 +49,16 @@ const RootStack = () => (
       name="PaymentSuccess"
       component={PaymentSuccessScreen}
       options={{ animation: 'fade' }}
+    />
+    <Root.Screen
+      name="Kundali"
+      component={KundaliScreen}
+      options={{ animation: 'slide_from_right' }}
+    />
+    <Root.Screen
+      name="BabyNaming"
+      component={BabyNamingScreen}
+      options={{ animation: 'slide_from_right' }}
     />
     {/* <Root.Screen name="Rashifal" component={RashifalScreen} options={{ animation: 'slide_from_right' }} /> */}{/* hidden */}
   </Root.Navigator>
