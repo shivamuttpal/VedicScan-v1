@@ -46,21 +46,33 @@ export const chatController = {
         isFirstMessage = true;
       }
 
-      // ─── Retrieve or create MongoDB chat session ───
-      let chat = await ChatSession.findOne({ conversationId: finalConvId, userId });
-      if (!chat) {
-        chat = new ChatSession({
-          conversationId: finalConvId,
-          userId,
-          title: message.substring(0, 50),
-          messages: [],
-          metadata: {
-            recentTopics: [],
-            emotionalConcerns: [],
-            tonePreference: null,
-            messageCount: 0
+      // ─── Retrieve or create MongoDB chat session (atomic upsert — race-safe) ───
+      // Using findOneAndUpdate + upsert instead of findOne + new to prevent
+      // E11000 duplicate key errors when two requests arrive simultaneously
+      // with the same conversationId.
+      const chat = await ChatSession.findOneAndUpdate(
+        { conversationId: finalConvId, userId },
+        {
+          $setOnInsert: {
+            conversationId: finalConvId,
+            userId,
+            title: message.substring(0, 50),
+            messages: [],
+            metadata: {
+              recentTopics: [],
+              emotionalConcerns: [],
+              tonePreference: null,
+              messageCount: 0
+            }
           }
-        });
+        },
+        { upsert: true, new: true }
+      );
+
+      if (!chat) throw new Error('Failed to retrieve or create chat session');
+
+      // A newly upserted document has an empty messages array
+      if (chat.messages.length === 0) {
         isFirstMessage = true;
       }
 
@@ -173,7 +185,20 @@ export const chatController = {
 
       // Add bot message and save session
       chat.messages.push({ role: 'assistant', content: botResponse });
-      await chat.save();
+      try {
+        await chat.save();
+      } catch (saveErr: any) {
+        // E11000: another concurrent request already inserted this session.
+        // Re-fetch and push messages atomically to avoid losing them.
+        if (saveErr?.code === 11000) {
+          await ChatSession.updateOne(
+            { conversationId: finalConvId, userId },
+            { $push: { messages: { $each: chat.messages } }, $set: { metadata: chat.metadata } }
+          );
+        } else {
+          throw saveErr;
+        }
+      }
 
       // ─── Update Usage Counters (Atomic) ───
       if (userUsage) {
