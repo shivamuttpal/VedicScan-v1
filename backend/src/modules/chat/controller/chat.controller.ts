@@ -32,7 +32,7 @@ export const chatController = {
         return;
       }
 
-      const finalConvId = conversationId || crypto.randomUUID();
+      let finalConvId = conversationId || crypto.randomUUID();
 
       // ─── Determine OpenAI Thread ───
       let threadId: string | null = null;
@@ -47,27 +47,32 @@ export const chatController = {
       }
 
       // ─── Retrieve or create MongoDB chat session (atomic upsert — race-safe) ───
-      // Using findOneAndUpdate + upsert instead of findOne + new to prevent
-      // E11000 duplicate key errors when two requests arrive simultaneously
-      // with the same conversationId.
-      const chat = await ChatSession.findOneAndUpdate(
-        { conversationId: finalConvId, userId },
-        {
-          $setOnInsert: {
-            conversationId: finalConvId,
-            userId,
-            title: message.substring(0, 50),
-            messages: [],
-            metadata: {
-              recentTopics: [],
-              emotionalConcerns: [],
-              tonePreference: null,
-              messageCount: 0
+      const upsertSession = async (convId: string) =>
+        ChatSession.findOneAndUpdate(
+          { conversationId: convId, userId },
+          {
+            $setOnInsert: {
+              conversationId: convId,
+              userId,
+              title: message.substring(0, 50),
+              messages: [],
+              metadata: { recentTopics: [], emotionalConcerns: [], tonePreference: null, messageCount: 0 }
             }
-          }
-        },
-        { upsert: true, new: true }
-      );
+          },
+          { upsert: true, new: true }
+        );
+
+      let chat = await upsertSession(finalConvId).catch(async (err) => {
+        // E11000 means finalConvId exists in the DB under a DIFFERENT userId
+        // (e.g. a stale ID cached on the client from a previous account).
+        // Generate a fresh ID and start a clean session for this user.
+        if (err?.code === 11000) {
+          finalConvId = crypto.randomUUID();
+          isFirstMessage = true;
+          return upsertSession(finalConvId);
+        }
+        throw err;
+      });
 
       if (!chat) throw new Error('Failed to retrieve or create chat session');
 
