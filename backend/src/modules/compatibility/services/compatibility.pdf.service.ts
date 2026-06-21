@@ -87,7 +87,7 @@ const NX: Record<string, { deity: string; symbol: string; essence: string; trait
 // ─── Guna Metadata ───────────────────────────────────────────────────────────
 const GM: Record<string, { sanskrit: string; max: number; measures: string; classical: string; full: string; partial: string; poor: string }> = {
   "Varna": {
-    sanskrit: "वर्ण (Varna)", max: 1,
+    sanskrit: "(Varna)", max: 1,
     measures: "Ego, spiritual evolution & work-ethic alignment",
     classical: "Varna koota, drawn from Brihat Parashara Hora Shastra, assesses whether both partners share compatible social dharma and work ethic. Aligned Varna ensures the couple understands each other's duties, ambitions, and place in the social order — reducing friction in daily responsibilities.",
     full: "Their social dharma and work ethic are in perfect alignment. The couple shares united values of duty, ambition, and spiritual responsibility — they will naturally stand side-by-side in life's obligations.",
@@ -95,7 +95,7 @@ const GM: Record<string, { sanskrit: string; max: number; measures: string; clas
     poor: "Different approaches to social hierarchy and duty may create friction in shared responsibilities. Conscious honoring of each other's unique perspective transforms this difference into a source of complementary strength.",
   },
   "Vashya": {
-    sanskrit: "वश्य (Vashya)", max: 2,
+    sanskrit: "(Vashya)", max: 2,
     measures: "Mutual attraction, magnetic pull & natural dominance",
     classical: "Vashya koota governs the natural magnetism and power dynamic between partners. It indicates who naturally draws whom, and whether the pull is mutual — essential for creating a balanced, attractive relationship where neither partner feels controlled.",
     full: "An exceptional magnetic attraction flows between these two souls. Their influence over each other is beautifully balanced — neither dominates unduly, and both feel naturally compelled to love and support the other.",
@@ -103,7 +103,7 @@ const GM: Record<string, { sanskrit: string; max: number; measures: string; clas
     poor: "The natural magnetic pull between these partners needs active cultivation. Consciously celebrating each other's gifts and practicing daily appreciation will build the attraction Vashya seeks.",
   },
   "Tara": {
-    sanskrit: "तारा (Tara)", max: 3,
+    sanskrit: "(Tara)", max: 3,
     measures: "Destiny, luck, fortune & life-trajectory alignment",
     classical: "Tara koota examines the relationship between both birth stars across nine divisions of the zodiac. It assesses whether the celestial timing, life opportunities, and overall fortune of both partners will tend to arrive in synchrony — or if they will frequently experience contrary timing.",
     full: "Their stars are divinely aligned for a fortunate journey together. Life's blessings, opportunities, and auspicious timing will tend to arrive in synchrony — making this union a vehicle for mutual growth and abundance.",
@@ -111,7 +111,7 @@ const GM: Record<string, { sanskrit: string; max: number; measures: string; clas
     poor: "Celestial timing may occasionally feel out of synchrony between the partners. Shared spiritual practice, patience with each other's life rhythms, and conscious celebration of the other's victories will harmonize their destinies.",
   },
   "Yoni": {
-    sanskrit: "योनि (Yoni)", max: 4,
+    sanskrit: "(Yoni)", max: 4,
     measures: "Physical compatibility, intimate harmony & biological resonance",
     classical: "Yoni koota is among the most intimate of all compatibility factors in classical Jyotisha. It governs the depth of physical attraction, biological harmony, and the quality of energetic exchange between partners — considered essential for a fulfilling marital bond.",
     full: "Exceptional physical and energetic compatibility graces this union. Their bodies, rhythms, and intimate energy naturally flow together — creating a powerful and deeply satisfying foundation for physical and emotional closeness.",
@@ -119,7 +119,7 @@ const GM: Record<string, { sanskrit: string; max: number; measures: string; clas
     poor: "Physical compatibility requires conscious nurturing. With patience, open communication, and mutual respect, the couple can build a deeply fulfilling intimate connection that grows richer over years of shared life.",
   },
   "Maitri": {
-    sanskrit: "ग्रह मैत्री (Graha Maitri)", max: 5,
+    sanskrit: "(Graha Maitri)", max: 5,
     measures: "Intellectual friendship, mental rapport & psychological harmony",
     classical: "Graha Maitri examines the friendship between the ruling planets of both moon signs. A strong Maitri indicates that partners think similarly, find intellectual exchange stimulating, and experience a natural psychological harmony — the foundation of lasting companionship.",
     full: "Their minds are beautifully attuned. The planetary lords of their moon signs are deep friends — creating effortless intellectual resonance and psychological harmony. These two will understand each other without needing to explain themselves.",
@@ -127,7 +127,7 @@ const GM: Record<string, { sanskrit: string; max: number; measures: string; clas
     poor: "Their minds approach problems quite differently. Celebrating this diversity of thought — rather than seeking sameness — will transform intellectual differences into a stimulating source of growth and mutual discovery.",
   },
   "Gana": {
-    sanskrit: "गण (Gana)", max: 6,
+    sanskrit: "(Gana)", max: 6,
     measures: "Core temperament, behavioral disposition & attitudinal harmony",
     classical: "Gana koota represents the most fundamental level of a person's temperament — whether divine (Deva: generous, light), human (Manushya: balanced, complex), or wild (Rakshasa: fierce, intense). Compatible Ganas ensure effortless daily interaction and a natural understanding of each other's fundamental nature.",
     full: "A remarkable gift — their core temperaments are perfectly matched. Both partners approach life, relationships, and challenges with the same fundamental energy, creating effortless daily harmony and genuine mutual understanding.",
@@ -135,7 +135,7 @@ const GM: Record<string, { sanskrit: string; max: number; measures: string; clas
     poor: "Significant temperamental differences require deep conscious bridging. Partners must genuinely honor and even celebrate each other's fundamental nature — not seek to change it — for this union to reach its potential.",
   },
   "Bhakut": {
-    sanskrit: "भकूट (Bhakut)", max: 7,
+    sanskrit: "(Bhakut)", max: 7,
     measures: "Life force, emotional health, prosperity & family wellbeing",
     classical: "Bhakut is one of the most powerful kootas in the Ashta Koota system, carrying 7 of the 36 points. It governs the flow of combined life energy (prana), emotional health, material prosperity, and the overall vitality of the family unit that this couple will create together.",
     full: "An extraordinarily auspicious Bhakut — their combined life force flows powerfully toward mutual prosperity, emotional wellbeing, and abundant family blessings. This couple's union is energetically potent and life-giving.",
@@ -143,7 +143,7 @@ const GM: Record<string, { sanskrit: string; max: number; measures: string; clas
     poor: "A Bhakut Dosha is present and requires serious attention (see Dosha Analysis section). With proper remedial measures, spiritual foundation, and conscious effort, this couple can navigate the challenges and build a meaningful, prosperous life.",
   },
   "Nadi": {
-    sanskrit: "नाड़ी (Nadi)", max: 8,
+    sanskrit: "(Nadi)", max: 8,
     measures: "Genetic compatibility, health harmony & progeny wellbeing",
     classical: "Nadi is the most important koota in the Ashta Koota system, carrying the highest weight of 8 points out of 36. It governs the fundamental level of energetic and physiological compatibility — the body's life-current (nadi), health, and the genetic compatibility essential for healthy offspring.",
     full: "The most auspicious Nadi result — their life-energy currents are perfectly complementary. This bodes beautifully for their individual health, combined vitality, longevity together, and the health and brightness of their children.",
@@ -156,8 +156,8 @@ const GM: Record<string, { sanskrit: string; max: number; measures: string; clas
 const DR: Record<string, { mantras: Array<{ text: string; instruction: string }>; puja: string; cancellation: string[]; gemstone: string; fasting: string; charity: string }> = {
   "Nadi Dosha": {
     mantras: [
-      { text: "ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् ।\nउर्वारुकमिव बन्धनान् मृत्योर्मुक्षीय माऽमृतात् ॥", instruction: "Mahamrityunjaya Mantra — chant 108 times daily for 40 consecutive days before marriage" },
-      { text: "ॐ नमो भगवते वासुदेवाय", instruction: "Vishnu Mantra — recite 108 times every morning for 21 days" },
+      { text: "Om Tryambakam Yajamahe Sugandhim Pushtivardhanam\nUrvarukamiva Bandhanan Mrityor Mukshiya Mamritat", instruction: "Mahamrityunjaya Mantra — chant 108 times daily for 40 consecutive days before marriage" },
+      { text: "Om Namo Bhagavate Vasudevaya", instruction: "Vishnu Mantra — recite 108 times every morning for 21 days" },
     ],
     puja: "Nadi Dosha Nivarana Puja should be performed by a learned Vedic priest at a Shiva temple — ideally at Kashi (Varanasi), Trimbakeshwar (Nashik), or Tirupati. The puja involves Abhishek of the Shiva linga, recitation of Mahamrityunjaya mantra, and specific havan (fire ritual) with offerings of til (sesame), ghee, and honey.",
     cancellation: [
@@ -174,8 +174,8 @@ const DR: Record<string, { mantras: Array<{ text: string; instruction: string }>
   },
   "Bhakut Dosha": {
     mantras: [
-      { text: "ॐ श्रां श्रीं श्रौं सः चन्द्राय नमः", instruction: "Chandra (Moon) Mantra — chant 108 times every Monday, especially on Purnima (Full Moon)" },
-      { text: "ॐ नमो नारायणाय", instruction: "Vishnu Mantra — both partners recite together 108 times on the wedding day" },
+      { text: "Om Shram Shrim Shraum Sah Chandraaya Namah", instruction: "Chandra (Moon) Mantra — chant 108 times every Monday, especially on Purnima (Full Moon)" },
+      { text: "Om Namo Narayanaya", instruction: "Vishnu Mantra — both partners recite together 108 times on the wedding day" },
     ],
     puja: "Navagraha Shanti Puja with special emphasis on Chandra Puja (Moon worship) should be performed before the marriage ceremony. The puja is ideally conducted on a Monday or Purnima by a learned Jyotishi-priest. Additionally, a Vishnu Puja for marital harmony and shared prosperity is highly recommended.",
     cancellation: [
@@ -200,9 +200,9 @@ function hRule(doc: InstanceType<typeof PDFDocument>, x: number, y: number, widt
 function ornamentRow(doc: InstanceType<typeof PDFDocument>, x: number, y: number, width: number) {
   const cx = x + width / 2;
   doc.save().fillColor(C.gold).font(SERIF).fontSize(9);
-  doc.text("✦", cx - 50, y - 5, { width: 15, align: "center", lineBreak: false });
-  doc.text("·  ·  ·  ·  ·  ·", cx - 40, y - 4, { width: 80, align: "center", lineBreak: false });
-  doc.text("✦", cx + 36, y - 5, { width: 15, align: "center", lineBreak: false });
+  doc.text("*", cx - 50, y - 5, { width: 15, align: "center", lineBreak: false });
+  doc.text("-  -  -  -  -  -", cx - 40, y - 4, { width: 80, align: "center", lineBreak: false });
+  doc.text("*", cx + 36, y - 5, { width: 15, align: "center", lineBreak: false });
   doc.restore();
 }
 
@@ -284,7 +284,7 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
 
   // Top ornament line
   doc.save().fillColor(C.gold).fontSize(10)
-    .text("— ✦ —", 0, 66, { width: PW, align: "center", lineBreak: false }).restore();
+    .text("--- * ---", 0, 66, { width: PW, align: "center", lineBreak: false }).restore();
 
   // Central mandala-like decoration
   const cx = PW / 2, cy = 240;
@@ -298,27 +298,27 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
   doc.save().strokeColor(C.gold).lineWidth(0.8).circle(cx, cy, 35).stroke().restore();
   doc.save().strokeColor(C.goldDeep).lineWidth(0.4).circle(cx, cy, 55).stroke().restore();
   doc.save().strokeColor(C.goldLight).lineWidth(0.3).circle(cx, cy, 22).stroke().restore();
-  // Center heart/lotus symbol
-  doc.save().font(SERIF).fontSize(26).fillColor(C.goldLight)
-    .text("♡", cx - 18, cy - 16, { lineBreak: false }).restore();
+  // Center lotus symbol
+  doc.save().font(SERIF_B).fontSize(18).fillColor(C.goldLight)
+    .text("OM", cx - 16, cy - 10, { lineBreak: false }).restore();
 
   // Report title
   doc.save().font(SERIF_B).fontSize(26).fillColor(C.cream)
     .text("Vivah Compatibility Report", 0, 295, { width: PW, align: "center", lineBreak: false }).restore();
   doc.save().font(SERIF_I).fontSize(12).fillColor(C.goldLight)
-    .text("विवाह संगतता विश्लेषण", 0, 330, { width: PW, align: "center", lineBreak: false }).restore();
+    .text("Vivah Sangata Vishleshan", 0, 330, { width: PW, align: "center", lineBreak: false }).restore();
 
   // Divider
   doc.save().strokeColor(C.goldDeep).lineWidth(0.5)
     .moveTo(PW / 2 - 80, 356).lineTo(PW / 2 + 80, 356).stroke().restore();
   doc.save().fillColor(C.gold).font(SERIF).fontSize(12)
-    .text("❦", PW / 2 - 10, 349, { lineBreak: false }).restore();
+    .text("~", PW / 2 - 10, 349, { lineBreak: false }).restore();
 
   // Names
   doc.save().font(SERIF_B).fontSize(20).fillColor(C.cream)
     .text(bName, 0, 375, { width: PW / 2 - 20, align: "right", lineBreak: false }).restore();
   doc.save().font(SERIF_I).fontSize(20).fillColor(C.gold)
-    .text("  ❤  ", PW / 2 - 20, 375, { width: 40, align: "center", lineBreak: false }).restore();
+    .text("  &  ", PW / 2 - 20, 375, { width: 40, align: "center", lineBreak: false }).restore();
   doc.save().font(SERIF_B).fontSize(20).fillColor(C.cream)
     .text(gName, PW / 2 + 20, 375, { width: PW / 2 - 20, align: "left", lineBreak: false }).restore();
 
@@ -620,8 +620,8 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
     doc.save().strokeColor(C.gold).lineWidth(1.2).roundedRect(ML, y, W, certH, 10).stroke().restore();
     doc.save().strokeColor(C.rule).lineWidth(0.4).roundedRect(ML + 8, y + 8, W - 16, certH - 16, 6).stroke().restore();
 
-    doc.save().font(SERIF).fontSize(28).fillColor(C.green)
-      .text("✓", ML, y + 30, { width: W, align: "center", lineBreak: false }).restore();
+    doc.save().font(SERIF_B).fontSize(28).fillColor(C.green)
+      .text("CLEAR", ML, y + 30, { width: W, align: "center", lineBreak: false }).restore();
     doc.save().font(SERIF_B).fontSize(20).fillColor(C.green)
       .text("No Doshas Detected", ML, y + 68, { width: W, align: "center", lineBreak: false }).restore();
     doc.save().font(SERIF_I).fontSize(13).fillColor(C.muted)
@@ -681,7 +681,7 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
           .text("CANCELLATION CONDITIONS — When Does This Dosha Get Nullified?", ML, y, { lineBreak: false }).restore();
         y += 16;
         rem.cancellation.forEach(cond => {
-          doc.save().font(SERIF).fontSize(7.5).fillColor(C.muted).text("✦", ML, y, { lineBreak: false }).restore();
+          doc.save().font(SERIF).fontSize(7.5).fillColor(C.muted).text("-", ML, y, { lineBreak: false }).restore();
           doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft).text(cond, ML + 16, y, { width: W - 16 }).restore();
           y += doc.heightOfString(cond, { width: W - 16 }) + 5;
         });
@@ -723,8 +723,8 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
   // General remedies always shown
   const generalRemedies = [
     { section: "Auspicious Mantras for the Couple", items: [
-      { title: "ॐ गं गणपतये नमः", sub: "Ganesha Mantra — Recite together 108 times before the wedding ceremony to remove all obstacles" },
-      { title: "ॐ श्री महालक्ष्म्यै नमः", sub: "Lakshmi Mantra — Chant 108 times every Friday for marital prosperity and domestic harmony" },
+      { title: "Om Gam Ganapataye Namah", sub: "Ganesha Mantra — Recite together 108 times before the wedding ceremony to remove all obstacles" },
+      { title: "Om Shri Mahalakshmyai Namah", sub: "Lakshmi Mantra — Chant 108 times every Friday for marital prosperity and domestic harmony" },
     ]},
     { section: "Puja Recommendations", items: [
       { title: "Satyanarayan Katha", sub: "Perform on the first Purnima (full moon) after the wedding, and every year on the anniversary" },
@@ -831,7 +831,7 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
   const areas = [
     {
       title: "Marriage & Daily Partnership",
-      icon: "♡",
+      icon: "*",
       rating: gana?.passed ? "Excellent" : total >= 21 ? "Good" : "Needs Work",
       rColor: gana?.passed ? C.green : total >= 21 ? C.amber : C.red,
       insight: gana?.passed
@@ -840,7 +840,7 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
     },
     {
       title: "Physical & Intimate Harmony",
-      icon: "✦",
+      icon: "*",
       rating: (yoni?.score || 0) >= 3 ? "Excellent" : (yoni?.score || 0) >= 2 ? "Good" : "Needs Attention",
       rColor: (yoni?.score || 0) >= 3 ? C.green : (yoni?.score || 0) >= 2 ? C.amber : C.red,
       insight: (yoni?.passed)
@@ -849,7 +849,7 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
     },
     {
       title: "Financial Harmony & Prosperity",
-      icon: "❋",
+      icon: "*",
       rating: bhakut?.score === 7 ? "Excellent" : "Needs Attention",
       rColor: bhakut?.score === 7 ? C.green : C.amber,
       insight: bhakut?.passed
@@ -858,7 +858,7 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
     },
     {
       title: "Intellectual & Psychological Bond",
-      icon: "◈",
+      icon: "*",
       rating: (maitri?.score || 0) >= 4 ? "Excellent" : (maitri?.score || 0) >= 3 ? "Good" : "Needs Work",
       rColor: (maitri?.score || 0) >= 4 ? C.green : (maitri?.score || 0) >= 3 ? C.amber : C.red,
       insight: maitri?.passed
@@ -867,7 +867,7 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
     },
     {
       title: "Health, Genetics & Progeny",
-      icon: "❀",
+      icon: "*",
       rating: nadi?.score === 8 ? "Excellent" : "Needs Guidance",
       rColor: nadi?.score === 8 ? C.green : C.red,
       insight: nadi?.passed
@@ -876,7 +876,7 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
     },
     {
       title: "Destiny, Fortune & Spiritual Path",
-      icon: "★",
+      icon: "*",
       rating: (tara?.score || 0) >= 2 ? "Excellent" : total >= 21 ? "Good" : "Needs Practice",
       rColor: (tara?.score || 0) >= 2 ? C.green : total >= 21 ? C.amber : C.red,
       insight: boyN.gana === girlN.gana
@@ -1054,7 +1054,7 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
 
   // Names
   doc.save().font(SERIF_B).fontSize(16).fillColor(C.cream)
-    .text(`${bName}  ❤  ${gName}`, 0, y, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(`${bName}  &  ${gName}`, 0, y, { width: PW, align: "center", lineBreak: false }).restore();
   y += 22;
   doc.save().font(SERIF_I).fontSize(10).fillColor(C.muted)
     .text(`${d.boyNakshatra.name} Nakshatra  ·  ${d.girlNakshatra.name} Nakshatra`, 0, y, { width: PW, align: "center", lineBreak: false }).restore();
@@ -1065,7 +1065,7 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
 
   // Vedic blessing
   doc.save().font(SERIF_I).fontSize(13).fillColor(C.goldLight)
-    .text("ॐ सर्वे भवन्तु सुखिनः", 0, y, { width: PW, align: "center", lineBreak: false }).restore();
+    .text("Om Sarve Bhavantu Sukhinah", 0, y, { width: PW, align: "center", lineBreak: false }).restore();
   y += 22;
   doc.save().font(SERIF_I).fontSize(10).fillColor(C.muted)
     .text("May all beings be happy · May all beings be at peace", 0, y, { width: PW, align: "center", lineBreak: false }).restore();
