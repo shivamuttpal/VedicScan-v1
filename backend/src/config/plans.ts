@@ -62,6 +62,7 @@ export const PLAN_PRICES = {
     'one-time': {
       compatibility: 99900,
       'baby-naming': 99900,
+      'compatibility-report': 149900,   // ₹1,499 — standalone full PDF report
     } as Record<string, number>,
   },
   USD: {
@@ -76,6 +77,7 @@ export const PLAN_PRICES = {
     'one-time': {
       compatibility: 9900,
       'baby-naming': 9900,
+      'compatibility-report': 1799,     // $17.99 — standalone full PDF report
     } as Record<string, number>,
   }
 };
@@ -89,7 +91,7 @@ export const PLAN_PRICES = {
 export const SUBSCRIPTION_PLANS: PlanType[] = ['standard', 'premium'];
 
 /** One-time purchasable features. Add new features here only. */
-export const ONE_TIME_FEATURES: string[] = ['compatibility', 'baby-naming'];
+export const ONE_TIME_FEATURES: string[] = ['compatibility', 'baby-naming', 'compatibility-report'];
 
 /** All valid purchasable items (subscriptions + one-time) */
 export const ALL_PURCHASABLE = [...SUBSCRIPTION_PLANS, ...ONE_TIME_FEATURES];
@@ -101,6 +103,7 @@ export const PLAN_DISPLAY_NAMES: Record<string, string> = {
   premium: 'Premium',
   compatibility: 'Compatibility Analysis',
   'baby-naming': 'Baby Naming',
+  'compatibility-report': 'Full Compatibility Report',
 };
 
 /**
