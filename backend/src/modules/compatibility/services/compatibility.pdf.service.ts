@@ -46,6 +46,7 @@ const SERIF_B = "Times-Bold";
 const SERIF_I = "Times-Italic";
 const SANS = "Helvetica";
 const SANS_B = "Helvetica-Bold";
+const SANS_I = "Helvetica-Oblique";
 const PW = 595.28;
 const PH = 841.89;
 const ML = 48;
@@ -331,7 +332,7 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
 
   // Score Panel
   const sp = { x: PW / 2 - 110, y: 440, w: 220, h: 120 };
-  doc.save().roundedRect(sp.x, sp.y, sp.w, sp.h, 10).fill("rgba(0,0,0,0.25)").restore();
+  doc.save().fillOpacity(0.25).roundedRect(sp.x, sp.y, sp.w, sp.h, 10).fill('#000000').restore();
   doc.save().strokeColor(C.gold).lineWidth(0.7)
     .roundedRect(sp.x, sp.y, sp.w, sp.h, 10).stroke().restore();
 
@@ -345,7 +346,7 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
 
   // Score bar in panel
   const barX = sp.x + 20, barY = sp.y + 82, barW = sp.w - 40;
-  doc.save().roundedRect(barX, barY, barW, 6, 3).fill("rgba(255,255,255,0.1)").restore();
+  doc.save().fillOpacity(0.15).roundedRect(barX, barY, barW, 6, 3).fill('#FFFFFF').restore();
   const fillW = barW * (pct / 100);
   doc.save().roundedRect(barX, barY, fillW, 6, 3).fill(C.gold).restore();
 
@@ -804,8 +805,6 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
   }
 }
 
-const SANS_I = "Helvetica-Oblique";
-
 // ─── Page 7: Life Area Analysis ───────────────────────────────────────────────
 function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
@@ -1043,8 +1042,8 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
   y += 22;
 
   // Final score box
-  doc.save().roundedRect(PW / 2 - 130, y, 260, 80, 8)
-    .fillAndStroke("rgba(0,0,0,0.3)", C.gold).restore();
+  doc.save().fillOpacity(0.3).roundedRect(PW / 2 - 130, y, 260, 80, 8).fill('#000000').restore();
+  doc.save().strokeColor(C.gold).lineWidth(0.7).roundedRect(PW / 2 - 130, y, 260, 80, 8).stroke().restore();
   doc.save().font(SANS_B).fontSize(9).fillColor(C.muted).characterSpacing(1.5)
     .text("FINAL COMPATIBILITY SCORE", PW / 2 - 130, y + 12, { width: 260, align: "center", lineBreak: false }).restore();
   doc.save().font(SERIF_B).fontSize(36).fillColor(C.goldLight)
@@ -1096,8 +1095,7 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
   y += 36;
 
   // Disclaimer
-  doc.save().roundedRect(ML + 20, y, W - 40, 68, 6)
-    .fill("rgba(0,0,0,0.2)").restore();
+  doc.save().fillOpacity(0.2).roundedRect(ML + 20, y, W - 40, 68, 6).fill('#000000').restore();
   doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted).characterSpacing(0.8)
     .text("DISCLAIMER", ML + 32, y + 10, { lineBreak: false }).restore();
   doc.save().font(SANS).fontSize(7.5).fillColor(C.muted)
