@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import path from "path";
 import { NakshatraData } from "../service/koota.service";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -192,6 +193,8 @@ const DR: Record<string, { mantras: Array<{ text: string; instruction: string }>
   },
 };
 
+const LOGO_PATH = path.join(__dirname, '../../../../assets/logo.png');
+
 // ─── Drawing Helpers ─────────────────────────────────────────────────────────
 function hRule(doc: InstanceType<typeof PDFDocument>, x: number, y: number, width: number, color = C.rule, thick = 0.5) {
   doc.save().strokeColor(color).lineWidth(thick).moveTo(x, y).lineTo(x + width, y).stroke().restore();
@@ -245,6 +248,17 @@ function pageHeader(doc: InstanceType<typeof PDFDocument>, title: string) {
   hRule(doc, ML, 34, W, C.rule, 0.4);
 }
 
+// ─── Watermark ───────────────────────────────────────────────────────────────
+function drawWatermark(doc: InstanceType<typeof PDFDocument>, isDark = false) {
+  try {
+    const logoSize = 160;
+    doc.save();
+    doc.opacity(isDark ? 0.08 : 0.05);
+    doc.image(LOGO_PATH, PW / 2 - logoSize / 2, PH / 2 - logoSize / 2, { width: logoSize, height: logoSize });
+    doc.restore();
+  } catch (_) { /* skip watermark if logo file unavailable */ }
+}
+
 // ─── Cover Page ──────────────────────────────────────────────────────────────
 function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   const score = d.gunaMilan.total_score;
@@ -254,6 +268,7 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
 
   // Dark background
   doc.rect(0, 0, PW, PH).fill(C.maroonDeep);
+  drawWatermark(doc, true);
 
   // Gold outer border
   doc.save().strokeColor(C.gold).lineWidth(1.2)
@@ -285,6 +300,22 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
   // Top ornament line
   doc.save().fillColor(C.gold).fontSize(10)
     .text("--- * ---", 0, 66, { width: PW, align: "center", lineBreak: false }).restore();
+
+  // VedicScan logo emblem
+  try {
+    const logoSize = 88;
+    const lx = PW / 2 - logoSize / 2;
+    const ly = 83;
+    const lcx = PW / 2, lcy = ly + logoSize / 2;
+    // Concentric gold circles framing the logo
+    doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
+      .circle(lcx, lcy, logoSize / 2 + 14).stroke().restore();
+    doc.save().strokeColor(C.gold).lineWidth(0.8)
+      .circle(lcx, lcy, logoSize / 2 + 8).stroke().restore();
+    // Clip to circle, draw logo
+    doc.save().circle(lcx, lcy, logoSize / 2).clip()
+      .image(LOGO_PATH, lx, ly, { width: logoSize, height: logoSize }).restore();
+  } catch (_) {}
 
   // Central mandala-like decoration
   const cx = PW / 2, cy = 240;
@@ -400,6 +431,7 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
 // ─── Page 2: Executive Summary & Scores ──────────────────────────────────────
 function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
+  drawWatermark(doc);
   pageHeader(doc, "Ashta Koota Summary");
   pageFooter(doc, 2, 11);
 
@@ -441,31 +473,44 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
 
   // Partner summary row
   const halfW = (W - 16) / 2;
-  const drawPartnerCard = (x: number, nk: NakshatraData, person: any, label: string) => {
-    doc.save().roundedRect(x, y, halfW, 88, 6).fill(C.white).restore();
-    doc.save().strokeColor(C.rule).lineWidth(0.5).roundedRect(x, y, halfW, 88, 6).stroke().restore();
-    doc.save().fillColor(label === "GROOM" ? "#D4A84B" : C.rose).rect(x, y, halfW, 4).fill().restore();
-    doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted)
-      .text(label, x + 12, y + 12, { characterSpacing: 1, lineBreak: false }).restore();
-    doc.save().font(SERIF_B).fontSize(14).fillColor(C.ink)
-      .text(person.name || label, x + 12, y + 24, { width: halfW - 24, lineBreak: false }).restore();
-    const rows = [
+  const drawPartnerCard = (x: number, nk: NakshatraData, person: any, label: string): number => {
+    const rows: [string, string][] = [
       ["Nakshatra", nk.name],
       ["Rashi", nk.rashi_english],
       ["Gana", nk.gana],
       ["Nadi", nk.nadi],
       ["Lord", nk.lord],
     ];
-    let ry = y + 44;
+    // Pre-calculate name height so the card expands if a long name wraps
+    doc.font(SERIF_B).fontSize(14);
+    const nameH = Math.max(18, doc.heightOfString(person.name || label, { width: halfW - 24 }));
+    const rowsStartY = y + 24 + nameH + 6;
+    const cardH = (rowsStartY - y) + rows.length * 13 + 10;
+
+    doc.save().roundedRect(x, y, halfW, cardH, 6).fill(C.white).restore();
+    doc.save().strokeColor(C.rule).lineWidth(0.5).roundedRect(x, y, halfW, cardH, 6).stroke().restore();
+    // Accent strip — clipped so it respects the top rounded corners
+    doc.save().roundedRect(x, y, halfW, cardH, 6).clip()
+      .fillColor(label === "GROOM" ? "#D4A84B" : C.rose).rect(x, y, halfW, 4).fill().restore();
+
+    doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted)
+      .text(label, x + 12, y + 12, { characterSpacing: 1, lineBreak: false }).restore();
+    doc.save().font(SERIF_B).fontSize(14).fillColor(C.ink)
+      .text(person.name || label, x + 12, y + 24, { width: halfW - 24 }).restore();
+
+    let ry = rowsStartY;
     rows.forEach(([lbl, val]) => {
-      doc.save().font(SANS).fontSize(8).fillColor(C.muted).text(lbl + ":", x + 12, ry, { lineBreak: false }).restore();
-      doc.save().font(SANS_B).fontSize(8).fillColor(C.inkSoft).text(val, x + 70, ry, { lineBreak: false }).restore();
-      ry += 12;
+      doc.save().font(SANS).fontSize(8).fillColor(C.muted)
+        .text(lbl + ":", x + 12, ry, { lineBreak: false }).restore();
+      doc.save().font(SANS_B).fontSize(8).fillColor(C.inkSoft)
+        .text(val, x + 70, ry, { width: halfW - 84, lineBreak: false }).restore();
+      ry += 13;
     });
+    return cardH;
   };
-  drawPartnerCard(ML, d.boyNakshatra, d.boy, "GROOM");
-  drawPartnerCard(ML + halfW + 16, d.girlNakshatra, d.girl, "BRIDE");
-  y += 104;
+  const groomH = drawPartnerCard(ML, d.boyNakshatra, d.boy, "GROOM");
+  const brideH = drawPartnerCard(ML + halfW + 16, d.girlNakshatra, d.girl, "BRIDE");
+  y += Math.max(groomH, brideH) + 16;
 
   // Koota overview table
   doc.save().font(SERIF_B).fontSize(13).fillColor(C.maroon)
@@ -525,6 +570,7 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
 // ─── Pages 3–6: Guna Deep Dive (2 kootas per page, dynamic card height) ────────
 function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput, from: number, to: number, pageNum: number) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
+  drawWatermark(doc);
   pageHeader(doc, "Guna Analysis");
   pageFooter(doc, pageNum, 11);
 
@@ -613,6 +659,7 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
 // ─── Page 5: Dosha Analysis ───────────────────────────────────────────────────
 function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
+  drawWatermark(doc);
   pageHeader(doc, "Dosha Analysis");
   pageFooter(doc, 7, 11);
 
@@ -717,6 +764,7 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
 // ─── Page 6: Sacred Remedies ─────────────────────────────────────────────────
 function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
+  drawWatermark(doc);
   pageHeader(doc, "Sacred Remedies");
   pageFooter(doc, 8, 11);
 
@@ -819,6 +867,7 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
 // ─── Page 7: Life Area Analysis ───────────────────────────────────────────────
 function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
+  drawWatermark(doc);
   pageHeader(doc, "Life Areas");
   pageFooter(doc, 9, 11);
 
@@ -925,6 +974,7 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
 // ─── Page 8: Nakshatra Profiles ───────────────────────────────────────────────
 function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
+  drawWatermark(doc);
   pageHeader(doc, "Nakshatra Profiles");
   pageFooter(doc, 10, 11);
 
@@ -1057,6 +1107,7 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
 // ─── Page 9: Conclusion & Blessing ───────────────────────────────────────────
 function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.maroonDeep);
+  drawWatermark(doc, true);
 
   // Border
   doc.save().strokeColor(C.gold).lineWidth(1)
