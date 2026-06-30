@@ -152,9 +152,13 @@ export const compatibilityController = {
                 generated_at: new Date().toISOString(),
             });
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Compatibility Report generation error:', error);
-            res.status(500).json({ success: false, message: 'Report generation failed. Please try again.' });
+            res.status(500).json({
+                success: false,
+                message: 'Report generation failed. Please try again.',
+                debug: String(error?.message || error),
+            });
         }
     },
 };
