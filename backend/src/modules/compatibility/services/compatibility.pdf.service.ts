@@ -262,170 +262,175 @@ function drawWatermark(doc: InstanceType<typeof PDFDocument>, isDark = false) {
 // ─── Cover Page ──────────────────────────────────────────────────────────────
 function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   const score = d.gunaMilan.total_score;
-  const pct = d.gunaMilan.percentage;
-  const bName = d.boy.name || "Groom";
+  const pct   = d.gunaMilan.percentage;
+  const bName = d.boy.name  || "Groom";
   const gName = d.girl.name || "Bride";
 
-  // Dark background
+  // ── Background + watermark ──────────────────────────────────────────────────
   doc.rect(0, 0, PW, PH).fill(C.maroonDeep);
   drawWatermark(doc, true);
 
-  // Gold outer border
+  // ── Double border ───────────────────────────────────────────────────────────
   doc.save().strokeColor(C.gold).lineWidth(1.2)
-    .rect(18, 18, PW - 36, PH - 36).stroke().restore();
-  // Inner border
+    .rect(16, 16, PW - 32, PH - 32).stroke().restore();
   doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
-    .rect(24, 24, PW - 48, PH - 48).stroke().restore();
+    .rect(22, 22, PW - 44, PH - 44).stroke().restore();
 
-  // Corner ornaments
-  const corners = [[26, 26], [PW - 26, 26], [26, PH - 26], [PW - 26, PH - 26]];
-  corners.forEach(([cx, cy]) => {
-    doc.save().strokeColor(C.gold).lineWidth(0.8)
-      .moveTo(cx, cy - 12).lineTo(cx, cy).lineTo(cx + 12, cy)
-      .stroke().restore();
-  });
-  // Fix last two corners direction
+  // ── Corner flourishes (each corner drawn correctly) ─────────────────────────
+  const cL = 14;
+  // top-left
   doc.save().strokeColor(C.gold).lineWidth(0.8)
-    .moveTo(PW - 38, PH - 26).lineTo(PW - 26, PH - 26).lineTo(PW - 26, PH - 14)
-    .stroke().restore();
+    .moveTo(28, 28 + cL).lineTo(28, 28).lineTo(28 + cL, 28).stroke().restore();
+  // top-right
   doc.save().strokeColor(C.gold).lineWidth(0.8)
-    .moveTo(PW - 38, 26).lineTo(PW - 26, 26).lineTo(PW - 26, 38)
-    .stroke().restore();
+    .moveTo(PW - 28 - cL, 28).lineTo(PW - 28, 28).lineTo(PW - 28, 28 + cL).stroke().restore();
+  // bottom-left
+  doc.save().strokeColor(C.gold).lineWidth(0.8)
+    .moveTo(28, PH - 28 - cL).lineTo(28, PH - 28).lineTo(28 + cL, PH - 28).stroke().restore();
+  // bottom-right
+  doc.save().strokeColor(C.gold).lineWidth(0.8)
+    .moveTo(PW - 28 - cL, PH - 28).lineTo(PW - 28, PH - 28).lineTo(PW - 28, PH - 28 - cL).stroke().restore();
 
-  // Brand at top
-  doc.save().font(SANS_B).fontSize(8).fillColor(C.goldLight)
-    .text("VEDICSCAN", 0, 52, { width: PW, align: "center", characterSpacing: 4, lineBreak: false })
-    .restore();
+  // ── Brand name ──────────────────────────────────────────────────────────────
+  doc.save().font(SANS_B).fontSize(7.5).fillColor(C.goldLight)
+    .text("V E D I C S C A N", 0, 38, { width: PW, align: "center", lineBreak: false }).restore();
+  doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
+    .moveTo(PW / 2 - 48, 54).lineTo(PW / 2 + 48, 54).stroke().restore();
 
-  // Top ornament line
-  doc.save().fillColor(C.gold).fontSize(10)
-    .text("--- * ---", 0, 66, { width: PW, align: "center", lineBreak: false }).restore();
-
-  // VedicScan logo emblem
+  // ── Logo emblem ─────────────────────────────────────────────────────────────
   try {
-    const logoSize = 88;
-    const lx = PW / 2 - logoSize / 2;
-    const ly = 83;
+    const logoSize = 104;
+    const lx = PW / 2 - logoSize / 2, ly = 66;
     const lcx = PW / 2, lcy = ly + logoSize / 2;
-    // Concentric gold circles framing the logo
-    doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
-      .circle(lcx, lcy, logoSize / 2 + 14).stroke().restore();
+    // Outer decorative ring with 8 dot accents
+    doc.save().strokeColor(C.goldDeep).lineWidth(0.3)
+      .circle(lcx, lcy, logoSize / 2 + 18).stroke().restore();
     doc.save().strokeColor(C.gold).lineWidth(0.8)
-      .circle(lcx, lcy, logoSize / 2 + 8).stroke().restore();
-    // Clip to circle, draw logo
+      .circle(lcx, lcy, logoSize / 2 + 10).stroke().restore();
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 4;
+      const rx = lcx + Math.cos(angle) * (logoSize / 2 + 10);
+      const ry = lcy + Math.sin(angle) * (logoSize / 2 + 10);
+      doc.save().fillColor(C.gold).circle(rx, ry, 1.8).fill().restore();
+    }
+    // Logo clipped to circle
     doc.save().circle(lcx, lcy, logoSize / 2).clip()
       .image(LOGO_PATH, lx, ly, { width: logoSize, height: logoSize }).restore();
   } catch (_) {}
 
-  // Central mandala-like decoration
-  const cx = PW / 2, cy = 240;
-  for (let i = 0; i < 8; i++) {
-    const angle = (i * Math.PI) / 4;
-    const x1 = cx + Math.cos(angle) * 38, y1 = cy + Math.sin(angle) * 38;
-    const x2 = cx + Math.cos(angle) * 58, y2 = cy + Math.sin(angle) * 58;
-    doc.save().strokeColor(C.goldDeep).lineWidth(0.5)
-      .moveTo(x1, y1).lineTo(x2, y2).stroke().restore();
-  }
-  doc.save().strokeColor(C.gold).lineWidth(0.8).circle(cx, cy, 35).stroke().restore();
-  doc.save().strokeColor(C.goldDeep).lineWidth(0.4).circle(cx, cy, 55).stroke().restore();
-  doc.save().strokeColor(C.goldLight).lineWidth(0.3).circle(cx, cy, 22).stroke().restore();
-  // Center lotus symbol
-  doc.save().font(SERIF_B).fontSize(18).fillColor(C.goldLight)
-    .text("OM", cx - 16, cy - 10, { lineBreak: false }).restore();
+  // ── Title block ─────────────────────────────────────────────────────────────
+  const titleY = 210;
+  doc.save().font(SERIF_B).fontSize(28).fillColor(C.cream)
+    .text("Vivah Compatibility Report", 0, titleY, { width: PW, align: "center", lineBreak: false }).restore();
+  doc.save().font(SERIF_I).fontSize(12).fillColor(C.gold)
+    .text("Vivah Sangata Vishleshan", 0, titleY + 40, { width: PW, align: "center", lineBreak: false }).restore();
 
-  // Report title
-  doc.save().font(SERIF_B).fontSize(26).fillColor(C.cream)
-    .text("Vivah Compatibility Report", 0, 295, { width: PW, align: "center", lineBreak: false }).restore();
-  doc.save().font(SERIF_I).fontSize(12).fillColor(C.goldLight)
-    .text("Vivah Sangata Vishleshan", 0, 330, { width: PW, align: "center", lineBreak: false }).restore();
+  // ── Ornamental divider (lines + diamond) ────────────────────────────────────
+  const divY = titleY + 70;
+  doc.save().strokeColor(C.gold).lineWidth(0.6)
+    .moveTo(PW / 2 - 96, divY).lineTo(PW / 2 - 12, divY).stroke().restore();
+  doc.save().strokeColor(C.gold).lineWidth(0.6)
+    .moveTo(PW / 2 + 12, divY).lineTo(PW / 2 + 96, divY).stroke().restore();
+  const ds = 5;
+  doc.save().strokeColor(C.gold).lineWidth(0.9)
+    .moveTo(PW / 2, divY - ds).lineTo(PW / 2 + ds, divY)
+    .lineTo(PW / 2, divY + ds).lineTo(PW / 2 - ds, divY)
+    .closePath().stroke().restore();
 
-  // Divider
-  doc.save().strokeColor(C.goldDeep).lineWidth(0.5)
-    .moveTo(PW / 2 - 80, 356).lineTo(PW / 2 + 80, 356).stroke().restore();
-  doc.save().fillColor(C.gold).font(SERIF).fontSize(12)
-    .text("~", PW / 2 - 10, 349, { lineBreak: false }).restore();
-
-  // Names
-  doc.save().font(SERIF_B).fontSize(20).fillColor(C.cream)
-    .text(bName, 0, 375, { width: PW / 2 - 20, align: "right", lineBreak: false }).restore();
-  doc.save().font(SERIF_I).fontSize(20).fillColor(C.gold)
-    .text("  &  ", PW / 2 - 20, 375, { width: 40, align: "center", lineBreak: false }).restore();
-  doc.save().font(SERIF_B).fontSize(20).fillColor(C.cream)
-    .text(gName, PW / 2 + 20, 375, { width: PW / 2 - 20, align: "left", lineBreak: false }).restore();
+  // ── Names ───────────────────────────────────────────────────────────────────
+  const namesY = divY + 18;
+  const nameSideW = PW / 2 - 52;
+  doc.save().font(SERIF_B).fontSize(21).fillColor(C.cream)
+    .text(bName, 36, namesY, { width: nameSideW, align: "right", lineBreak: false }).restore();
+  doc.save().font(SERIF_I).fontSize(21).fillColor(C.gold)
+    .text("&", PW / 2 - 11, namesY, { width: 22, align: "center", lineBreak: false }).restore();
+  doc.save().font(SERIF_B).fontSize(21).fillColor(C.cream)
+    .text(gName, PW / 2 + 16, namesY, { width: nameSideW, align: "left", lineBreak: false }).restore();
 
   // Nakshatra subtitles
-  doc.save().font(SERIF_I).fontSize(10).fillColor(C.goldDeep)
-    .text(d.boyNakshatra.name + " Nakshatra · " + d.boyNakshatra.rashi_english, 0, 402, { width: PW / 2 - 16, align: "right", lineBreak: false })
-    .restore();
-  doc.save().font(SERIF_I).fontSize(10).fillColor(C.goldDeep)
-    .text(d.girlNakshatra.name + " Nakshatra · " + d.girlNakshatra.rashi_english, PW / 2 + 16, 402, { width: PW / 2 - 20, align: "left", lineBreak: false })
-    .restore();
+  const nkY = namesY + 30;
+  doc.save().font(SERIF_I).fontSize(9.5).fillColor(C.goldDeep)
+    .text(`${d.boyNakshatra.name} · ${d.boyNakshatra.rashi_english}`, 36, nkY, { width: nameSideW, align: "right", lineBreak: false }).restore();
+  doc.save().font(SERIF_I).fontSize(9.5).fillColor(C.goldDeep)
+    .text(`${d.girlNakshatra.name} · ${d.girlNakshatra.rashi_english}`, PW / 2 + 16, nkY, { width: nameSideW, align: "left", lineBreak: false }).restore();
 
-  // Score Panel
-  const sp = { x: PW / 2 - 110, y: 440, w: 220, h: 120 };
-  doc.save().fillOpacity(0.25).roundedRect(sp.x, sp.y, sp.w, sp.h, 10).fill('#000000').restore();
-  doc.save().strokeColor(C.gold).lineWidth(0.7)
-    .roundedRect(sp.x, sp.y, sp.w, sp.h, 10).stroke().restore();
-
-  doc.save().font(SANS_B).fontSize(8).fillColor(C.muted)
-    .text("ASHTA KOOTA SCORE", sp.x, sp.y + 16, { width: sp.w, align: "center", characterSpacing: 1.5, lineBreak: false }).restore();
-
-  doc.save().font(SERIF_B).fontSize(44).fillColor(C.goldLight)
-    .text(`${score}`, sp.x, sp.y + 30, { width: sp.w / 2 + 10, align: "right", lineBreak: false }).restore();
-  doc.save().font(SERIF).fontSize(18).fillColor(C.muted)
-    .text("/ 36", sp.x + sp.w / 2 + 14, sp.y + 46, { lineBreak: false }).restore();
-
-  // Score bar in panel
-  const barX = sp.x + 20, barY = sp.y + 82, barW = sp.w - 40;
-  doc.save().fillOpacity(0.15).roundedRect(barX, barY, barW, 6, 3).fill('#FFFFFF').restore();
-  const fillW = barW * (pct / 100);
-  doc.save().roundedRect(barX, barY, fillW, 6, 3).fill(C.gold).restore();
-
-  doc.save().font(SANS).fontSize(9).fillColor(C.goldLight)
-    .text(`${pct}% Harmony`, sp.x, sp.y + 96, { width: sp.w, align: "center", lineBreak: false }).restore();
-
-  // Verdict badge
-  const vdict = d.gunaMilan.verdict;
-  const vColor = pct >= 75 ? "#22C55E" : pct >= 55 ? C.gold : "#EF4444";
-  const vBadgeY = sp.y + sp.h + 20;
-  doc.save().roundedRect(PW / 2 - 120, vBadgeY, 240, 28, 6).fill(C.maroon).restore();
-  doc.save().strokeColor(C.gold).lineWidth(0.6)
-    .roundedRect(PW / 2 - 120, vBadgeY, 240, 28, 6).stroke().restore();
-  doc.save().font(SERIF_B).fontSize(11).fillColor(C.goldLight)
-    .text(vdict, PW / 2 - 120, vBadgeY + 9, { width: 240, align: "center", lineBreak: false }).restore();
-
-  // Birth details
-  const detY = vBadgeY + 56;
-  doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
-    .moveTo(ML + 40, detY).lineTo(PW - ML - 40, detY).stroke().restore();
+  // ── Score Panel ─────────────────────────────────────────────────────────────
+  const spW = 248, spH = 144;
+  const spX = PW / 2 - spW / 2, spY = nkY + 42;
+  doc.save().fillOpacity(0.22).roundedRect(spX, spY, spW, spH, 12).fill('#000000').restore();
+  doc.save().strokeColor(C.gold).lineWidth(0.9).roundedRect(spX, spY, spW, spH, 12).stroke().restore();
+  doc.save().strokeColor(C.goldDeep).lineWidth(0.3)
+    .roundedRect(spX + 4, spY + 4, spW - 8, spH - 8, 10).stroke().restore();
 
   doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted)
-    .text("BIRTH DETAILS", 0, detY + 10, { width: PW, align: "center", characterSpacing: 1.2, lineBreak: false }).restore();
+    .text("ASHTA KOOTA SCORE", spX, spY + 16, { width: spW, align: "center", characterSpacing: 1.5, lineBreak: false }).restore();
 
-  const col1x = ML + 20, col2x = PW / 2 + 10;
+  // Measure score + "/36" widths to center them together without overlap
+  const scoreStr = `${score}`;
+  doc.font(SERIF_B).fontSize(50);
+  const scoreW = doc.widthOfString(scoreStr);
+  doc.font(SERIF).fontSize(18);
+  const denom36W = doc.widthOfString("/ 36");
+  const gap = 10;
+  const totalScoreW = scoreW + gap + denom36W;
+  const scoreStartX = spX + (spW - totalScoreW) / 2;
+
+  doc.save().font(SERIF_B).fontSize(50).fillColor(C.goldLight)
+    .text(scoreStr, scoreStartX, spY + 26, { lineBreak: false }).restore();
+  doc.save().font(SERIF).fontSize(18).fillColor(C.muted)
+    .text("/ 36", scoreStartX + scoreW + gap, spY + 52, { lineBreak: false }).restore();
+
+  // Harmony bar
+  const barX = spX + 24, barY = spY + 96, barW = spW - 48;
+  doc.save().fillOpacity(0.15).roundedRect(barX, barY, barW, 6, 3).fill('#FFFFFF').restore();
+  const fillW = barW * (pct / 100);
+  if (fillW > 0) doc.save().roundedRect(barX, barY, fillW, 6, 3).fill(C.gold).restore();
+  doc.save().font(SANS).fontSize(9).fillColor(C.goldLight)
+    .text(`${pct}% Harmony`, spX, spY + 114, { width: spW, align: "center", lineBreak: false }).restore();
+
+  // ── Verdict badge ────────────────────────────────────────────────────────────
+  const vBadgeY = spY + spH + 16;
+  const vBadgeW = 264;
+  doc.save().roundedRect(PW / 2 - vBadgeW / 2, vBadgeY, vBadgeW, 30, 6).fill(C.maroon).restore();
+  doc.save().strokeColor(C.gold).lineWidth(0.6)
+    .roundedRect(PW / 2 - vBadgeW / 2, vBadgeY, vBadgeW, 30, 6).stroke().restore();
+  doc.save().font(SERIF_B).fontSize(12).fillColor(C.goldLight)
+    .text(d.gunaMilan.verdict, PW / 2 - vBadgeW / 2, vBadgeY + 10, { width: vBadgeW, align: "center", lineBreak: false }).restore();
+
+  // ── Birth details ────────────────────────────────────────────────────────────
+  const detDivY = vBadgeY + 50;
+  doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
+    .moveTo(ML + 24, detDivY).lineTo(PW - ML - 24, detDivY).stroke().restore();
+  doc.save().font(SANS_B).fontSize(7).fillColor(C.muted)
+    .text("BIRTH DETAILS", 0, detDivY + 10, { width: PW, align: "center", characterSpacing: 1.5, lineBreak: false }).restore();
+
+  const col1x = ML + 14, col2x = PW / 2 + 8;
+  const colValW = PW / 2 - ML - 58;
   const detItems = [
-    { label: "Name", b: bName, g: gName },
-    { label: "Date", b: d.boy.dateOfBirth || "—", g: d.girl.dateOfBirth || "—" },
-    { label: "Time", b: d.boy.timeOfBirth || "—", g: d.girl.timeOfBirth || "—" },
-    { label: "Place", b: d.boy.placeOfBirth || "—", g: d.girl.placeOfBirth || "—" },
+    { label: "Name",  b: bName,                      g: gName },
+    { label: "Date",  b: d.boy.dateOfBirth  || "—",  g: d.girl.dateOfBirth  || "—" },
+    { label: "Time",  b: d.boy.timeOfBirth  || "—",  g: d.girl.timeOfBirth  || "—" },
+    { label: "Place", b: d.boy.placeOfBirth || "—",  g: d.girl.placeOfBirth || "—" },
   ];
-  let diy = detY + 26;
+  let diy = detDivY + 26;
   detItems.forEach(item => {
     doc.save().font(SANS).fontSize(8).fillColor(C.muted)
-      .text(item.label + ":", col1x, diy, { width: 40, lineBreak: false }).restore();
+      .text(item.label + ":", col1x, diy, { width: 36, lineBreak: false }).restore();
     doc.save().font(SANS_B).fontSize(8).fillColor(C.cream)
-      .text(item.b, col1x + 40, diy, { width: PW / 2 - ML - 60, lineBreak: false }).restore();
+      .text(item.b, col1x + 40, diy, { width: colValW, lineBreak: false }).restore();
     doc.save().font(SANS).fontSize(8).fillColor(C.muted)
-      .text(item.label + ":", col2x, diy, { width: 40, lineBreak: false }).restore();
+      .text(item.label + ":", col2x, diy, { width: 36, lineBreak: false }).restore();
     doc.save().font(SANS_B).fontSize(8).fillColor(C.cream)
-      .text(item.g, col2x + 40, diy, { width: PW / 2 - ML - 60, lineBreak: false }).restore();
+      .text(item.g, col2x + 40, diy, { width: colValW, lineBreak: false }).restore();
     diy += 16;
   });
 
-  // Generated date at bottom
+  // ── Bottom rule + generated date ────────────────────────────────────────────
+  doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
+    .moveTo(PW / 2 - 70, PH - 58).lineTo(PW / 2 + 70, PH - 58).stroke().restore();
   const dateStr = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   doc.save().font(SANS).fontSize(7.5).fillColor(C.muted)
-    .text(`Generated on ${dateStr}  ·  Powered by VedicScan`, 0, PH - 50, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(`Generated on ${dateStr}  ·  Powered by VedicScan`, 0, PH - 46, { width: PW, align: "center", lineBreak: false }).restore();
 }
 
 // ─── Page 2: Executive Summary & Scores ──────────────────────────────────────
