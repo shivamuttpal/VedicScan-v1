@@ -1,11 +1,27 @@
 import { Request, Response } from 'express';
 import { KootaService, NAKSHATRA_TABLE } from '../service/koota.service';
+import { calculateNakshatra } from '../service/astronomical';
 import { generateCompatibilityPDF } from '../services/compatibility.pdf.service';
 import { AuthRequest } from '../../../middlewares/auth.middleware';
 import { User } from '../../user/model/user.model';
 import { UserUsage } from '../../subscription/model/subscription.model';
 
-const getDeterministicNakshatra = (data: any) => {
+/**
+ * Resolve Janma Nakshatra for a person using the Moon's actual astronomical
+ * position at the time of birth (Jean Meeus algorithm + Lahiri ayanamsa).
+ *
+ * Falls back to a simple deterministic seed only when dateOfBirth is missing.
+ */
+const getNakshatraForPerson = (data: any) => {
+    if (data.dateOfBirth) {
+        const name = calculateNakshatra(
+            data.dateOfBirth,
+            data.timeOfBirth || '12:00',
+            data.placeOfBirth || 'India',
+        );
+        if (name && NAKSHATRA_TABLE[name]) return NAKSHATRA_TABLE[name];
+    }
+    // Fallback: deterministic seed (used only when date is absent)
     const nakshatras = Object.keys(NAKSHATRA_TABLE);
     const seed = (data.name?.length || 0) + (new Date(data.dateOfBirth).getDate() || 0);
     return NAKSHATRA_TABLE[nakshatras[seed % nakshatras.length]];
@@ -47,8 +63,8 @@ export const compatibilityController = {
                 return;
             }
 
-            const boyN = getDeterministicNakshatra(boy);
-            const girlN = getDeterministicNakshatra(girl);
+            const boyN = getNakshatraForPerson(boy);
+            const girlN = getNakshatraForPerson(girl);
 
             const gunaMilan = KootaService.analyze(boyN, girlN);
             const doshas = detectDoshas(boyN, girlN, gunaMilan);
@@ -126,8 +142,8 @@ export const compatibilityController = {
                 return;
             }
 
-            const boyN = getDeterministicNakshatra(boy);
-            const girlN = getDeterministicNakshatra(girl);
+            const boyN = getNakshatraForPerson(boy);
+            const girlN = getNakshatraForPerson(girl);
             const gunaMilan = KootaService.analyze(boyN, girlN);
             const doshas = detectDoshas(boyN, girlN, gunaMilan);
 
