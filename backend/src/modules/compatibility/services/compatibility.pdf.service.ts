@@ -460,8 +460,6 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
   // Big score
   doc.save().font(SERIF_B).fontSize(52).fillColor(vColor)
     .text(`${milan.total_score}`, ML + 18, y + 16, { lineBreak: false }).restore();
-  doc.save().font(SERIF).fontSize(18).fillColor(C.muted)
-    .text("/ 36", ML + 78, y + 36, { lineBreak: false }).restore();
   doc.save().font(SANS_B).fontSize(8).fillColor(C.muted)
     .text("TOTAL GUNA SCORE", ML + 18, y + 74, { characterSpacing: 1, lineBreak: false }).restore();
 
@@ -615,8 +613,8 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
     // Koota header row
     doc.save().font(SERIF_B).fontSize(14).fillColor(C.ink)
       .text(k.koota, ML + 16, y + 12, { lineBreak: false }).restore();
-    doc.save().font(SERIF_I).fontSize(10).fillColor(C.muted)
-      .text("  " + meta.sanskrit, ML + 16 + doc.widthOfString(k.koota) + 2, y + 15, { lineBreak: false }).restore();
+    // doc.save().font(SERIF_I).fontSize(10).fillColor(C.muted)
+    //   .text("  " + meta.sanskrit, ML + 16 + doc.widthOfString(k.koota) + 2, y + 15, { lineBreak: false }).restore();
 
     // Score badge (top right)
     const badgeX = ML + W - 80;
