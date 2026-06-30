@@ -54,7 +54,27 @@
       "Bash(node -c src/screens/main/ChatScreen.js)",
       "Bash(node -c src/screens/main/HomeScreen.js)",
       "Bash(node -c src/screens/main/ProfileScreen.js)",
-      "Bash(node -c src/components/LocationInput.js)"
+      "Bash(node -c src/components/LocationInput.js)",
+      "Bash(pm2 restart *)",
+      "PowerShell(pm2 restart vedicscan-backend 2>&1)",
+      "Bash(xargs grep -l \"pdfkit\\\\|pdf\\\\|PDF\")",
+      "PowerShell(Get-Command pm2 -ErrorAction SilentlyContinue)",
+      "PowerShell(npx pm2 --version 2>$null)",
+      "PowerShell(node --version 2>$null)",
+      "Bash(mkdir -p \"d:/Vedicscan1/video/src/scenes\")",
+      "Bash(npx remotion *)",
+      "Bash(node -e \"const pdf = require\\('pdfkit'\\); console.log\\('pdfkit loaded, version:', pdf.version || 'unknown'\\); const doc = new pdf\\({ autoFirstPage: false }\\); doc.addPage\\(\\); doc.text\\('test'\\); doc.end\\(\\); console.log\\('Basic PDF creation works'\\);\")",
+      "PowerShell(Get-Process -Name \"node\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-NetTCPConnection -State Listen | Where-Object {$_.LocalPort -in @\\(3000, 5000, 8000, 4000, 3001, 8080\\)} | Select-Object LocalAddress, LocalPort, OwningProcess)",
+      "PowerShell(Get-NetTCPConnection -State Listen)",
+      "PowerShell($proc = Get-Process -Id 960 -ErrorAction SilentlyContinue; if \\($proc\\) { $wmi = Get-WmiObject Win32_Process -Filter \"ProcessId=960\"; $wmi.CommandLine })",
+      "Bash(git -C d:/Vedicscan1 ls-files backend/dist/)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
+    ],
+    "additionalDirectories": [
+      "d:\\Vedicscan1\\video\\src"
     ]
   }
 }

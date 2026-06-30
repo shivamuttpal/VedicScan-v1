@@ -1,0 +1,25 @@
+{
+  "name": "vedicscan-video",
+  "version": "1.0.0",
+  "description": "VedicScan promotional video — 30s mobile ad",
+  "scripts": {
+    "start": "npx remotion studio",
+    "render": "npx remotion render VedicScanAd out/VedicScanAd.mp4 --overwrite",
+    "render:reel": "npx remotion render VedicScanAd out/VedicScanAd_reel.mp4 --overwrite",
+    "still": "npx remotion still VedicScanAd out/thumbnail.png --frame=60"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.290",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "remotion": "4.0.290"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.0.0"
+  },
+  "remotion": {
+    "entryPoint": "src/index.ts"
+  }
+}

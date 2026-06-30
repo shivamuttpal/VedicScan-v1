@@ -13,7 +13,7 @@ import api from '../../config/api';
 import LocationInput from '../../components/LocationInput';
 
 const LOGO = require('../../../assets/logo.jpeg');
-const BANNER = require('../../../assets/bannerbackground5.webp');
+const BANNER = require('../../../assets/banner.png');
 
 const BabyNamingScreen = ({ navigation }) => {
   const { hasProfile } = useAuth();

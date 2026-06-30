@@ -19,7 +19,7 @@ import {
 } from '../../config/revenuecat';
 
 const LOGO = require('../../../assets/logo.jpeg');
-const BANNER = require('../../../assets/bannerbackground5.webp');
+const BANNER = require('../../../assets/banner.png');
 
 const PRO_FEATURES = [
   { icon: '🔮', title: 'Unlimited AI Questions', desc: 'Ask as many Vedic questions as you need, every day.' },

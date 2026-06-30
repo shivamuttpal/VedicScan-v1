@@ -10,7 +10,7 @@ import api from '../../config/api';
 import { getCustomerInfo, hasPro, getActiveProductId, presentCustomerCenter, syncRevenueCatToBackend } from '../../config/revenuecat';
 
 const LOGO = require('../../../assets/logo.jpeg');
-const BANNER = require('../../../assets/bannerbackground5.webp');
+const BANNER = require('../../../assets/banner.png');
 
 const PLAN_META = {
   free: { label: 'Free', color: '#A08856', bg: '#FFFDF8', border: '#F7F1E5', icon: '✨' },

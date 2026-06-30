@@ -4,12 +4,14 @@ import {
   ActivityIndicator, Keyboard, ScrollView, Animated
 } from 'react-native';
 import axios from 'axios';
+import { Ionicons } from '@expo/vector-icons';
 import { C, spacing, radius, fontSize, shadow } from '../theme';
 
 const LocationInput = ({
   value, onChangeText, placeholder, style, onFocus,
   // optional dark-theme overrides
   dark = false,
+  soft = false,
 }) => {
   const [query, setQuery] = useState(value || '');
   const [suggestions, setSuggestions] = useState([]);
@@ -29,6 +31,18 @@ const LocationInput = ({
     subtextColor: '#9A8878',
     iconColor: '#C8A45A',
     clearColor: '#9A8878',
+  } : soft ? {
+    inputBg: '#FCFAF8',
+    inputBorder: '#ECE6E2',
+    inputText: '#54474B',
+    inputPlaceholder: '#B5A5A1',
+    dropdownBg: '#FFFFFF',
+    dropdownBorder: '#E9DEDA',
+    itemBorder: '#F2EAE7',
+    itemText: '#54474B',
+    subtextColor: '#9A8580',
+    iconColor: '#A87861',
+    clearColor: '#A68F8A',
   } : {
     inputBg: '#F7F1E5',
     inputBorder: '#E8DCC2',
@@ -106,7 +120,7 @@ const LocationInput = ({
   return (
     <View style={[styles.container, style]}>
       <View style={[styles.inputWrapper, { backgroundColor: th.inputBg, borderColor: th.inputBorder }]}>
-        <Text style={[styles.searchIcon, { color: th.iconColor }]}>📍</Text>
+        <Ionicons name="location-outline" size={17} color={th.iconColor} style={styles.searchIcon} />
         <TextInput
           style={[styles.input, { color: th.inputText }]}
           value={query}
@@ -120,7 +134,7 @@ const LocationInput = ({
         />
         {query.length > 0 && (
           <TouchableOpacity onPress={clearSearch} style={styles.clearBtn}>
-            <Text style={[styles.clearIcon, { color: th.clearColor }]}>✕</Text>
+            <Ionicons name="close" size={16} color={th.clearColor} />
           </TouchableOpacity>
         )}
       </View>
@@ -181,7 +195,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   searchIcon: {
-    fontSize: 16,
     marginRight: 8,
   },
   input: {
@@ -193,11 +206,6 @@ const styles = StyleSheet.create({
   },
   clearBtn: {
     padding: 8,
-  },
-  clearIcon: {
-    fontSize: 14,
-    color: C.textDim,
-    fontWeight: '700',
   },
   dropdown: {
     position: 'absolute',

@@ -12,7 +12,7 @@ import api from '../../config/api';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const LOGO = require('../../../assets/logo.jpeg');
-const BANNER = require('../../../assets/bannerbackground5.webp');
+const BANNER = require('../../../assets/banner.png');
 
 const GENDERS = ['Male', 'Female', 'Other'];
 const RELATIONSHIPS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Friend', 'Other'];

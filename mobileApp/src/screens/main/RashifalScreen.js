@@ -11,7 +11,7 @@ import api from '../../config/api';
 import { SIGNS } from '../../data/signs';
 
 const LOGO = require('../../../assets/logo.jpeg');
-const BANNER = require('../../../assets/bannerbackground5.webp');
+const BANNER = require('../../../assets/banner.png');
 
 const PERIODS = ['daily', 'weekly', 'monthly'];
 

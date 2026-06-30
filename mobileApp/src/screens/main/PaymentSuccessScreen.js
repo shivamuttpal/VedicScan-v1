@@ -7,7 +7,7 @@ import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { VedicCard } from '../../components/VedicCard';
 
 const LOGO = require('../../../assets/logo.jpeg');
-const BANNER = require('../../../assets/bannerbackground5.webp');
+const BANNER = require('../../../assets/banner.png');
 
 const { width } = Dimensions.get('window');
 

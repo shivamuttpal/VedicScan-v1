@@ -10,7 +10,7 @@ import { VedicCard, GoldBar } from '../../components/VedicCard';
 import api from '../../config/api';
 
 const LOGO = require('../../../assets/logo.jpeg');
-const BANNER = require('../../../assets/bannerbackground5.webp');
+const BANNER = require('../../../assets/banner.png');
 
 const InsightsScreen = ({ navigation }) => {
   const { hasProfile } = useAuth();
