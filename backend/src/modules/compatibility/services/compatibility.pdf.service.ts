@@ -368,8 +368,8 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
   doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
     .moveTo(ML + 40, detY).lineTo(PW - ML - 40, detY).stroke().restore();
 
-  doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted).characterSpacing(1.2)
-    .text("BIRTH DETAILS", 0, detY + 10, { width: PW, align: "center", lineBreak: false }).restore();
+  doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted)
+    .text("BIRTH DETAILS", 0, detY + 10, { width: PW, align: "center", characterSpacing: 1.2, lineBreak: false }).restore();
 
   const col1x = ML + 20, col2x = PW / 2 + 10;
   const detItems = [
@@ -425,8 +425,8 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
     .text(`${milan.total_score}`, ML + 18, y + 16, { lineBreak: false }).restore();
   doc.save().font(SERIF).fontSize(18).fillColor(C.muted)
     .text("/ 36", ML + 78, y + 36, { lineBreak: false }).restore();
-  doc.save().font(SANS_B).fontSize(8).fillColor(C.muted).characterSpacing(1)
-    .text("TOTAL GUNA SCORE", ML + 18, y + 74, { lineBreak: false }).restore();
+  doc.save().font(SANS_B).fontSize(8).fillColor(C.muted)
+    .text("TOTAL GUNA SCORE", ML + 18, y + 74, { characterSpacing: 1, lineBreak: false }).restore();
 
   // Verdict
   doc.save().font(SERIF_B).fontSize(15).fillColor(C.ink)
@@ -445,8 +445,8 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
     doc.save().roundedRect(x, y, halfW, 88, 6).fill(C.white).restore();
     doc.save().strokeColor(C.rule).lineWidth(0.5).roundedRect(x, y, halfW, 88, 6).stroke().restore();
     doc.save().fillColor(label === "GROOM" ? "#D4A84B" : C.rose).rect(x, y, halfW, 4).fill().restore();
-    doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted).characterSpacing(1)
-      .text(label, x + 12, y + 12, { lineBreak: false }).restore();
+    doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted)
+      .text(label, x + 12, y + 12, { characterSpacing: 1, lineBreak: false }).restore();
     doc.save().font(SERIF_B).fontSize(14).fillColor(C.ink)
       .text(person.name || label, x + 12, y + 24, { width: halfW - 24, lineBreak: false }).restore();
     const rows = [
@@ -741,8 +741,8 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
   ];
 
   generalRemedies.forEach(section => {
-    doc.save().font(SANS_B).fontSize(8.5).fillColor(C.maroon).characterSpacing(0.5)
-      .text(section.section.toUpperCase(), ML, y, { lineBreak: false }).restore();
+    doc.save().font(SANS_B).fontSize(8.5).fillColor(C.maroon)
+      .text(section.section.toUpperCase(), ML, y, { characterSpacing: 0.5, lineBreak: false }).restore();
     y += 16;
 
     section.items.forEach(item => {
@@ -935,8 +935,8 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
     doc.save().rect(ML, y, W, 36).fill(C.maroon).restore();
     doc.save().roundedRect(ML, y, W, 8, 4).fill(accentColor).restore();
 
-    doc.save().font(SANS_B).fontSize(7.5).fillColor(C.goldLight).characterSpacing(1.2)
-      .text(label, ML + 16, y + 12, { lineBreak: false }).restore();
+    doc.save().font(SANS_B).fontSize(7.5).fillColor(C.goldLight)
+      .text(label, ML + 16, y + 12, { characterSpacing: 1.2, lineBreak: false }).restore();
     doc.save().font(SERIF_B).fontSize(15).fillColor(C.white)
       .text(`${nk.name} Nakshatra`, ML + 16, y + 23, { lineBreak: false }).restore();
     doc.save().font(SERIF_I).fontSize(10).fillColor(C.goldLight)
@@ -1032,8 +1032,8 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
   let y = 52;
 
   // Header
-  doc.save().font(SANS_B).fontSize(8).fillColor(C.goldLight).characterSpacing(3)
-    .text("CONCLUSION & BLESSING", 0, y, { width: PW, align: "center", lineBreak: false }).restore();
+  doc.save().font(SANS_B).fontSize(8).fillColor(C.goldLight)
+    .text("CONCLUSION & BLESSING", 0, y, { width: PW, align: "center", characterSpacing: 3, lineBreak: false }).restore();
   y += 22;
   doc.save().font(SERIF_I).fontSize(11).fillColor(C.muted)
     .text("VedicScan · Vivah Compatibility Analysis", 0, y, { width: PW, align: "center", lineBreak: false }).restore();
@@ -1044,8 +1044,8 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
   // Final score box
   doc.save().fillOpacity(0.3).roundedRect(PW / 2 - 130, y, 260, 80, 8).fill('#000000').restore();
   doc.save().strokeColor(C.gold).lineWidth(0.7).roundedRect(PW / 2 - 130, y, 260, 80, 8).stroke().restore();
-  doc.save().font(SANS_B).fontSize(9).fillColor(C.muted).characterSpacing(1.5)
-    .text("FINAL COMPATIBILITY SCORE", PW / 2 - 130, y + 12, { width: 260, align: "center", lineBreak: false }).restore();
+  doc.save().font(SANS_B).fontSize(9).fillColor(C.muted)
+    .text("FINAL COMPATIBILITY SCORE", PW / 2 - 130, y + 12, { width: 260, align: "center", characterSpacing: 1.5, lineBreak: false }).restore();
   doc.save().font(SERIF_B).fontSize(36).fillColor(C.goldLight)
     .text(`${score} / 36`, PW / 2 - 130, y + 26, { width: 260, align: "center", lineBreak: false }).restore();
   doc.save().font(SERIF_B).fontSize(13).fillColor(verdictColor)
@@ -1096,8 +1096,8 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
 
   // Disclaimer
   doc.save().fillOpacity(0.2).roundedRect(ML + 20, y, W - 40, 68, 6).fill('#000000').restore();
-  doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted).characterSpacing(0.8)
-    .text("DISCLAIMER", ML + 32, y + 10, { lineBreak: false }).restore();
+  doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted)
+    .text("DISCLAIMER", ML + 32, y + 10, { characterSpacing: 0.8, lineBreak: false }).restore();
   doc.save().font(SANS).fontSize(7.5).fillColor(C.muted)
     .text(
       "This report is based on classical Vedic Jyotisha principles and is offered for spiritual reflection and guidance only. It does not constitute professional astrological, medical, legal, or marital advice. The final decision regarding marriage rests entirely with the individuals involved and their families. VedicScan does not guarantee any particular life outcome based on this analysis.",
