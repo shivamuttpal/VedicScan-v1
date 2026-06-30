@@ -148,7 +148,7 @@ export const compatibilityController = {
                 success: true,
                 pdf: pdfBuffer.toString('base64'),
                 filename,
-                pages: 9,
+                pages: 11,
                 generated_at: new Date().toISOString(),
             });
 

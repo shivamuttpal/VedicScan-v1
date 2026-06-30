@@ -401,7 +401,7 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
 function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
   pageHeader(doc, "Ashta Koota Summary");
-  pageFooter(doc, 2, 9);
+  pageFooter(doc, 2, 11);
 
   let y = 48;
 
@@ -522,11 +522,11 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
     .restore();
 }
 
-// ─── Pages 3–4: Guna Deep Dive ───────────────────────────────────────────────
+// ─── Pages 3–6: Guna Deep Dive (2 kootas per page, dynamic card height) ────────
 function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput, from: number, to: number, pageNum: number) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
   pageHeader(doc, "Guna Analysis");
-  pageFooter(doc, pageNum, 9);
+  pageFooter(doc, pageNum, 11);
 
   const kootas = d.gunaMilan.koota_breakdown.slice(from, to);
   let y = 48;
@@ -537,7 +537,7 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
   hRule(doc, ML, y, W);
   y += 12;
 
-  kootas.forEach((k, idx) => {
+  kootas.forEach((k) => {
     const meta = GM[k.koota];
     if (!meta) return;
     const kPct = (k.score / k.max_score) * 100;
@@ -545,11 +545,20 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
     const rating = kPct >= 75 ? "EXCELLENT" : kPct >= 50 ? "GOOD" : kPct > 0 ? "FAIR" : "POOR";
     const analysis = kPct >= 75 ? meta.full : kPct >= 50 ? meta.partial : meta.poor;
 
+    // Pre-calculate text heights so the card can size to content
+    const classicalW = W - 32;
+    const analysisW = W - 36;
+    doc.font(SERIF_I).fontSize(9);
+    const classicalH = doc.heightOfString(meta.classical, { width: classicalW });
+    doc.font(SERIF).fontSize(9);
+    const analysisH = doc.heightOfString(analysis, { width: analysisW });
+    // Layout: header(80) + classicalLabel(12) + classicalText + gap(12) + analysisBox + bottomPad(12)
+    const analysisBoxH = 10 + 12 + analysisH + 10;
+    const cardH = 80 + 12 + classicalH + 12 + analysisBoxH + 12;
+
     // Card background
-    const cardH = 160;
     doc.save().roundedRect(ML, y, W, cardH, 6).fill(C.white).restore();
     doc.save().strokeColor(C.rule).lineWidth(0.5).roundedRect(ML, y, W, cardH, 6).stroke().restore();
-    // Left color accent
     doc.save().roundedRect(ML, y, 4, cardH, 2).fill(kColor).restore();
 
     // Koota header row
@@ -564,7 +573,7 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
     doc.save().font(SANS_B).fontSize(10).fillColor(C.white)
       .text(`${k.score} / ${k.max_score}  ${rating[0]}`, badgeX + 6, y + 16, { lineBreak: false }).restore();
 
-    // Rating text small
+    // Rating text
     doc.save().font(SANS_B).fontSize(7).fillColor(kColor)
       .text(rating, ML + 16, y + 30, { lineBreak: false }).restore();
 
@@ -581,21 +590,23 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
 
     hRule(doc, ML + 16, y + 72, W - 32, C.rule, 0.3);
 
-    // Classical description
+    // Classical description (wraps freely)
+    const classicalLabelY = y + 80;
+    const classicalTextY = classicalLabelY + 12;
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.maroon)
-      .text("CLASSICAL SIGNIFICANCE:", ML + 16, y + 80, { lineBreak: false }).restore();
+      .text("CLASSICAL SIGNIFICANCE:", ML + 16, classicalLabelY, { lineBreak: false }).restore();
     doc.save().font(SERIF_I).fontSize(9).fillColor(C.inkSoft)
-      .text(meta.classical, ML + 16, y + 92, { width: W - 32, lineBreak: false }).restore();
+      .text(meta.classical, ML + 16, classicalTextY, { width: classicalW }).restore();
 
-    // Analysis for this couple
-    const analysisY = y + 115;
-    doc.save().roundedRect(ML + 10, analysisY, W - 20, 36, 4).fill(C.creamAlt).restore();
+    // Analysis for this couple — positioned dynamically after classical text
+    const analysisBoxY = classicalTextY + classicalH + 12;
+    doc.save().roundedRect(ML + 10, analysisBoxY, W - 20, analysisBoxH, 4).fill(C.creamAlt).restore();
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.maroon)
-      .text("FOR THIS COUPLE:", ML + 18, analysisY + 5, { lineBreak: false }).restore();
+      .text("FOR THIS COUPLE:", ML + 18, analysisBoxY + 8, { lineBreak: false }).restore();
     doc.save().font(SERIF).fontSize(9).fillColor(C.ink)
-      .text(analysis, ML + 18, analysisY + 16, { width: W - 36, lineBreak: false }).restore();
+      .text(analysis, ML + 18, analysisBoxY + 20, { width: analysisW }).restore();
 
-    y += cardH + 14;
+    y += cardH + 16;
   });
 }
 
@@ -603,7 +614,7 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
 function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
   pageHeader(doc, "Dosha Analysis");
-  pageFooter(doc, 5, 9);
+  pageFooter(doc, 7, 11);
 
   let y = 48;
 
@@ -707,7 +718,7 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
 function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
   pageHeader(doc, "Sacred Remedies");
-  pageFooter(doc, 6, 9);
+  pageFooter(doc, 8, 11);
 
   let y = 48;
 
@@ -809,7 +820,7 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
 function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
   pageHeader(doc, "Life Areas");
-  pageFooter(doc, 7, 9);
+  pageFooter(doc, 9, 11);
 
   let y = 48;
   const kootas = d.gunaMilan.koota_breakdown;
@@ -915,7 +926,7 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
 function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
   doc.rect(0, 0, PW, PH).fill(C.cream);
   pageHeader(doc, "Nakshatra Profiles");
-  pageFooter(doc, 8, 9);
+  pageFooter(doc, 10, 11);
 
   let y = 48;
 
@@ -927,27 +938,14 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
 
   const drawNakshatraCard = (nk: NakshatraData, person: any, label: string, accentColor: string) => {
     const extra = NX[nk.name];
-    const cardH = 210;
+    const leftW = 220;
+    const rightW = W - leftW - 16;
+    const lx = ML + 16;
+    const rx = ML + leftW + 16;
+    const specValW = leftW - 110; // width available for spec values
 
-    doc.save().roundedRect(ML, y, W, cardH, 8).fill(C.white).restore();
-    doc.save().strokeColor(C.rule).lineWidth(0.5).roundedRect(ML, y, W, cardH, 8).stroke().restore();
-    // Header gradient strip
-    doc.save().rect(ML, y, W, 36).fill(C.maroon).restore();
-    doc.save().roundedRect(ML, y, W, 8, 4).fill(accentColor).restore();
-
-    doc.save().font(SANS_B).fontSize(7.5).fillColor(C.goldLight)
-      .text(label, ML + 16, y + 12, { characterSpacing: 1.2, lineBreak: false }).restore();
-    doc.save().font(SERIF_B).fontSize(15).fillColor(C.white)
-      .text(`${nk.name} Nakshatra`, ML + 16, y + 23, { lineBreak: false }).restore();
-    doc.save().font(SERIF_I).fontSize(10).fillColor(C.goldLight)
-      .text(`${nk.rashi_english} (${nk.rashi})  ·  Lord: ${nk.lord}`, ML + W - 200, y + 26, { width: 190, align: "right", lineBreak: false }).restore();
-
-    let ky = y + 46;
-    const leftW = 220, rightW = W - leftW - 16;
-    const lx = ML + 16, rx = ML + leftW + 16;
-
-    // Left column — technical data
-    const specs = [
+    // Left column specs
+    const specs: [string, string][] = [
       ["Deity (Devata)", extra?.deity || "—"],
       ["Symbol", extra?.symbol || "—"],
       ["Zodiac Sign", `${nk.rashi_english} (${nk.rashi})`],
@@ -958,13 +956,53 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
       ["Yoni", nk.yoni],
       ["Vashya", nk.vashya],
     ];
+
+    // Pre-calculate left column height (each row height = max of label vs wrapped value)
+    doc.font(SANS_B).fontSize(8);
+    const specRowHeights = specs.map(([, val]) =>
+      Math.max(13, doc.heightOfString(val, { width: specValW })) + 3
+    );
+    const leftColH = 14 + specRowHeights.reduce((a, b) => a + b, 0);
+
+    // Pre-calculate right column height
+    let rightColH = 14; // "ESSENCE & CHARACTER" label
+    if (extra) {
+      doc.font(SERIF_I).fontSize(9);
+      rightColH += 12 + doc.heightOfString(`"${extra.essence}"`, { width: rightW }) + 8;
+      doc.font(SERIF).fontSize(9);
+      rightColH += 12 + doc.heightOfString(extra.traits, { width: rightW }) + 8;
+      rightColH += 12 + doc.heightOfString(extra.shadow, { width: rightW });
+    }
+
+    const contentH = Math.max(leftColH, rightColH);
+    const cardH = 46 + contentH + 16; // 46 = header strip area, 16 = bottom padding
+
+    // Draw card background
+    doc.save().roundedRect(ML, y, W, cardH, 8).fill(C.white).restore();
+    doc.save().strokeColor(C.rule).lineWidth(0.5).roundedRect(ML, y, W, cardH, 8).stroke().restore();
+    // Header strip
+    doc.save().rect(ML, y, W, 36).fill(C.maroon).restore();
+    doc.save().roundedRect(ML, y, W, 8, 4).fill(accentColor).restore();
+
+    doc.save().font(SANS_B).fontSize(7.5).fillColor(C.goldLight)
+      .text(label, ML + 16, y + 12, { characterSpacing: 1.2, lineBreak: false }).restore();
+    doc.save().font(SERIF_B).fontSize(15).fillColor(C.white)
+      .text(`${nk.name} Nakshatra`, ML + 16, y + 23, { lineBreak: false }).restore();
+    doc.save().font(SERIF_I).fontSize(10).fillColor(C.goldLight)
+      .text(`${nk.rashi_english} (${nk.rashi})  ·  Lord: ${nk.lord}`, ML + W - 200, y + 26, { width: 190, align: "right", lineBreak: false }).restore();
+
+    // Left column — technical data
+    let ky = y + 46;
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.maroon)
       .text("BIRTH STAR PROFILE", lx, ky, { lineBreak: false }).restore();
     ky += 14;
-    specs.forEach(([lbl, val]) => {
-      doc.save().font(SANS).fontSize(8).fillColor(C.muted).text(lbl + ":", lx, ky, { width: 90, lineBreak: false }).restore();
-      doc.save().font(SANS_B).fontSize(8).fillColor(C.inkSoft).text(val, lx + 92, ky, { width: leftW - 110, lineBreak: false }).restore();
-      ky += 13;
+    specs.forEach(([lbl, val], si) => {
+      const rowH = specRowHeights[si];
+      doc.save().font(SANS).fontSize(8).fillColor(C.muted)
+        .text(lbl + ":", lx, ky, { width: 90, lineBreak: false }).restore();
+      doc.save().font(SANS_B).fontSize(8).fillColor(C.inkSoft)
+        .text(val, lx + 92, ky, { width: specValW }).restore();
+      ky += rowH;
     });
 
     // Right column — qualities
@@ -998,16 +1036,19 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
   drawNakshatraCard(d.boyNakshatra, d.boy, "GROOM'S NAKSHATRA", "#D4A84B");
   drawNakshatraCard(d.girlNakshatra, d.girl, "BRIDE'S NAKSHATRA", C.rose);
 
-  // Energetic interaction section
-  doc.save().roundedRect(ML, y, W, 78, 6).fill(C.creamAlt).restore();
-  doc.save().strokeColor(C.gold).lineWidth(0.5).roundedRect(ML, y, W, 78, 6).stroke().restore();
-  doc.save().font(SANS_B).fontSize(8.5).fillColor(C.maroon)
-    .text("THEIR ENERGETIC INTERACTION", ML + 14, y + 10, { lineBreak: false }).restore();
-
+  // Energetic interaction section — dynamic height based on content
   const sameGana = d.boyNakshatra.gana === d.girlNakshatra.gana;
   const interaction = sameGana
     ? `Both ${d.boyNakshatra.name} and ${d.girlNakshatra.name} belong to the ${d.boyNakshatra.gana} Gana — the same fundamental temperament family. This creates an immediate recognition and resonance between partners: they approach life's challenges and joys with the same underlying spirit. Their home will feel naturally harmonious, their communication will be intuitively understood, and their daily rhythms will align with minimum friction.`
     : `${d.boyNakshatra.name} (${d.boyNakshatra.gana} Gana) and ${d.girlNakshatra.name} (${d.girlNakshatra.gana} Gana) come from different temperament families — creating a dynamic, textured partnership. The ${d.boyNakshatra.gana} energy offers ${d.boyNakshatra.gana === "Deva" ? "grace, lightness, and idealism" : d.boyNakshatra.gana === "Manushya" ? "practicality, emotional depth, and balance" : "intensity, passion, and transformative power"}, while the ${d.girlNakshatra.gana} energy brings ${d.girlNakshatra.gana === "Deva" ? "grace, lightness, and spiritual aspiration" : d.girlNakshatra.gana === "Manushya" ? "grounded warmth and human wisdom" : "fierce devotion and transformative strength"}. Together, they can create a beautifully complementary whole.`;
+
+  doc.font(SERIF).fontSize(9.5);
+  const interactionTextH = doc.heightOfString(interaction, { width: W - 28 });
+  const interactionBoxH = 24 + interactionTextH + 12;
+  doc.save().roundedRect(ML, y, W, interactionBoxH, 6).fill(C.creamAlt).restore();
+  doc.save().strokeColor(C.gold).lineWidth(0.5).roundedRect(ML, y, W, interactionBoxH, 6).stroke().restore();
+  doc.save().font(SANS_B).fontSize(8.5).fillColor(C.maroon)
+    .text("THEIR ENERGETIC INTERACTION", ML + 14, y + 10, { lineBreak: false }).restore();
 
   doc.save().font(SERIF).fontSize(9.5).fillColor(C.inkSoft)
     .text(interaction, ML + 14, y + 24, { width: W - 28 }).restore();
@@ -1140,27 +1181,32 @@ export function generateCompatibilityPDF(input: CompatibilityPDFInput): Promise<
       doc.addPage();
       drawSummaryPage(doc, input);
 
-      // Page 3: Gunas 1–4
+      // Pages 3–6: Gunas (2 per page for full text visibility)
       doc.addPage();
-      drawGunaPage(doc, input, 0, 4, 3);
+      drawGunaPage(doc, input, 0, 2, 3);
 
-      // Page 4: Gunas 5–8
       doc.addPage();
-      drawGunaPage(doc, input, 4, 8, 4);
+      drawGunaPage(doc, input, 2, 4, 4);
 
-      // Page 5: Dosha Analysis
+      doc.addPage();
+      drawGunaPage(doc, input, 4, 6, 5);
+
+      doc.addPage();
+      drawGunaPage(doc, input, 6, 8, 6);
+
+      // Page 7: Dosha Analysis
       doc.addPage();
       drawDoshaPage(doc, input);
 
-      // Page 6: Sacred Remedies
+      // Page 8: Sacred Remedies
       doc.addPage();
       drawRemediesPage(doc, input);
 
-      // Page 7: Life Areas
+      // Page 9: Life Areas
       doc.addPage();
       drawLifeAreasPage(doc, input);
 
-      // Page 8: Nakshatra Profiles
+      // Page 10: Nakshatra Profiles
       doc.addPage();
       drawNakshatraProfilesPage(doc, input);
 
