@@ -75,9 +75,10 @@ export const kundaliController = {
         return res.status(404).json({ success: false, message: 'Kundali not found' });
       }
 
-      // PDF always uses English interpretations — PDFKit's built-in fonts (Times/Helvetica)
-      // don't support Devanagari glyphs; Hindi text would render as garbled characters.
-      const pdfBuffer = await generateKundaliPDF(kundali as any);
+      // Bilingual PDF: 'hi' embeds bundled Noto Devanagari fonts and sources Hindi
+      // labels + the stored `interpretationsHi` prose. Defaults to English.
+      const lang = (req.query.lang === 'hi') ? 'hi' : 'en';
+      const pdfBuffer = await generateKundaliPDF(kundali as any, lang);
       const filename = `VedicScan_Kundali_${kundali.name.replace(/\s+/g, '_')}_${kundali.dateOfBirth}.pdf`;
 
       res.setHeader('Content-Type', 'application/pdf');

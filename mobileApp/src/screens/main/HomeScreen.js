@@ -24,7 +24,7 @@ import api from '../../config/api';
 import { SIGNS, LORD_HI, EL_HI } from '../../data/signs';
 
 const LOGO = require('../../../assets/logo.jpeg');
-const BANNER = require('../../../assets/home/hero-celestial.jpg');
+const BANNER = require('../../../assets/home/banner.png');
 const HOME_ART = {
   kundali: require('../../../assets/home/kundali.jpg'),
   matching: require('../../../assets/home/matching.jpg'),
@@ -177,8 +177,8 @@ const HomeScreen = ({ navigation }) => {
     {
       id: 'kundali',
       image: HOME_ART.kundali,
-      title: 'Get Your Kundali',
-      desc: 'Detailed analysis of your birth chart',
+      title: t('getYourKundali'),
+      desc: t('getYourKundaliDesc'),
       route: 'KundaliTab',
       accent: '#C9860A',
     },
@@ -186,15 +186,15 @@ const HomeScreen = ({ navigation }) => {
       id: 'matching',
       image: HOME_ART.matching,
       title: t('kundaliMatching'),
-      desc: 'Check compatibility for a happy future',
+      desc: t('kundaliMatchingDesc'),
       route: 'CompatibilityTab',
       accent: '#7A1F3D',
     },
     {
       id: 'maharishi',
       image: HOME_ART.maharishi,
-      title: 'Ask Maharishi',
-      desc: "Get answers to life's important questions",
+      title: t('askMaharishi'),
+      desc: t('askMaharishiDesc'),
       route: 'Chat',
       accent: '#5C3D8F',
     },
@@ -202,7 +202,7 @@ const HomeScreen = ({ navigation }) => {
       id: 'baby',
       image: HOME_ART.baby,
       title: t('babyNaming'),
-      desc: 'Most auspicious names for your baby',
+      desc: t('babyNamingCardDesc'),
       route: 'BabyNaming',
       accent: '#1565A0',
     },
@@ -265,9 +265,9 @@ const HomeScreen = ({ navigation }) => {
                   <Image source={HOME_ART.maharishi} style={styles.aiAvatarImg} resizeMode="cover" />
                 </View>
                 <View style={styles.aiGuideText}>
-                  <Text style={styles.aiCapsuleEyebrow}>YOUR VEDIC GUIDE</Text>
-                  <Text style={styles.aiCapsuleName}>Ask Maharishi</Text>
-                  <Text style={styles.aiGuideHint}>Personal guidance, whenever you need it</Text>
+                  <Text style={styles.aiCapsuleEyebrow}>{t('yourVedicGuide')}</Text>
+                  <Text style={styles.aiCapsuleName}>{t('askMaharishi')}</Text>
+                  <Text style={styles.aiGuideHint}>{t('personalGuidanceHint')}</Text>
                 </View>
                 <View style={styles.aiGuideArrow}>
                   <Ionicons name="arrow-forward" size={17} color="#3E1735" />
@@ -389,10 +389,8 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.section}>
           <View style={styles.sectionTitleRow}>
             <View>
-              <Text style={styles.sectionLabel}>Explore Guidance</Text>
-              <Text style={styles.sectionSubtitle}>
-                {isHindi ? 'वैदिक ज्ञान पर आधारित साधन' : 'Tools rooted in timeless Vedic wisdom'}
-              </Text>
+              <Text style={styles.sectionLabel}>{t('exploreGuidance')}</Text>
+              <Text style={styles.sectionSubtitle}>{t('exploreGuidanceSubtitle')}</Text>
             </View>
             <Ionicons name="compass-outline" size={21} color="#A66C16" />
           </View>
@@ -419,7 +417,7 @@ const HomeScreen = ({ navigation }) => {
                   <Text style={[styles.featureTitle, { color: f.accent }]}>{f.title}</Text>
                   <Text style={styles.featureDesc}>{f.desc}</Text>
                   <View style={styles.featureFooter}>
-                    <Text style={[styles.featureAction, { color: f.accent }]}>Explore</Text>
+                    <Text style={[styles.featureAction, { color: f.accent }]}>{t('exploreCta')}</Text>
                     <View style={[styles.featureArrowBtn, { backgroundColor: f.accent }]}>
                       <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
                     </View>
@@ -472,8 +470,8 @@ const HomeScreen = ({ navigation }) => {
                   <Image source={LOGO} style={styles.drawerAvatarLogo} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.drawerUserName}>{defaultProfile?.name || user?.firstName || 'Welcome'}</Text>
-                  <Text style={styles.drawerUserSub}>{user?.email || 'vedic member'}</Text>
+                  <Text style={styles.drawerUserName}>{defaultProfile?.name || user?.firstName || t('welcomeTitle')}</Text>
+                  <Text style={styles.drawerUserSub}>{user?.email || t('vedicMember')}</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={closeDrawer} style={styles.drawerCloseBtn} activeOpacity={0.7}>
@@ -548,7 +546,7 @@ const styles = StyleSheet.create({
   // ── HERO ──
   hero: {
     overflow: 'hidden',
-    paddingBottom: 72,
+    paddingBottom: 42,
     backgroundColor: '#241126',
   },
   heroBanner: {
@@ -655,6 +653,7 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     borderWidth: 1,
     borderColor: 'rgba(235,203,132,0.34)',
+    marginBottom:30
   },
   aiAvatarRing: {
     width: 50,
@@ -720,8 +719,9 @@ const styles = StyleSheet.create({
   warningDesc: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 1 },
   // ── RASHI CARD ──
   rashiCardWrap: {
-    marginTop: -42,
+    marginTop: -49,
     paddingHorizontal: 16,
+    backgroundColor: '#F8F4EE',
     zIndex: 10,
   },
   rashiCard: {
@@ -735,6 +735,7 @@ const styles = StyleSheet.create({
     elevation: 10,
     borderWidth: 1,
     borderColor: 'rgba(212,166,79,0.14)',
+    marginTop:10
   },
   rashiGoldBar: {
     height: 2,

@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
             await AsyncStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
           }
         } catch (err) {
-          console.error('Token invalid, clearing session');
+          console.log('Token invalid, clearing session');
           await clearSession();
         }
 
@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
 
       }
     } catch (error) {
-      console.error('Error loading session:', error);
+      console.log('Error loading session:', error);
       await clearSession();
     } finally {
       setLoading(false);
@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
       await refreshProfileStatus(newToken);
       setIsAuthenticated(true);
     } catch (error) {
-      console.error('Error saving session:', error);
+      console.log('Error saving session:', error);
     } finally {
       setLoading(false);
     }
@@ -122,7 +122,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, message: res.data?.message || 'Verification failed' };
       }
     } catch (error) {
-      console.error('Google Sign-In Error:', error);
+      console.log('Google Sign-In Error:', error);
       return { success: false, error };
     }
   };
@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }) => {
       setHasProfile(exists);
       return exists;
     } catch (err) {
-      console.error('Failed to fetch profile status:', err?.message);
+      console.log('Failed to fetch profile status:', err?.message);
       return false;
     }
   }, [token]);

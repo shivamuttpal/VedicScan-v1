@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
   Alert, RefreshControl, Platform, Image
@@ -8,25 +8,15 @@ import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import { VedicCard, GoldBar } from '../../components/VedicCard';
 import LocationInput from '../../components/LocationInput';
+import CalendarDatePicker from '../../components/CalendarDatePicker';
+import CustomTimePicker from '../../components/CustomTimePicker';
 import api from '../../config/api';
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 const LOGO = require('../../../assets/logo.jpeg');
 const BANNER = require('../../../assets/banner.png');
 
 const GENDERS = ['Male', 'Female', 'Other'];
 const RELATIONSHIPS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Friend', 'Other'];
-
-const parseDateLocal = (str) => {
-  const [y, m, d] = str.split('-').map(Number);
-  return new Date(y, m - 1, d);
-};
-const formatLocalDate = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
 
 const ProfileScreen = ({ route, navigation }) => {
   const { user, hasProfile, refreshProfileStatus, logout } = useAuth();
@@ -35,6 +25,22 @@ const ProfileScreen = ({ route, navigation }) => {
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  const scrollViewRef = useRef(null);
+  const locationFieldRef = useRef(null);
+  const nameTouchedRef = useRef(false);
+
+  const scrollToLocationField = () => {
+    setTimeout(() => {
+      if (locationFieldRef.current && scrollViewRef.current) {
+        locationFieldRef.current.measureLayout(
+          scrollViewRef.current,
+          (x, y) => scrollViewRef.current?.scrollTo({ y: y - 20, animated: true }),
+          () => {}
+        );
+      }
+    }, 150);
+  };
 
   // Form state
   const [form, setForm] = useState({
@@ -46,21 +52,28 @@ const ProfileScreen = ({ route, navigation }) => {
     isDefault: false,
   });
 
-  // Auto-populate name from user context when relationship is Self
+  // Auto-populate name from user context when relationship is Self.
+  // Only runs once per form-open session — stops the moment the user types
+  // (or clears) the field themselves, so a manual clear doesn't get overwritten.
   useEffect(() => {
-    if (!editingId && showForm && form.relationship === 'Self' && !form.fullName && user) {
-      const nameFromContext = (user.firstName || user.name || '').trim();
-      const lastNameFromContext = (user.lastName || '').trim();
-      const fullName = `${nameFromContext} ${lastNameFromContext}`.trim();
-
-      if (fullName) {
-        setForm(prev => ({ ...prev, fullName }));
-      } else if (user.email || user.phone) {
-        const fallback = (user.email ? user.email.split('@')[0] : user.phone) || '';
-        if (fallback) setForm(prev => ({ ...prev, fullName: fallback }));
-      }
+    if (!showForm) {
+      nameTouchedRef.current = false;
+      return;
     }
-  }, [user, showForm, form.relationship, editingId, form.fullName]);
+    if (editingId || form.relationship !== 'Self' || nameTouchedRef.current || form.fullName || !user) {
+      return;
+    }
+    const nameFromContext = (user.firstName || user.name || '').trim();
+    const lastNameFromContext = (user.lastName || '').trim();
+    const fullName = `${nameFromContext} ${lastNameFromContext}`.trim();
+
+    if (fullName) {
+      setForm(prev => ({ ...prev, fullName }));
+    } else if (user.email || user.phone) {
+      const fallback = (user.email ? user.email.split('@')[0] : user.phone) || '';
+      if (fallback) setForm(prev => ({ ...prev, fullName: fallback }));
+    }
+  }, [showForm, form.relationship, editingId, user]);
   const [editingId, setEditingId] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -159,21 +172,6 @@ const ProfileScreen = ({ route, navigation }) => {
     }
   };
 
-  const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setForm({ ...form, dateOfBirth: formatLocalDate(selectedDate) });
-    }
-  };
-
-  const onTimeChange = (event, selectedTime) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      const hours = selectedTime.getHours().toString().padStart(2, '0');
-      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
-      setForm({ ...form, timeOfBirth: `${hours}:${minutes}` });
-    }
-  };
 
   const handleDelete = (id) => {
     Alert.alert('Delete Profile', 'Are you sure you want to delete this profile?', [
@@ -219,6 +217,7 @@ const ProfileScreen = ({ route, navigation }) => {
       </LinearGradient>
 
       <ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.saffron} />}
@@ -271,7 +270,7 @@ const ProfileScreen = ({ route, navigation }) => {
                 <TextInput
                   style={styles.input}
                   value={form.fullName}
-                  onChangeText={(t) => setForm({ ...form, fullName: t })}
+                  onChangeText={(t) => { nameTouchedRef.current = true; setForm({ ...form, fullName: t }); }}
                   placeholder="Enter full name"
                   placeholderTextColor={C.textDim}
                 />
@@ -286,16 +285,18 @@ const ProfileScreen = ({ route, navigation }) => {
                   </Text>
                 </TouchableOpacity>
 
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={form.dateOfBirth ? parseDateLocal(form.dateOfBirth) : new Date(1990, 0, 1)}
-                    mode="date"
-                    display="spinner"
-                    minimumDate={new Date(1900, 0, 1)}
-                    maximumDate={new Date()}
-                    onChange={onDateChange}
-                  />
-                )}
+                <CalendarDatePicker
+                  visible={showDatePicker}
+                  value={form.dateOfBirth}
+                  title="Date of Birth"
+                  minDate={new Date(1900, 0, 1)}
+                  maxDate={new Date()}
+                  onClose={() => setShowDatePicker(false)}
+                  onConfirm={(dateStr) => {
+                    setForm({ ...form, dateOfBirth: dateStr });
+                    setShowDatePicker(false);
+                  }}
+                />
 
                 <Text style={styles.label}>Time of Birth *</Text>
                 <TouchableOpacity
@@ -307,29 +308,27 @@ const ProfileScreen = ({ route, navigation }) => {
                   </Text>
                 </TouchableOpacity>
 
-                {showTimePicker && (
-                  <DateTimePicker
-                    value={(() => {
-                      const d = new Date();
-                      if (form.timeOfBirth) {
-                        const [h, m] = form.timeOfBirth.split(':');
-                        d.setHours(parseInt(h), parseInt(m));
-                      }
-                      return d;
-                    })()}
-                    mode="time"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={onTimeChange}
-                  />
-                )}
+                <CustomTimePicker
+                  visible={showTimePicker}
+                  value={form.timeOfBirth}
+                  title="Time of Birth"
+                  onClose={() => setShowTimePicker(false)}
+                  onConfirm={(timeStr) => {
+                    setForm({ ...form, timeOfBirth: timeStr });
+                    setShowTimePicker(false);
+                  }}
+                />
 
                 <Text style={styles.label}>Place of Birth *</Text>
-                <LocationInput
-                  style={styles.input}
-                  value={form.placeOfBirth}
-                  onChangeText={(t) => setForm({ ...form, placeOfBirth: t })}
-                  placeholder="Mumbai, Maharashtra"
-                />
+                <View ref={locationFieldRef} collapsable={false}>
+                  <LocationInput
+                    style={styles.input}
+                    value={form.placeOfBirth}
+                    onChangeText={(t) => setForm({ ...form, placeOfBirth: t })}
+                    placeholder="Mumbai, Maharashtra"
+                    onFocus={scrollToLocationField}
+                  />
+                </View>
 
                 <View style={styles.switchRow}>
                   <TouchableOpacity

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, KeyboardAvoidingView, Platform, Alert,
@@ -9,22 +9,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { VedicCard } from '../../components/VedicCard';
 import LocationInput from '../../components/LocationInput';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import CalendarDatePicker from '../../components/CalendarDatePicker';
+import CustomTimePicker from '../../components/CustomTimePicker';
 import api from '../../config/api';
-
-// Parse a YYYY-MM-DD string as a LOCAL date (avoids UTC-midnight timezone shift)
-const parseDateLocal = (str) => {
-  const [y, m, d] = str.split('-').map(Number);
-  return new Date(y, m - 1, d);
-};
-
-// Format a Date as YYYY-MM-DD using local time
-const formatLocalDate = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
 
 const ProfileWizardScreen = ({ navigation }) => {
   const { user, refreshProfileStatus } = useAuth();
@@ -35,6 +22,21 @@ const ProfileWizardScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const scrollViewRef = useRef(null);
+  const locationFieldRef = useRef(null);
+
+  const scrollToLocationField = () => {
+    setTimeout(() => {
+      if (locationFieldRef.current && scrollViewRef.current) {
+        locationFieldRef.current.measureLayout(
+          scrollViewRef.current,
+          (x, y) => scrollViewRef.current?.scrollTo({ y: y - 20, animated: true }),
+          () => {}
+        );
+      }
+    }, 150);
+  };
 
   const [form, setForm] = useState({
     fullName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
@@ -56,22 +58,6 @@ const ProfileWizardScreen = ({ navigation }) => {
   };
 
   const prevStep = () => setStep(s => Math.max(s - 1, 0));
-
-  const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setForm({ ...form, dateOfBirth: formatLocalDate(selectedDate) });
-    }
-  };
-
-  const onTimeChange = (event, selectedTime) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      const h = selectedTime.getHours().toString().padStart(2, '0');
-      const m = selectedTime.getMinutes().toString().padStart(2, '0');
-      setForm({ ...form, timeOfBirth: `${h}:${m}` });
-    }
-  };
 
   const handleFinish = async () => {
     setLoading(true);
@@ -133,7 +119,7 @@ const ProfileWizardScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
           <View style={styles.header}>
             <Text style={styles.brand}>Vedic<Text style={styles.brandAccent}>Scan</Text></Text>
@@ -213,16 +199,18 @@ const ProfileWizardScreen = ({ navigation }) => {
                     {form.dateOfBirth || t('selectDate')}
                   </Text>
                 </TouchableOpacity>
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={form.dateOfBirth ? parseDateLocal(form.dateOfBirth) : new Date(1990, 0, 1)}
-                    mode="date"
-                    display="spinner"
-                    minimumDate={new Date(1900, 0, 1)}
-                    maximumDate={new Date()}
-                    onChange={onDateChange}
-                  />
-                )}
+                <CalendarDatePicker
+                  visible={showDatePicker}
+                  value={form.dateOfBirth}
+                  title={t('dateOfBirth')}
+                  minDate={new Date(1900, 0, 1)}
+                  maxDate={new Date()}
+                  onClose={() => setShowDatePicker(false)}
+                  onConfirm={(dateStr) => {
+                    setForm({ ...form, dateOfBirth: dateStr });
+                    setShowDatePicker(false);
+                  }}
+                />
 
                 <Text style={styles.label}>{t('timeOfBirth')}</Text>
                 <TouchableOpacity style={styles.input} onPress={() => setShowTimePicker(true)}>
@@ -230,28 +218,26 @@ const ProfileWizardScreen = ({ navigation }) => {
                     {form.timeOfBirth || t('selectTime')}
                   </Text>
                 </TouchableOpacity>
-                {showTimePicker && (
-                  <DateTimePicker
-                    value={(() => {
-                      const d = new Date();
-                      if (form.timeOfBirth) {
-                        const [h, m] = form.timeOfBirth.split(':');
-                        d.setHours(parseInt(h), parseInt(m));
-                      }
-                      return d;
-                    })()}
-                    mode="time"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    onChange={onTimeChange}
-                  />
-                )}
+                <CustomTimePicker
+                  visible={showTimePicker}
+                  value={form.timeOfBirth}
+                  title={t('timeOfBirth')}
+                  onClose={() => setShowTimePicker(false)}
+                  onConfirm={(timeStr) => {
+                    setForm({ ...form, timeOfBirth: timeStr });
+                    setShowTimePicker(false);
+                  }}
+                />
 
                 <Text style={styles.label}>{t('placeOfBirth')}</Text>
-                <LocationInput
-                  value={form.placeOfBirth}
-                  onChangeText={v => setForm({ ...form, placeOfBirth: v })}
-                  placeholder="City, State, Country"
-                />
+                <View ref={locationFieldRef} collapsable={false}>
+                  <LocationInput
+                    value={form.placeOfBirth}
+                    onChangeText={v => setForm({ ...form, placeOfBirth: v })}
+                    placeholder="City, State, Country"
+                    onFocus={scrollToLocationField}
+                  />
+                </View>
 
                 <View style={styles.infoBox}>
                   <Text style={styles.infoText}>{t('infoTip')}</Text>

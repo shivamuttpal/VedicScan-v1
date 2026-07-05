@@ -2,6 +2,18 @@ import PDFDocument from "pdfkit";
 import path from "path";
 import fs from "fs";
 import { IKundali } from "../model/kundali.model";
+import {
+  Lang, T, labels, planetList, yogaName, doshaName, formatDate, phaseName, sadeSatiCounsel,
+} from "./kundali.pdf.i18n";
+
+const FONT_DIR = path.join(__dirname, "../../../../assets/fonts/");
+const FONT_OVERRIDES: Record<string, string> = {
+  "Times-Roman": "NotoSerifDevanagari-Regular.ttf",
+  "Times-Bold": "NotoSerifDevanagari-Bold.ttf",
+  "Times-Italic": "NotoSerifDevanagari-Regular.ttf",
+  "Helvetica": "NotoSansDevanagari-Regular.ttf",
+  "Helvetica-Bold": "NotoSansDevanagari-Bold.ttf",
+};
 
 // Logo image — prefer PNG (transparent), fall back to JPEG
 const LOGO_PATH = (() => {
@@ -427,7 +439,7 @@ function drawNorthIndianChart(
    PAGE FURNITURE
    ════════════════════════════════════════════════════════════════════════ */
 
-function contentHeader(doc: Doc, L: number, pageW: number, title: string) {
+function contentHeader(doc: Doc, L: number, pageW: number, title: string, lang: Lang = "en") {
   // maroon band with gold rule + side flourishes
   doc.rect(0, 0, doc.page.width, 46).fill(C.maroon);
   doc.rect(0, 46, doc.page.width, 2.2).fill(C.gold);
@@ -435,7 +447,7 @@ function contentHeader(doc: Doc, L: number, pageW: number, title: string) {
     .font(SERIF_B)
     .fontSize(15)
     .fillColor(C.white)
-    .text(title, L, 15, { width: pageW, align: "center", characterSpacing: 1 });
+    .text(title, L, 15, { width: pageW, align: "center", characterSpacing: lang === "hi" ? 0 : 1 });
   const cx = doc.page.width / 2;
   const half = doc.widthOfString(title) / 2 + 18;
   doc.lineWidth(0.8).strokeColor(C.goldLight);
@@ -468,6 +480,7 @@ function sectionHeader(
   title: string,
   y?: number,
   accent = C.maroon,
+  lang: Lang = "en",
 ) {
   const yPos = y ?? doc.y + 10;
   const g = doc.linearGradient(L, yPos, L + pageW, yPos + 24);
@@ -480,7 +493,7 @@ function sectionHeader(
     .fillColor(C.white)
     .text(title, L + 14, yPos + 7, {
       width: pageW - 28,
-      characterSpacing: 0.5,
+      characterSpacing: lang === "hi" ? 0 : 0.5,
       lineBreak: false,
     });
   diamondDot(doc, L + pageW - 12, yPos + 12.5, 2.6, C.goldLight);
@@ -522,9 +535,13 @@ function ensureSpace(doc: Doc, needed: number, onNewPage?: () => void) {
 /* ════════════════════════════════════════════════════════════════════════
    MAIN
    ════════════════════════════════════════════════════════════════════════ */
-export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
+export function generateKundaliPDF(rawKundali: IKundali, lang: Lang = "en"): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const kundali: any = JSON.parse(JSON.stringify(rawKundali));
+    const S = labels(lang);
+    const s = (k: string) => S[k] as string; // static-label helper
+    // Heavy interpretive prose is stored bilingually on the document.
+    const interp = (lang === "hi" ? kundali.interpretationsHi : kundali.interpretations) || kundali.interpretations || {};
 
     const doc = new PDFDocument({
       size: "A4",
@@ -532,6 +549,15 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       bufferPages: true,
       info: { Title: `Kundali Report — ${kundali.name}`, Author: "VedicScan" },
     });
+
+    // Hindi mode: override PDFKit's built-in Times/Helvetica with Noto Devanagari,
+    // clearing the pre-cached default so every existing .font() call renders Devanagari.
+    if (lang === "hi") {
+      for (const [std, file] of Object.entries(FONT_OVERRIDES)) {
+        doc.registerFont(std, path.join(FONT_DIR, file));
+        delete (doc as any)._fontFamilies[std];
+      }
+    }
 
     const buffers: Buffer[] = [];
     doc.on("data", (c: Buffer) => buffers.push(c));
@@ -632,16 +658,16 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       .font(SERIF)
       .fontSize(12)
       .fillColor(C.gold)
-      .text("V E D I C S C A N", L, 196, {
+      .text(s("brand"), L, 196, {
         width: pageW,
         align: "center",
-        characterSpacing: 3,
+        characterSpacing: lang === "hi" ? 0 : 3,
       });
     doc
       .font(SERIF_B)
-      .fontSize(30)
+      .fontSize(lang === "hi" ? 26 : 30)
       .fillColor(C.white)
-      .text("Personal Kundali Report", L, 218, {
+      .text(s("reportTitle"), L, 218, {
         width: pageW,
         align: "center",
       });
@@ -649,12 +675,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       .font(SERIF_I)
       .fontSize(11.5)
       .fillColor(C.goldLight)
-      .text(
-        "—  Ancient Wisdom · Precise Calculations · Modern Insights  —",
-        L,
-        258,
-        { width: pageW, align: "center" },
-      );
+      .text(s("coverTagline"), L, 258, { width: pageW, align: "center" });
     divider(doc, cx, 286, 150);
 
     // Name
@@ -679,17 +700,10 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       .stroke();
 
     const info: [string, string][] = [
-      ["Date of Birth", kundali.dateOfBirth],
-      ["Time of Birth", kundali.timeOfBirth],
-      ["Place of Birth", kundali.placeOfBirth],
-      [
-        "Report Generated",
-        new Date(kundali.generatedAt).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        }),
-      ],
+      [s("dob"), kundali.dateOfBirth],
+      [s("tob"), kundali.timeOfBirth],
+      [s("pob"), kundali.placeOfBirth],
+      [s("reportGenerated"), formatDate(kundali.generatedAt, lang)],
     ];
     const colW = cardW / 2;
     info.forEach(([label, val], i) => {
@@ -699,7 +713,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         .font(SANS)
         .fontSize(7.5)
         .fillColor(C.gold)
-        .text(label.toUpperCase(), col, row, { characterSpacing: 1 });
+        .text(lang === "hi" ? label : label.toUpperCase(), col, row, { characterSpacing: lang === "hi" ? 0 : 1 });
       doc
         .font(SERIF_B)
         .fontSize(11)
@@ -710,10 +724,10 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     // Key signs strip
     const stripY = 488;
     const items: [string, string, string][] = [
-      ["Lagna", kundali.lagna.sign, "asc"],
-      ["Moon Sign", kundali.moonSign, "moon"],
-      ["Sun Sign", kundali.sunSign, "sun"],
-      ["Nakshatra", kundali.moonNakshatra, "star"],
+      [s("lagna"), T.rashi(kundali.lagna.sign, lang), "asc"],
+      [s("moonSign"), T.rashi(kundali.moonSign, lang), "moon"],
+      [s("sunSign"), T.rashi(kundali.sunSign, lang), "sun"],
+      [s("nakshatra"), T.nakshatra(kundali.moonNakshatra, lang), "star"],
     ];
     const sw = pageW / 4;
     items.forEach(([label, val, sym], i) => {
@@ -728,10 +742,10 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         .font(SANS)
         .fontSize(7)
         .fillColor(C.gold)
-        .text(label.toUpperCase(), bx, stripY + 34, {
+        .text(lang === "hi" ? label : label.toUpperCase(), bx, stripY + 34, {
           width: sw,
           align: "center",
-          characterSpacing: 1,
+          characterSpacing: lang === "hi" ? 0 : 1,
         });
       if (i < 3)
         doc
@@ -747,16 +761,11 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       .font(SERIF_I)
       .fontSize(8.5)
       .fillColor(C.muted)
-      .text(
-        "Prepared for spiritual guidance and self-understanding.\nNot a substitute for medical, financial, or legal advice.",
-        L,
-        PH - 92,
-        { width: pageW, align: "center", lineGap: 2 },
-      );
+      .text(s("coverNote"), L, PH - 92, { width: pageW, align: "center", lineGap: 2 });
 
     /* ── PAGE 2: CHARTS (vertical stacked, full-width) ────────────────── */
     doc.addPage();
-    contentHeader(doc, L, pageW, "BIRTH CHART  (D1)  &  NAVAMSA  (D9)");
+    contentHeader(doc, L, pageW, s("hdrCharts"), lang);
     pageFrame(doc);
 
     const retroSet = new Set<string>(
@@ -778,7 +787,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     const housesArr: any[] = Array.isArray(kundali.houses)
       ? kundali.houses
       : Object.values(kundali.houses || {});
-    drawNorthIndianChart(doc, chartX, d1Y, chartSz, housesArr, "D1 · Rashi (Birth Chart)", retroSet);
+    drawNorthIndianChart(doc, chartX, d1Y, chartSz, housesArr, s("d1Title"), retroSet);
 
     // D9 — Navamsa Chart
     const nav = kundali.navamsa;
@@ -793,7 +802,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         : [];
       return { number: h, sign, planets: navPlanets };
     });
-    drawNorthIndianChart(doc, chartX, d9Y, chartSz, navHouses, "D9 · Navamsa Chart", retroSet);
+    drawNorthIndianChart(doc, chartX, d9Y, chartSz, navHouses, s("d9Title"), retroSet);
 
     // ── Chart summary card — pinned below D9 ─────────────────────────────
     const sumCardY = d9Y + chartSz + 14;
@@ -801,33 +810,29 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     doc.roundedRect(L, sumCardY, pageW, sumCardH, 5).fill(C.card);
     doc.lineWidth(0.8).strokeColor(C.gold).roundedRect(L, sumCardY, pageW, sumCardH, 5).stroke();
     doc.rect(L, sumCardY, 3.5, sumCardH).fill(C.gold);
-    doc.font(SERIF_B).fontSize(10).fillColor(C.maroon).text("Chart Summary", L + 14, sumCardY + 10);
+    doc.font(SERIF_B).fontSize(10).fillColor(C.maroon).text(s("chartSummary"), L + 14, sumCardY + 10);
 
     const sumPairs: [string, string][] = [
-      ["Lagna (Ascendant)",  `${kundali.lagna.sign}  ${kundali.lagna.degree.toFixed(2)}°`],
-      ["Navamsa Lagna",      nav?.lagnaSign || "N/A"],
-      ["Moon Sign",          `${kundali.moonSign}`],
-      ["Moon Nakshatra",     `${kundali.moonNakshatra} (Pada ${kundali.moonPada})`],
-      // ["Sun Sign",           `${kundali.sunSign}`],
+      [s("lagnaAscendant"),  `${T.rashi(kundali.lagna.sign, lang)}  ${kundali.lagna.degree.toFixed(2)}°`],
+      [s("navamsaLagna"),    nav?.lagnaSign ? T.rashi(nav.lagnaSign, lang) : "N/A"],
+      [s("moonSign"),        `${T.rashi(kundali.moonSign, lang)}`],
+      [s("moonNakshatraLbl"),`${T.nakshatra(kundali.moonNakshatra, lang)} (${s("pada")} ${kundali.moonPada})`],
     ];
+    const sumLblW = lang === "hi" ? 96 : 118;
     sumPairs.forEach((pr, i) => {
       const colx = L + 14 + (i % 2) * (pageW / 2);
       const rowy = sumCardY + 28 + Math.floor(i / 2) * 18;
-      doc.font(SANS).fontSize(7.5).fillColor(C.muted).text(pr[0] + ":", colx, rowy, { width: 118 });
-      doc.font(SANS_B).fontSize(8.5).fillColor(C.ink).text(pr[1], colx + 118, rowy, { width: pageW / 2 - 132 });
+      doc.font(SANS).fontSize(7.5).fillColor(C.muted).text(pr[0] + ":", colx, rowy, { width: sumLblW });
+      doc.font(SANS_B).fontSize(8.5).fillColor(C.ink).text(pr[1], colx + sumLblW, rowy, { width: pageW / 2 - sumLblW - 14 });
     });
 
     // ── Legend ────────────────────────────────────────────────────────────
     doc.font(SANS).fontSize(7.5).fillColor(C.muted)
-      .text(
-        "Legend:  Su Sun · Mo Moon · Ma Mars · Me Mercury · Ju Jupiter · Ve Venus · Sa Saturn · Ra Rahu · Ke Ketu · (R) Retrograde",
-        L, sumCardY + sumCardH + 10,
-        { width: pageW, align: "center" },
-      );
+      .text(s("legend"), L, sumCardY + sumCardH + 10, { width: pageW, align: "center" });
 
     /* ── PAGE 3: PLANETARY POSITIONS ───────────────────────────────────── */
     doc.addPage();
-    contentHeader(doc, L, pageW, "PLANETARY POSITIONS");
+    contentHeader(doc, L, pageW, s("hdrPositions"), lang);
     pageFrame(doc);
     doc.y = 66;
 
@@ -836,7 +841,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       doc,
       L,
       pageW,
-      ["Planet", "Rashi", "Nakshatra", "Degree", "House", "Navamsa"],
+      [s("colPlanet"), s("colRashi"), s("colNakshatra"), s("colDegree"), s("colHouse"), s("colNavamsa")],
       pw,
     );
 
@@ -849,12 +854,12 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       alt = !alt;
       const retro = p.retrograde ? " (R)" : "";
       const cols = [
-        name + retro,
-        p.rashi || "—",
-        p.nakshatra || "—",
+        T.planet(name, lang) + retro,
+        p.rashi ? T.rashi(p.rashi, lang) : "—",
+        p.nakshatra ? T.nakshatra(p.nakshatra, lang) : "—",
         `${(p.degree || 0).toFixed(2)}°`,
         `${p.houseNumber || "—"}`,
-        p.navamsaSign || "—",
+        p.navamsaSign ? T.rashi(p.navamsaSign, lang) : "—",
       ];
       let tx = L;
       cols.forEach((v, i) => {
@@ -875,10 +880,10 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       .stroke();
 
     doc.moveDown(1.2);
-    sectionHeader(doc, L, pageW, "HOUSE PLACEMENTS");
+    sectionHeader(doc, L, pageW, s("housePlacements"), undefined, C.maroon, lang);
     doc.moveDown(0.3);
     const hw = [70, 110, pageW - 180];
-    tableHeader(doc, L, pageW, ["House", "Sign", "Planets"], hw);
+    tableHeader(doc, L, pageW, [s("colHouse"), s("colSign"), s("colPlanets")], hw);
     alt = false;
     for (const h of housesArr) {
       const y = doc.y;
@@ -888,17 +893,17 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         .font(SANS_B)
         .fontSize(8.5)
         .fillColor(C.ink)
-        .text(`House ${h.number}`, L + 6, y + 5, { width: hw[0] - 8 });
+        .text(`${s("house")} ${h.number}`, L + 6, y + 5, { width: hw[0] - 8 });
       doc
         .font(SANS)
         .fontSize(8.5)
         .fillColor(C.ink)
-        .text(h.sign, L + hw[0] + 6, y + 5, { width: hw[1] - 8 });
+        .text(T.rashi(h.sign, lang), L + hw[0] + 6, y + 5, { width: hw[1] - 8 });
       doc
         .font(SANS)
         .fontSize(8.5)
         .fillColor(C.maroon)
-        .text(h.planets?.join(", ") || "—", L + hw[0] + hw[1] + 6, y + 5, {
+        .text(h.planets?.length ? planetList(h.planets.join(", "), lang) : "—", L + hw[0] + hw[1] + 6, y + 5, {
           width: hw[2] - 8,
         });
       doc.y = y + 19;
@@ -906,11 +911,11 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
 
     /* ── PAGE 4: YOGAS & DOSHAS ────────────────────────────────────────── */
     doc.addPage();
-    contentHeader(doc, L, pageW, "YOGAS  &  DOSHAS");
+    contentHeader(doc, L, pageW, s("hdrYogasDoshas"), lang);
     pageFrame(doc);
     doc.y = 66;
 
-    sectionHeader(doc, L, pageW, "AUSPICIOUS YOGAS");
+    sectionHeader(doc, L, pageW, s("auspiciousYogas"), undefined, C.maroon, lang);
     doc.moveDown(0.4);
     const yogas = (kundali.yogas || []).filter((y: any) => y.isPresent);
     if (!yogas.length) {
@@ -918,17 +923,12 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         .font(SERIF)
         .fontSize(10)
         .fillColor(C.muted)
-        .text(
-          "No major yogas are formed in this chart; the energies are balanced and steady.",
-          L + 6,
-          doc.y,
-          { width: pageW - 12 },
-        );
+        .text(s("noYogas"), L + 6, doc.y, { width: pageW - 12 });
       doc.moveDown(1.2);
     } else {
       for (const yg of yogas) {
         ensureSpace(doc, 80, () => {
-          contentHeader(doc, L, pageW, "YOGAS  &  DOSHAS  (cont.)");
+          contentHeader(doc, L, pageW, s("hdrYogasDoshasCont"), lang);
           pageFrame(doc);
           doc.y = 66;
         });
@@ -938,12 +938,12 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
           .font(SERIF_B)
           .fontSize(11)
           .fillColor(C.maroon)
-          .text(yg.name, L + 14, top, { width: pageW - 100, lineBreak: false });
+          .text(yogaName(yg.name, lang), L + 14, top, { width: pageW - 100, lineBreak: false });
         doc
           .font(SANS_B)
           .fontSize(8)
           .fillColor(C.goldDeep)
-          .text((yg.strength || "").toUpperCase(), L + pageW - 80, top + 2, {
+          .text(lang === "hi" ? T.strength(yg.strength, lang) : (yg.strength || "").toUpperCase(), L + pageW - 80, top + 2, {
             width: 76,
             align: "right",
             lineBreak: false,
@@ -965,14 +965,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     }
 
     doc.moveDown(0.3);
-    sectionHeader(
-      doc,
-      L,
-      pageW,
-      "DOSHAS & KARMIC PATTERNS",
-      undefined,
-      "#7A2433",
-    );
+    sectionHeader(doc, L, pageW, s("doshasKarmic"), undefined, "#7A2433", lang);
     doc.moveDown(0.4);
     const doshas = (kundali.doshas || []).filter((d: any) => d.isPresent);
     if (!doshas.length) {
@@ -980,16 +973,11 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         .font(SERIF)
         .fontSize(10)
         .fillColor(C.muted)
-        .text(
-          "No significant doshas were found — an auspicious indication.",
-          L + 6,
-          doc.y,
-          { width: pageW - 12 },
-        );
+        .text(s("noDoshas"), L + 6, doc.y, { width: pageW - 12 });
     } else {
       for (const ds of doshas) {
         ensureSpace(doc, 100, () => {
-          contentHeader(doc, L, pageW, "YOGAS  &  DOSHAS  (cont.)");
+          contentHeader(doc, L, pageW, s("hdrYogasDoshasCont"), lang);
           pageFrame(doc);
           doc.y = 66;
         });
@@ -1006,7 +994,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
           .font(SERIF_B)
           .fontSize(10)
           .fillColor(sev)
-          .text(ds.name || "", L + 14, top + 5, {
+          .text(doshaName(ds.name || "", lang), L + 14, top + 5, {
             width: pageW - 120,
             lineBreak: false,
           });
@@ -1015,7 +1003,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
           .fontSize(7.5)
           .fillColor(sev)
           .text(
-            `SEVERITY: ${(ds.severity || "").toUpperCase()}`,
+            `${s("severity")}: ${lang === "hi" ? T.severity(ds.severity, lang) : (ds.severity || "").toUpperCase()}`,
             L + pageW - 100,
             top + 6,
             { width: 96, align: "right", lineBreak: false },
@@ -1037,7 +1025,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
             .font(SANS_B)
             .fontSize(8.5)
             .fillColor(C.green)
-            .text("Remedy: ", L + 14, doc.y, {
+            .text(s("remedy"), L + 14, doc.y, {
               continued: true,
             });
 
@@ -1056,7 +1044,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
 
     /* ── PAGE 5: DASHA ─────────────────────────────────────────────────── */
     doc.addPage();
-    contentHeader(doc, L, pageW, "VIMSHOTTARI DASHA ANALYSIS");
+    contentHeader(doc, L, pageW, s("hdrDasha"), lang);
     pageFrame(doc);
     doc.y = 66;
 
@@ -1064,11 +1052,11 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
 
     // Build period cards data
     const periodCards: Array<{ label: string; planet: string; range: string; accent: string }> = [
-      { label: 'MAHADASHA',  planet: d.currentMahadasha,  range: `${d.mahadashaStartDate}  –  ${d.mahadashaEndDate}`,    accent: C.maroon   },
-      { label: 'ANTARDASHA', planet: d.currentAntardasha, range: `${d.antardashaStartDate}  –  ${d.antardashaEndDate}`,  accent: C.goldDeep },
+      { label: s('mahadasha'),  planet: T.planet(d.currentMahadasha, lang),  range: `${d.mahadashaStartDate}  –  ${d.mahadashaEndDate}`,    accent: C.maroon   },
+      { label: s('antardasha'), planet: T.planet(d.currentAntardasha, lang), range: `${d.antardashaStartDate}  –  ${d.antardashaEndDate}`,  accent: C.goldDeep },
     ];
     if (d.currentPratyantar) {
-      periodCards.push({ label: 'PRATYANTAR', planet: d.currentPratyantar, range: `Ends  ${d.pratyantarEndDate}`, accent: '#3B6E2A' });
+      periodCards.push({ label: s('pratyantar'), planet: T.planet(d.currentPratyantar, lang), range: `${s('ends')}  ${d.pratyantarEndDate}`, accent: '#3B6E2A' });
     }
 
     const nPeriods   = periodCards.length;
@@ -1094,7 +1082,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
 
     // 4. Header text
     doc.font(SANS_B).fontSize(9.5).fillColor(C.goldLight)
-      .text('CURRENT PLANETARY PERIODS', L, dpCardY + 11, { width: pageW, align: 'center', characterSpacing: 1.2 });
+      .text(s('currentPeriods'), L, dpCardY + 11, { width: pageW, align: 'center', characterSpacing: lang === 'hi' ? 0 : 1.2 });
 
     // Thin gold rule below header
     doc.lineWidth(0.7).strokeColor(C.gold)
@@ -1119,7 +1107,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
 
       // Period label (small caps style)
       doc.font(SANS_B).fontSize(6.5).fillColor(accent)
-        .text(label, iX, dpSubY + 9, { width: iW, characterSpacing: 0.9, lineBreak: false });
+        .text(label, iX, dpSubY + 9, { width: iW, characterSpacing: lang === 'hi' ? 0 : 0.9, lineBreak: false });
 
       // Planet name (large serif)
       doc.font(SERIF_B).fontSize(15).fillColor(C.ink)
@@ -1136,20 +1124,20 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
 
     doc.y = dpCardY + dpCardH + 14;
 
-    sectionHeader(doc, L, pageW, "MAHADASHA TIMELINE");
+    sectionHeader(doc, L, pageW, s("mahadashaTimeline"), undefined, C.maroon, lang);
     doc.moveDown(0.3);
     const mw = [pageW - 80 - 80 - 64 - 56, 80, 80, 64, 56];
     tableHeader(
       doc,
       L,
       pageW,
-      ["Mahadasha", "Start", "End", "Duration", "Status"],
+      [s("colMahadasha"), s("colStart"), s("colEnd"), s("colDuration"), s("colStatus")],
       mw,
     );
     alt = false;
     for (const md of (d.timeline || []).slice(0, 18)) {
       ensureSpace(doc, 19, () => {
-        contentHeader(doc, L, pageW, "VIMSHOTTARI DASHA  (cont.)");
+        contentHeader(doc, L, pageW, s("hdrDashaCont"), lang);
         pageFrame(doc);
         doc.y = 66;
       });
@@ -1163,11 +1151,11 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
           (365.25 * 864e5),
       );
       const cells = [
-        md.planet,
+        T.planet(md.planet, lang),
         md.startDate,
         md.endDate,
-        `${yrs} yrs`,
-        md.isCurrent ? "Active" : "",
+        `${yrs} ${s("yrs")}`,
+        md.isCurrent ? s("active") : "",
       ];
       let tx = L;
       cells.forEach((v, i) => {
@@ -1185,7 +1173,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     if (curMD?.antardashas?.length) {
       doc.moveDown(1);
       ensureSpace(doc, 140, () => {
-        contentHeader(doc, L, pageW, "VIMSHOTTARI DASHA  (cont.)");
+        contentHeader(doc, L, pageW, s("hdrDashaCont"), lang);
         pageFrame(doc);
         doc.y = 66;
       });
@@ -1193,15 +1181,18 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         doc,
         L,
         pageW,
-        `ANTARDASHA WITHIN ${String(curMD.planet).toUpperCase()} MAHADASHA`,
+        (S["antardashaWithin"] as (p: string) => string)(lang === "hi" ? T.planet(curMD.planet, lang) : String(curMD.planet).toUpperCase()),
+        undefined,
+        C.maroon,
+        lang,
       );
       doc.moveDown(0.3);
       const aw = [pageW - 110 - 110 - 70, 110, 110, 70];
-      tableHeader(doc, L, pageW, ["Antardasha", "Start", "End", "Status"], aw);
+      tableHeader(doc, L, pageW, [s("colAntardasha"), s("colStart"), s("colEnd"), s("colStatus")], aw);
       alt = false;
       for (const ad of curMD.antardashas) {
         ensureSpace(doc, 18, () => {
-          contentHeader(doc, L, pageW, "VIMSHOTTARI DASHA  (cont.)");
+          contentHeader(doc, L, pageW, s("hdrDashaCont"), lang);
           pageFrame(doc);
           doc.y = 66;
         });
@@ -1211,10 +1202,10 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         alt = !alt;
         if (ad.isCurrent) doc.rect(L, y, 3, 18).fill(C.gold);
         const cells = [
-          ad.planet,
+          T.planet(ad.planet, lang),
           ad.startDate,
           ad.endDate,
-          ad.isCurrent ? "Active" : "",
+          ad.isCurrent ? s("active") : "",
         ];
         let tx = L;
         cells.forEach((v, i) => {
@@ -1233,7 +1224,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     const ss: any = (kundali as any).sadeSati;
     if (ss && ss.moon_sign) {
       doc.addPage();
-      contentHeader(doc, L, pageW, "SHANI SADE SATI  &  DHAIYA");
+      contentHeader(doc, L, pageW, s("hdrSadeSati"), lang);
       pageFrame(doc);
       doc.y = 66;
 
@@ -1251,16 +1242,16 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       let statusLine1: string;
       let statusLine2: string;
       if (inSS) {
-        statusLine1 = `SADE SATI ACTIVE  ·  ${cs.phase || ""} Phase  (${cs.phase_sanskrit || ""})`;
-        statusLine2 = `Cycle: ${cs.cycle_start_date || ""}  –  ${cs.cycle_end_date || ""}     Phase ends: ${cs.phase_end_date || ""}`;
+        statusLine1 = `${s("sadeSatiActive")}  ·  ${phaseName(cs.phase || "", lang)} ${s("phase")}  (${cs.phase_sanskrit || ""})`;
+        statusLine2 = `${s("cycle")}: ${cs.cycle_start_date || ""}  –  ${cs.cycle_end_date || ""}     ${s("phaseEnds")}: ${cs.phase_end_date || ""}`;
       } else if (inDhaiya) {
-        statusLine1 = `DHAIYA ACTIVE  ·  ${cs.in_dhaiya?.type || ""}`;
-        statusLine2 = `Period: ${cs.in_dhaiya?.startDate || ""}  –  ${cs.in_dhaiya?.endDate || ""}`;
+        statusLine1 = `${s("dhaiyaActive")}  ·  ${cs.in_dhaiya?.type || ""}`;
+        statusLine2 = `${s("period")}: ${cs.in_dhaiya?.startDate || ""}  –  ${cs.in_dhaiya?.endDate || ""}`;
       } else {
-        statusLine1 = "Currently Free from Sade Sati & Dhaiya";
+        statusLine1 = s("freeSadeSati");
         statusLine2 = cs.next_cycle_start_date
-          ? `Next Sade Sati cycle begins: ${cs.next_cycle_start_date}  –  ${cs.next_cycle_end_date || ""}`
-          : "No upcoming cycle in the near future";
+          ? `${s("nextCycle")}: ${cs.next_cycle_start_date}  –  ${cs.next_cycle_end_date || ""}`
+          : s("noUpcoming");
       }
 
       const bannerY = doc.y;
@@ -1270,7 +1261,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         .text(statusLine2, L + 14, bannerY + 33, { width: pageW - 28 });
 
       const satNow = ss.saturn_now || {};
-      const satLine = `Saturn now in  ${satNow.sign || ""}  ${(satNow.degree_in_sign || 0).toFixed(2)}°${satNow.retrograde ? "  (Retrograde)" : ""}   ·   as of ${satNow.as_of || ""}`;
+      const satLine = `${s("saturnNow")}  ${T.rashi(satNow.sign || "", lang)}  ${(satNow.degree_in_sign || 0).toFixed(2)}°${satNow.retrograde ? `  (${s("retrograde")})` : ""}   ·   ${s("asOf")} ${satNow.as_of || ""}`;
       doc.font(SANS).fontSize(7.5).fillColor("#AEAEAE")
         .text(satLine, L + 14, bannerY + 52, { width: pageW - 28 });
       doc.y = bannerY + bannerH + 12;
@@ -1278,11 +1269,11 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       // ── Three-column info row ──────────────────────────────────────────
       const colW = (pageW - 16) / 3;
       const infoCards: [string, string, string][] = [
-        ["Janma Rashi (Moon Sign)", ss.moon_sign || "", `(${ss.moon_sign_sanskrit || ""})`],
-        ["Sade Sati Signs (12th · Moon · 2nd)",
-          `${ss.sade_sati_signs?.twelfth_from_moon || ""} · ${ss.sade_sati_signs?.moon_sign || ""} · ${ss.sade_sati_signs?.second_from_moon || ""}`, ""],
-        ["Dhaiya Signs",
-          `4th: ${ss.dhaiya_signs?.kantaka_shani_4th || ""}`, `8th: ${ss.dhaiya_signs?.ashtama_shani_8th || ""}`],
+        [s("janmaRashi"), T.rashi(ss.moon_sign || "", lang), `(${ss.moon_sign_sanskrit || ""})`],
+        [s("sadeSatiSigns"),
+          `${T.rashi(ss.sade_sati_signs?.twelfth_from_moon || "", lang)} · ${T.rashi(ss.sade_sati_signs?.moon_sign || "", lang)} · ${T.rashi(ss.sade_sati_signs?.second_from_moon || "", lang)}`, ""],
+        [s("dhaiyaSigns"),
+          `4th: ${T.rashi(ss.dhaiya_signs?.kantaka_shani_4th || "", lang)}`, `8th: ${T.rashi(ss.dhaiya_signs?.ashtama_shani_8th || "", lang)}`],
       ];
       const infoY = doc.y;
       const infoH = 56;
@@ -1302,12 +1293,12 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       doc.y = infoY + infoH + 14;
 
       // ── Sade Sati Lifecycle table ──────────────────────────────────────
-      sectionHeader(doc, L, pageW, "SADE SATI LIFECYCLE");
+      sectionHeader(doc, L, pageW, s("sadeSatiLifecycle"), undefined, C.maroon, lang);
       doc.moveDown(0.3);
 
       // Table columns: Cycle | Period | Rising | Peak | Setting | Status  (sum = pageW 499)
       const ssColW = [30, 110, 92, 92, 92, 83];
-      const ssCols = ["#", "Cycle Period", "Rising (Aroha)", "Peak (Madhya)", "Setting (Avaroha)", "Status"];
+      const ssCols = ["#", s("colCyclePeriod"), s("colRising"), s("colPeak"), s("colSetting"), s("colStatus")];
       tableHeader(doc, L, pageW, ssCols, ssColW);
 
       const cycles: any[] = (ss.cycles || []);
@@ -1332,7 +1323,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         doc.rect(L, ry, pageW, rowH).fill(rowBg);
         if (cyc.is_current) doc.rect(L, ry, 3, rowH).fill(C.gold);
 
-        const statusLabel = cyc.is_current ? "Active" : cyc.is_past ? "Past" : "Upcoming";
+        const statusLabel = cyc.is_current ? s("active") : cyc.is_past ? s("past") : s("upcoming");
         const statusColor = cyc.is_current ? C.maroon : cyc.is_past ? C.muted : C.ink;
 
         const rowVals = [
@@ -1359,7 +1350,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       doc.y += 10;
 
       // ── Dhaiya periods ────────────────────────────────────────────────
-      sectionHeader(doc, L, pageW, "DHAIYA  (SMALL PANOTI)");
+      sectionHeader(doc, L, pageW, s("dhaiyaSmallPanoti"), undefined, C.maroon, lang);
       doc.moveDown(0.3);
 
       const dhaiya = ss.dhaiya || {};
@@ -1373,47 +1364,40 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         doc.font(SANS_B).fontSize(8).fillColor(C.maroon)
           .text(title, ox + 10, dhY + 8, { width: dhHalf - 16 });
         doc.font(SANS).fontSize(7).fillColor(C.muted)
-          .text(`Saturn in ${sign}`, ox + 10, dhY + 20, { width: dhHalf - 16 });
+          .text(`${s("saturnIn")} ${T.rashi(sign, lang)}`, ox + 10, dhY + 20, { width: dhHalf - 16 });
         const list = (periods || []).slice(0, 4);
         list.forEach((p: any, i: number) => {
           const py = dhY + 32 + i * 14;
           const dot = p.is_current ? "●" : "○";
           const fColor = p.is_current ? C.maroon : C.ink;
           doc.font(SANS).fontSize(7.5).fillColor(fColor)
-            .text(`${dot}  ${p.startDate}  –  ${p.endDate}${p.is_current ? "  ← Active" : ""}`,
+            .text(`${dot}  ${p.startDate}  –  ${p.endDate}${p.is_current ? `  ← ${s("active")}` : ""}`,
               ox + 10, py, { width: dhHalf - 16 });
         });
         if (!list.length) {
           doc.font(SANS).fontSize(7.5).fillColor(C.muted)
-            .text("No occurrences in scan range", ox + 10, dhY + 32, { width: dhHalf - 16 });
+            .text(s("noOccurrences"), ox + 10, dhY + 32, { width: dhHalf - 16 });
         }
       };
 
-      drawDhaiyaCol(L,          "KANTAKA SHANI  (4th from Moon)", ss.dhaiya_signs?.kantaka_shani_4th || "", dhaiya.kantaka_shani_4th || []);
-      drawDhaiyaCol(L + dhHalf + 12, "ASHTAMA SHANI  (8th from Moon)", ss.dhaiya_signs?.ashtama_shani_8th || "", dhaiya.ashtama_shani_8th || []);
+      drawDhaiyaCol(L,          s("kantakaShani"), ss.dhaiya_signs?.kantaka_shani_4th || "", dhaiya.kantaka_shani_4th || []);
+      drawDhaiyaCol(L + dhHalf + 12, s("ashtamaShani"), ss.dhaiya_signs?.ashtama_shani_8th || "", dhaiya.ashtama_shani_8th || []);
       doc.y = dhY + 90 + 14;
 
       // ── Shani's Counsel (insight) ─────────────────────────────────────
-      sectionHeader(doc, L, pageW, "SHANI'S COUNSEL");
+      sectionHeader(doc, L, pageW, s("shanisCounsel"), undefined, C.maroon, lang);
       doc.moveDown(0.3);
 
-      let counsel = "";
-      const moonSign = ss.moon_sign || "";
-      if (inSS) {
-        const phase = cs.phase || "";
-        const phaseDesc: Record<string, string> = {
-          Rising:  "The Rising phase of Sade Sati (Saturn in the 12th from Moon) initiates a period of introspection, reduced external activity, and expenses. Sleep may be disturbed, and you may feel a pull toward withdrawal and inner work. This is a time to let go of what no longer serves you and prepare the ground for a new cycle of growth.",
-          Peak:    "The Peak phase (Saturn directly over the Moon, Janma Shani) is the most intense part of Sade Sati. Mental and emotional pressures can be heightened. Health, close relationships, and career may all feel the weight of Saturn's scrutiny. However, this phase also burns karmic residues and forges extraordinary resilience — those who persevere emerge far stronger.",
-          Setting: "The Setting phase (Saturn in the 2nd from Moon) brings gradual relief, though Saturn still touches finances, family, and speech. The worst of the pressure has passed; focus on stabilising what was disturbed in the earlier phases. Measured speech, prudent spending, and family harmony are the keys to this phase.",
-        };
-        counsel = `${moonSign} Moon · ${phase} Phase of Sade Sati\n\n${phaseDesc[phase] || cs.significance || ""}\n\nSaturn rewards sincere effort above all. Maintain your practice of discipline, service, and gratitude throughout this period. Phase ends: ${cs.phase_end_date || "N/A"}.`;
-      } else if (inDhaiya) {
-        const dType = cs.in_dhaiya?.type || "";
-        counsel = `${moonSign} Moon · ${dType} Active\n\n${dType.includes("4th") ? "Kantaka (4th from Moon) Shani brings challenges to home, comfort, and mother. It is a period of tests in domestic life and property matters. Patience and inner discipline are the antidotes." : "Ashtama (8th from Moon) Shani is the more intense of the two Dhaiya phases, touching secrets, joint finances, longevity, and sudden changes. Avoid speculation and unnecessary risks. This too shall pass."}\n\nDhaiya ends: ${cs.in_dhaiya?.endDate || "N/A"}.`;
-      } else {
-        const nextStart = cs.next_cycle_start_date || "";
-        counsel = `${moonSign} Moon · Clear Period\n\nYou are currently free of both Sade Sati and Dhaiya. This is an auspicious window to advance long-term goals, consolidate gains, and invest in relationships and health. ${nextStart ? `The next Sade Sati cycle begins around ${nextStart} — use this interval wisely to build resilience and resources.` : "Enjoy this period of relative planetary ease with gratitude and industry."}`;
-      }
+      const counsel = sadeSatiCounsel({
+        inSS, inDhaiya,
+        moonSign: ss.moon_sign || "",
+        phase: cs.phase || "",
+        phaseEndDate: cs.phase_end_date,
+        significance: cs.significance,
+        dhaiyaType: cs.in_dhaiya?.type || "",
+        dhaiyaEnd: cs.in_dhaiya?.endDate,
+        nextStart: cs.next_cycle_start_date || "",
+      }, lang);
 
       const counselY = doc.y;
       const counselH = 82;
@@ -1426,40 +1410,36 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
 
       // Remedies note
       doc.font(SANS).fontSize(7.5).fillColor(C.muted)
-        .text(
-          "Classical remedies during Sade Sati / Dhaiya: Recite Shani Chalisa or Hanuman Chalisa on Saturdays · Light sesame oil lamp under Peepal tree · Donate black sesame, iron, and dark-blue cloth to the needy · Chant \"Om Sham Shanicharaya Namah\" 108 times · Serve the elderly and the underprivileged.",
-          L, doc.y, { width: pageW, align: "left", lineGap: 1 },
-        );
+        .text(s("sadeSatiRemedies"), L, doc.y, { width: pageW, align: "left", lineGap: 1 });
     }
 
     /* ── LIFE ANALYSIS ─────────────────────────────────────────────────── */
-    const sections: Array<{ title: string; key: string }> = [
-      { title: "PERSONALITY", key: "personality" },
-      { title: "CAREER & PROFESSION", key: "career" },
-      { title: "FINANCIAL OUTLOOK", key: "finance" },
-      { title: "MARRIAGE & RELATIONSHIPS", key: "marriage" },
-      { title: "HEALTH & WELL-BEING", key: "health" },
-      { title: "EDUCATION & INTELLECT", key: "education" },
-      { title: "CHILDREN & CREATIVITY", key: "children" },
-      { title: "SPIRITUALITY & LIBERATION", key: "spirituality" },
+    const sections: Array<{ titleKey: string; key: string }> = [
+      { titleKey: "secPersonality", key: "personality" },
+      { titleKey: "secCareer", key: "career" },
+      { titleKey: "secFinance", key: "finance" },
+      { titleKey: "secMarriage", key: "marriage" },
+      { titleKey: "secHealth", key: "health" },
+      { titleKey: "secEducation", key: "education" },
+      { titleKey: "secChildren", key: "children" },
+      { titleKey: "secSpirituality", key: "spirituality" },
     ];
-    const interp = kundali.interpretations || {};
 
     doc.addPage();
-    contentHeader(doc, L, pageW, "LIFE ANALYSIS & INSIGHTS");
+    contentHeader(doc, L, pageW, s("hdrLifeAnalysis"), lang);
     pageFrame(doc);
     doc.y = 66;
 
-    for (const s of sections) {
-      const text = interp[s.key];
+    for (const sec of sections) {
+      const text = interp[sec.key];
       if (!text) continue;
       // Ensure room for the header bar + at least 3 lines of body text before adding
       ensureSpace(doc, 100, () => {
-        contentHeader(doc, L, pageW, "LIFE ANALYSIS  (cont.)");
+        contentHeader(doc, L, pageW, s("hdrLifeAnalysisCont"), lang);
         pageFrame(doc);
         doc.y = 66;
       });
-      sectionHeader(doc, L, pageW, s.title);
+      sectionHeader(doc, L, pageW, s(sec.titleKey), undefined, C.maroon, lang);
       doc
         .font(SERIF)
         .fontSize(10)
@@ -1473,11 +1453,11 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
     const strCount =
       (interp.strengths || []).length + (interp.challenges || []).length;
     ensureSpace(doc, 60 + strCount * 18, () => {
-      contentHeader(doc, L, pageW, "LIFE ANALYSIS  (cont.)");
+      contentHeader(doc, L, pageW, s("hdrLifeAnalysisCont"), lang);
       pageFrame(doc);
       doc.y = 66;
     });
-    sectionHeader(doc, L, pageW, "STRENGTHS & AREAS TO WORK ON");
+    sectionHeader(doc, L, pageW, s("strengthsAreas"), undefined, C.maroon, lang);
     doc.moveDown(0.4);
     const colGap = 20;
     const colWid = (pageW - colGap) / 2;
@@ -1490,15 +1470,15 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       .font(SERIF_B)
       .fontSize(10)
       .fillColor(C.green)
-      .text("Natural Strengths", sxL, startY, { width: colWid });
+      .text(s("naturalStrengths"), sxL, startY, { width: colWid });
     let ly = startY + 18;
-    for (const s of interp.strengths || []) {
+    for (const item of interp.strengths || []) {
       star(doc, sxL + 4, ly + 5, 3, C.green, 5);
       doc
         .font(SERIF)
         .fontSize(9.5)
         .fillColor(C.ink)
-        .text(s, sxL + 14, ly, { width: colWid - 18, lineGap: 1 });
+        .text(item, sxL + 14, ly, { width: colWid - 18, lineGap: 1 });
       ly = doc.y + 4;
     }
     const leftEnd = ly;
@@ -1508,7 +1488,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       .font(SERIF_B)
       .fontSize(10)
       .fillColor(C.red)
-      .text("Areas to Work On", sxR, startY, { width: colWid });
+      .text(s("areasToWork"), sxR, startY, { width: colWid });
     ly = startY + 18;
     for (const c of interp.challenges || []) {
       diamondDot(doc, sxR + 4, ly + 5, 2.4, C.red);
@@ -1524,41 +1504,25 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
 
     /* ── RECOMMENDATIONS ───────────────────────────────────────────────── */
     doc.addPage();
-    contentHeader(doc, L, pageW, "VEDIC RECOMMENDATIONS");
+    contentHeader(doc, L, pageW, s("hdrRecommendations"), lang);
     pageFrame(doc);
     doc.y = 66;
 
     const recs = [
-      {
-        title: "MANTRAS",
-        items: interp.mantras || [],
-        note: "Chant 108 times daily or on the prescribed day for best effect.",
-      },
-      {
-        title: "GEMSTONES",
-        items: interp.gemstones || [],
-        note: "Wear only after energisation; consult a learned astrologer before wearing.",
-      },
-      {
-        title: "FASTING",
-        items: interp.fastingDays || [],
-        note: "Observing the fast invokes the blessings of the ruling planet.",
-      },
-      {
-        title: "CHARITY & SERVICE",
-        items: interp.charities || [],
-        note: "Regular charity helps neutralise challenging karmic patterns.",
-      },
+      { title: s("recMantras"),   items: interp.mantras || [],    note: s("noteMantras") },
+      { title: s("recGemstones"), items: interp.gemstones || [],  note: s("noteGemstones") },
+      { title: s("recFasting"),   items: interp.fastingDays || [], note: s("noteFasting") },
+      { title: s("recCharity"),   items: interp.charities || [],  note: s("noteCharity") },
     ];
     for (const r of recs) {
       if (!r.items.length) continue;
       // Ensure enough room for the header + note + at least one item before starting the section
       ensureSpace(doc, 110, () => {
-        contentHeader(doc, L, pageW, "VEDIC RECOMMENDATIONS  (cont.)");
+        contentHeader(doc, L, pageW, s("hdrRecommendationsCont"), lang);
         pageFrame(doc);
         doc.y = 66;
       });
-      sectionHeader(doc, L, pageW, r.title);
+      sectionHeader(doc, L, pageW, r.title, undefined, C.maroon, lang);
       doc
         .font(SERIF_I)
         .fontSize(9)
@@ -1567,7 +1531,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       doc.moveDown(0.6);
       for (const it of r.items) {
         ensureSpace(doc, 28, () => {
-          contentHeader(doc, L, pageW, "VEDIC RECOMMENDATIONS  (cont.)");
+          contentHeader(doc, L, pageW, s("hdrRecommendationsCont"), lang);
           pageFrame(doc);
           doc.y = 66;
         });
@@ -1597,22 +1561,17 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
       .font(SANS_B)
       .fontSize(8)
       .fillColor(C.maroon)
-      .text("IMPORTANT DISCLAIMER", L + 12, dy + 9, {
+      .text(s("importantDisclaimer"), L + 12, dy + 9, {
         width: pageW - 24,
         align: "center",
-        characterSpacing: 1,
+        characterSpacing: lang === "hi" ? 0 : 1,
       });
     doc
       .font(SERIF)
       .fontSize(8.5)
       .fillColor(C.inkSoft)
       .lineGap(1.5)
-      .text(
-        "This report is provided for spiritual guidance and self-understanding only. It is not medical, financial, or legal advice. Astrological interpretations are symbolic and traditional in nature; VedicScan does not guarantee outcomes based on this report.",
-        L + 14,
-        dy + 22,
-        { width: pageW - 28, align: "center" },
-      );
+      .text(s("disclaimerText"), L + 14, dy + 22, { width: pageW - 28, align: "center" });
 
     /* ── FOOTERS (all content pages) ───────────────────────────────────── */
     const range = doc.bufferedPageRange();
@@ -1633,7 +1592,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         .font(SERIF_I)
         .fontSize(8)
         .fillColor(C.muted)
-        .text("VedicScan  ·  Personal Kundali Report", L, fy + 6, {
+        .text(s("footerBrand"), L, fy + 6, {
           width: pageW / 2,
           align: "left",
           lineBreak: false,
@@ -1642,7 +1601,7 @@ export function generateKundaliPDF(rawKundali: IKundali): Promise<Buffer> {
         .font(SANS)
         .fontSize(8)
         .fillColor(C.muted)
-        .text(`Page ${i + 1} of ${total}`, L + pageW / 2, fy + 6, {
+        .text(`${s("page")} ${i + 1} ${s("of")} ${total}`, L + pageW / 2, fy + 6, {
           width: pageW / 2,
           align: "right",
           lineBreak: false,

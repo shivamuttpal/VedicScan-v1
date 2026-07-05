@@ -36,7 +36,7 @@ api.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.error('Error reading token:', error);
+      console.log('Error reading token:', error);
     }
     return config;
   },
@@ -47,7 +47,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.error('API Error:', {
+    console.log('API Error:', {
       message: error.message,
       code: error.code,
       url: error.config?.url,

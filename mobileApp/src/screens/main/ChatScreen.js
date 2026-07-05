@@ -138,6 +138,7 @@ const VideoBubble = ({ source, poster }) => {
     p.muted = false;
   });
   const [playing, setPlaying] = useState(false);
+  const endedRef = useRef(false);
 
   // Sync state when playback naturally ends (no loop)
   useEffect(() => {
@@ -147,12 +148,27 @@ const VideoBubble = ({ source, poster }) => {
     return () => sub.remove();
   }, [player]);
 
+  // expo-video leaves position at the end after playback finishes — track
+  // this so a tap after the video ends replays from the start instead of
+  // silently doing nothing.
+  useEffect(() => {
+    const sub = player.addListener('playToEnd', () => {
+      endedRef.current = true;
+    });
+    return () => sub.remove();
+  }, [player]);
+
   const toggle = () => {
     if (playing) {
       player.pause();
       setPlaying(false);
     } else {
-      player.play();
+      if (endedRef.current) {
+        player.replay();
+        endedRef.current = false;
+      } else {
+        player.play();
+      }
       setPlaying(true);
     }
   };

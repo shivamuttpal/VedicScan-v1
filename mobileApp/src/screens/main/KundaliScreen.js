@@ -4,12 +4,14 @@ import {
   Alert, RefreshControl, Platform, Dimensions, TextInput, KeyboardAvoidingView,
   BackHandler, ImageBackground, Keyboard,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import LocationInput from '../../components/LocationInput';
+import CalendarDatePicker from '../../components/CalendarDatePicker';
+import CustomTimePicker from '../../components/CustomTimePicker';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import api from '../../config/api';
@@ -298,36 +300,9 @@ export default function KundaliScreen({ navigation }) {
 
   // Date / Time pickers
   const [dateObj, setDateObj] = useState(new Date(2000, 0, 1));
-  const [timeObj, setTimeObj] = useState(new Date(2000, 0, 1, 12, 0));
   const [timeDisplay, setTimeDisplay] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
-
-  const onDateChange = (_, date) => {
-    setShowDatePicker(false);
-    if (date) {
-      setDateObj(date);
-      const yyyy = date.getFullYear();
-      const mm = String(date.getMonth() + 1).padStart(2, '0');
-      const dd = String(date.getDate()).padStart(2, '0');
-      setForm(f => ({ ...f, dateOfBirth: `${yyyy}-${mm}-${dd}` }));
-    }
-  };
-
-  const onTimeChange = (_, time) => {
-    setShowTimePicker(false);
-    if (time) {
-      setTimeObj(time);
-      // Store 24-hr value for API
-      const hh = String(time.getHours()).padStart(2, '0');
-      const min = String(time.getMinutes()).padStart(2, '0');
-      setForm(f => ({ ...f, timeOfBirth: `${hh}:${min}` }));
-      // Build 12-hr AM/PM display string
-      const h12 = time.getHours() % 12 || 12;
-      const ampm = time.getHours() < 12 ? 'AM' : 'PM';
-      setTimeDisplay(`${h12}:${min} ${ampm}`);
-    }
-  };
 
   // Fetch full kundali (includes dasha.timeline + interpretations excluded from list)
   const fetchFullKundali = useCallback(async (id) => {
@@ -339,7 +314,7 @@ export default function KundaliScreen({ navigation }) {
         setKundalis(prev => prev.map(k => k.id === full.id ? full : k));
       }
     } catch (e) {
-      console.warn('Failed to fetch full kundali:', e.message);
+      console.log('Failed to fetch full kundali:', e.message);
     }
   }, []);
 
@@ -356,13 +331,19 @@ export default function KundaliScreen({ navigation }) {
         fetchFullKundali(list[0].id);
       }
     } catch (e) {
-      console.warn('Kundali list fetch failed:', e.message);
+      console.log('Kundali list fetch failed:', e.message);
     } finally {
       setLoading(false);
     }
   }, [fetchFullKundali]);
 
-  useEffect(() => { fetchList(); }, [fetchList]);
+  // Refetch whenever this tab regains focus (e.g. after creating/editing a
+  // profile elsewhere) so newly generated kundalis show up without a manual pull-to-refresh.
+  useFocusEffect(
+    useCallback(() => {
+      fetchList();
+    }, [fetchList])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -597,25 +578,35 @@ export default function KundaliScreen({ navigation }) {
         </KeyboardAvoidingView>
 
         {/* Date Picker */}
-        {showDatePicker && (
-          <DateTimePicker
-            value={dateObj}
-            mode="date"
-            display="spinner"
-            minimumDate={new Date(1900, 0, 1)}
-            maximumDate={new Date()}
-            onChange={onDateChange}
-          />
-        )}
+        <CalendarDatePicker
+          visible={showDatePicker}
+          value={dateObj}
+          title="Date of Birth"
+          minDate={new Date(1900, 0, 1)}
+          maxDate={new Date()}
+          onClose={() => setShowDatePicker(false)}
+          onConfirm={(dateStr) => {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            setDateObj(new Date(y, m - 1, d));
+            setForm(f => ({ ...f, dateOfBirth: dateStr }));
+            setShowDatePicker(false);
+          }}
+        />
         {/* Time Picker */}
-        {showTimePicker && (
-          <DateTimePicker
-            value={timeObj}
-            mode="time"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={onTimeChange}
-          />
-        )}
+        <CustomTimePicker
+          visible={showTimePicker}
+          value={form.timeOfBirth}
+          title="Time of Birth"
+          onClose={() => setShowTimePicker(false)}
+          onConfirm={(timeStr) => {
+            const [hh, min] = timeStr.split(':').map(Number);
+            setForm(f => ({ ...f, timeOfBirth: timeStr }));
+            const h12 = hh % 12 || 12;
+            const ampm = hh < 12 ? 'AM' : 'PM';
+            setTimeDisplay(`${h12}:${String(min).padStart(2, '0')} ${ampm}`);
+            setShowTimePicker(false);
+          }}
+        />
       </ImageBackground>
     );
   }

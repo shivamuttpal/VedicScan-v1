@@ -23,6 +23,21 @@ export default {
   unlockPremium: 'Unlock Premium',
   premiumDesc: 'Unlimited chats, detailed charts & more',
 
+  // HomeScreen — AI guide capsule
+  yourVedicGuide: 'YOUR VEDIC GUIDE',
+  personalGuidanceHint: 'Personal guidance, whenever you need it',
+  vedicMember: 'vedic member',
+
+  // HomeScreen — explore guidance section
+  exploreGuidance: 'Explore Guidance',
+  exploreGuidanceSubtitle: 'Tools rooted in timeless Vedic wisdom',
+  exploreCta: 'Explore',
+  getYourKundali: 'Get Your Kundali',
+  getYourKundaliDesc: 'Detailed analysis of your birth chart',
+  kundaliMatchingDesc: 'Check compatibility for a happy future',
+  askMaharishiDesc: "Get answers to life's important questions",
+  babyNamingCardDesc: 'Most auspicious names for your baby',
+
   // HomeScreen — drawer
   drawerFeatures: 'FEATURES',
   drawerAccount: 'ACCOUNT',
@@ -149,6 +164,27 @@ export default {
   compatPremiumReportLocked: 'Unlock for ₹1,499 or with Premium',
   compatPremiumReportError: 'Could not generate the report. Please try again.',
   compatPremiumShareTitle: 'Share your Premium Compatibility Report',
+
+  // Premium paywall modal
+  compatModalTitle: 'Full Compatibility Report',
+  compatModalBadge: 'PREMIUM REPORT',
+  compatWhatsIncluded: "WHAT'S INCLUDED",
+  compatUnlockOptions: 'UNLOCK OPTIONS',
+  compatPremiumPlanDesc: 'Unlimited reports + all features + AI chats',
+  compatPerMonth: '/month',
+  compatBestValue: 'BEST VALUE',
+  compatReportOnlyTitle: 'This Report Only',
+  compatReportOnlyDesc: 'One-time download, no subscription',
+  compatOnce: 'once',
+  compatModalFooterNote: '✦ Premium subscribers get unlimited compatibility reports, kundali generation, AI Maharishi chats, and more. Cancel anytime.',
+  compatFeaturePdf: '11-page detailed PDF report',
+  compatFeatureGunas: 'Deep dive on all 8 Gunas with classical references',
+  compatFeatureMatching: 'Best & worst matching analysis with explanations',
+  compatFeatureDosha: 'Complete Dosha report with cancellation conditions',
+  compatFeatureRemedies: 'Sacred remedies — mantras, puja, gemstones, fasting',
+  compatFeatureLifeAreas: 'Life area analysis: marriage, finance, health, children',
+  compatFeatureNakshatra: 'Detailed Nakshatra profiles for both partners',
+  compatFeatureDesign: 'Luxury gold & maroon VedicScan design — shareable PDF',
 
   // Alerts
   requiredFieldsTitle: 'Required Fields',

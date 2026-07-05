@@ -23,6 +23,21 @@ export default {
   unlockPremium: 'प्रीमियम अनलॉक करें',
   premiumDesc: 'असीमित चैट, विस्तृत चार्ट और बहुत कुछ',
 
+  // HomeScreen — AI guide capsule
+  yourVedicGuide: 'आपका वैदिक मार्गदर्शक',
+  personalGuidanceHint: 'जब भी आपको आवश्यकता हो, व्यक्तिगत मार्गदर्शन',
+  vedicMember: 'वैदिक सदस्य',
+
+  // HomeScreen — explore guidance section
+  exploreGuidance: 'मार्गदर्शन खोजें',
+  exploreGuidanceSubtitle: 'वैदिक ज्ञान पर आधारित साधन',
+  exploreCta: 'देखें',
+  getYourKundali: 'अपनी कुंडली प्राप्त करें',
+  getYourKundaliDesc: 'आपकी जन्म कुंडली का विस्तृत विश्लेषण',
+  kundaliMatchingDesc: 'सुखी भविष्य के लिए संगतता जांचें',
+  askMaharishiDesc: 'जीवन के महत्वपूर्ण प्रश्नों के उत्तर पाएं',
+  babyNamingCardDesc: 'आपके शिशु के लिए सबसे शुभ नाम',
+
   // HomeScreen — drawer
   drawerFeatures: 'सुविधाएं',
   drawerAccount: 'अकाउंट',
@@ -149,6 +164,27 @@ export default {
   compatPremiumReportLocked: '₹1,499 में अनलॉक करें या प्रीमियम से',
   compatPremiumReportError: 'रिपोर्ट तैयार नहीं हो सकी। कृपया पुनः प्रयास करें।',
   compatPremiumShareTitle: 'अपनी प्रीमियम संगतता रिपोर्ट साझा करें',
+
+  // Premium paywall modal
+  compatModalTitle: 'सम्पूर्ण कुंडली मिलान रिपोर्ट',
+  compatModalBadge: 'प्रीमियम रिपोर्ट',
+  compatWhatsIncluded: 'क्या शामिल है',
+  compatUnlockOptions: 'अनलॉक विकल्प',
+  compatPremiumPlanDesc: 'असीमित रिपोर्ट + सभी सुविधाएं + AI चैट',
+  compatPerMonth: '/माह',
+  compatBestValue: 'सर्वश्रेष्ठ मूल्य',
+  compatReportOnlyTitle: 'केवल यह रिपोर्ट',
+  compatReportOnlyDesc: 'एक बार डाउनलोड, कोई सदस्यता नहीं',
+  compatOnce: 'एक बार',
+  compatModalFooterNote: '✦ प्रीमियम सदस्यों को असीमित कुंडली मिलान रिपोर्ट, कुंडली निर्माण, AI महर्षि चैट और भी बहुत कुछ मिलता है। कभी भी रद्द करें।',
+  compatFeaturePdf: '11-पृष्ठ विस्तृत PDF रिपोर्ट',
+  compatFeatureGunas: 'शास्त्रीय संदर्भों सहित सभी 8 गुणों का गहन विश्लेषण',
+  compatFeatureMatching: 'व्याख्या सहित सर्वश्रेष्ठ और सबसे कमज़ोर मिलान विश्लेषण',
+  compatFeatureDosha: 'निवारण उपायों सहित संपूर्ण दोष रिपोर्ट',
+  compatFeatureRemedies: 'पवित्र उपाय — मंत्र, पूजा, रत्न, व्रत',
+  compatFeatureLifeAreas: 'जीवन क्षेत्र विश्लेषण: विवाह, वित्त, स्वास्थ्य, संतान',
+  compatFeatureNakshatra: 'दोनों साथियों के लिए विस्तृत नक्षत्र प्रोफ़ाइल',
+  compatFeatureDesign: 'शानदार गोल्ड और मैरून VedicScan डिज़ाइन — साझा करने योग्य PDF',
 
   // Alerts
   requiredFieldsTitle: 'आवश्यक फ़ील्ड',

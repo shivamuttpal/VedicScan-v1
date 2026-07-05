@@ -1,6 +1,12 @@
 import PDFDocument from "pdfkit";
 import path from "path";
 import { NakshatraData } from "../service/koota.service";
+import {
+  Lang, T, L, rashiDisplay, verdictText, ratingWord, ratingWordUpper,
+  getNX, getGM, getDR, doshaText, severityWord, generalRemedies,
+  doshaFreeParagraphs, doshaImportantNote, lifeAreas, interactionParagraph,
+  conclusionSummary, formattedDate,
+} from "./compatibility.pdf.i18n";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export interface CompatibilityPDFInput {
@@ -8,6 +14,7 @@ export interface CompatibilityPDFInput {
   girl: { name: string; dateOfBirth: string; timeOfBirth: string; placeOfBirth: string };
   boyNakshatra: NakshatraData;
   girlNakshatra: NakshatraData;
+  lang?: Lang; // 'en' (default) | 'hi'
   gunaMilan: {
     total_score: number;
     max_score: number;
@@ -47,7 +54,6 @@ const SERIF_B = "Times-Bold";
 const SERIF_I = "Times-Italic";
 const SANS = "Helvetica";
 const SANS_B = "Helvetica-Bold";
-const SANS_I = "Helvetica-Oblique";
 const PW = 595.28;
 const PH = 841.89;
 const ML = 48;
@@ -150,7 +156,7 @@ const GM: Record<string, { sanskrit: string; max: number; measures: string; clas
     full: "The most auspicious Nadi result — their life-energy currents are perfectly complementary. This bodes beautifully for their individual health, combined vitality, longevity together, and the health and brightness of their children.",
     partial: "Good Nadi harmony providing solid health compatibility. Their combined energetic constitutions are generally supportive of each other's wellbeing and overall health.",
     poor: "A Nadi Dosha is present — the most significant of all doshas (see Dosha Analysis section). Many couples with Nadi Dosha live long, healthy lives with proper remedial measures and dedicated spiritual practice.",
-  },
+  }, 
 };
 
 // ─── Dosha Remedies ──────────────────────────────────────────────────────────
@@ -232,18 +238,19 @@ function scoreColor(pct: number): string {
   return C.red;
 }
 
-function pageFooter(doc: InstanceType<typeof PDFDocument>, pageNum: number, total: number) {
+function pageFooter(doc: InstanceType<typeof PDFDocument>, pageNum: number, total: number, lang: Lang = "en") {
+  const S = L(lang);
   const y = PH - 30;
   hRule(doc, ML, y, W, C.rule, 0.4);
   doc.save().font(SANS).fontSize(7.5).fillColor(C.muted);
-  doc.text("VedicScan · Vivah Compatibility Report · Confidential", ML, y + 5, { width: W / 2, lineBreak: false });
-  doc.text(`Page ${pageNum} of ${total}`, ML + W / 2, y + 5, { width: W / 2, align: "right", lineBreak: false });
+  doc.text(S.footerConfidential, ML, y + 5, { width: W / 2, lineBreak: false });
+  doc.text(`${S.page} ${pageNum} ${S.of} ${total}`, ML + W / 2, y + 5, { width: W / 2, align: "right", lineBreak: false });
   doc.restore();
 }
 
-function pageHeader(doc: InstanceType<typeof PDFDocument>, title: string) {
+function pageHeader(doc: InstanceType<typeof PDFDocument>, lang: Lang = "en") {
   doc.save().font(SANS).fontSize(7.5).fillColor(C.muted);
-  doc.text("VEDICSCAN  ·  PREMIUM COMPATIBILITY REPORT", ML, 22, { width: W, align: "center", lineBreak: false });
+  doc.text(L(lang).headerRunning, ML, 22, { width: W, align: "center", lineBreak: false });
   doc.restore();
   hRule(doc, ML, 34, W, C.rule, 0.4);
 }
@@ -261,10 +268,12 @@ function drawWatermark(doc: InstanceType<typeof PDFDocument>, isDark = false) {
 
 // ─── Cover Page ──────────────────────────────────────────────────────────────
 function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
+  const lang = d.lang || "en";
+  const S = L(lang);
   const score = d.gunaMilan.total_score;
   const pct   = d.gunaMilan.percentage;
-  const bName = d.boy.name  || "Groom";
-  const gName = d.girl.name || "Bride";
+  const bName = d.boy.name  || S.groom;
+  const gName = d.girl.name || S.bride;
 
   // ── Background + watermark ──────────────────────────────────────────────────
   doc.rect(0, 0, PW, PH).fill(C.maroonDeep);
@@ -293,7 +302,7 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
 
   // ── Brand name ──────────────────────────────────────────────────────────────
   doc.save().font(SANS_B).fontSize(7.5).fillColor(C.goldLight)
-    .text("V E D I C S C A N", 0, 38, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(S.brand, 0, 38, { width: PW, align: "center", lineBreak: false }).restore();
   doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
     .moveTo(PW / 2 - 48, 54).lineTo(PW / 2 + 48, 54).stroke().restore();
 
@@ -320,10 +329,10 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
 
   // ── Title block ─────────────────────────────────────────────────────────────
   const titleY = 210;
-  doc.save().font(SERIF_B).fontSize(28).fillColor(C.cream)
-    .text("Vivah Compatibility Report", 0, titleY, { width: PW, align: "center", lineBreak: false }).restore();
+  doc.save().font(SERIF_B).fontSize(lang === "hi" ? 26 : 28).fillColor(C.cream)
+    .text(S.coverTitle, 0, titleY, { width: PW, align: "center", lineBreak: false }).restore();
   doc.save().font(SERIF_I).fontSize(12).fillColor(C.gold)
-    .text("Vivah Sangata Vishleshan", 0, titleY + 40, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(S.coverSubtitle, 0, titleY + 40, { width: PW, align: "center", lineBreak: false }).restore();
 
   // ── Ornamental divider (lines + diamond) ────────────────────────────────────
   const divY = titleY + 70;
@@ -350,9 +359,9 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
   // Nakshatra subtitles
   const nkY = namesY + 30;
   doc.save().font(SERIF_I).fontSize(9.5).fillColor(C.goldDeep)
-    .text(`${d.boyNakshatra.name} · ${d.boyNakshatra.rashi_english}`, 36, nkY, { width: nameSideW, align: "right", lineBreak: false }).restore();
+    .text(`${T.nakshatra(d.boyNakshatra.name, lang)} · ${T.rashiEn(d.boyNakshatra.rashi_english, lang)}`, 36, nkY, { width: nameSideW, align: "right", lineBreak: false }).restore();
   doc.save().font(SERIF_I).fontSize(9.5).fillColor(C.goldDeep)
-    .text(`${d.girlNakshatra.name} · ${d.girlNakshatra.rashi_english}`, PW / 2 + 16, nkY, { width: nameSideW, align: "left", lineBreak: false }).restore();
+    .text(`${T.nakshatra(d.girlNakshatra.name, lang)} · ${T.rashiEn(d.girlNakshatra.rashi_english, lang)}`, PW / 2 + 16, nkY, { width: nameSideW, align: "left", lineBreak: false }).restore();
 
   // ── Score Panel ─────────────────────────────────────────────────────────────
   const spW = 248, spH = 144;
@@ -363,7 +372,7 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
     .roundedRect(spX + 4, spY + 4, spW - 8, spH - 8, 10).stroke().restore();
 
   doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted)
-    .text("ASHTA KOOTA SCORE", spX, spY + 16, { width: spW, align: "center", characterSpacing: 1.5, lineBreak: false }).restore();
+    .text(S.ashtaKootaScore, spX, spY + 16, { width: spW, align: "center", characterSpacing: lang === "hi" ? 0 : 1.5, lineBreak: false }).restore();
 
   // Measure score + "/36" widths to center them together without overlap
   const scoreStr = `${score}`;
@@ -386,7 +395,7 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
   const fillW = barW * (pct / 100);
   if (fillW > 0) doc.save().roundedRect(barX, barY, fillW, 6, 3).fill(C.gold).restore();
   doc.save().font(SANS).fontSize(9).fillColor(C.goldLight)
-    .text(`${pct}% Harmony`, spX, spY + 114, { width: spW, align: "center", lineBreak: false }).restore();
+    .text(`${pct}% ${S.harmony}`, spX, spY + 114, { width: spW, align: "center", lineBreak: false }).restore();
 
   // ── Verdict badge ────────────────────────────────────────────────────────────
   const vBadgeY = spY + spH + 16;
@@ -394,57 +403,59 @@ function drawCoverPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
   doc.save().roundedRect(PW / 2 - vBadgeW / 2, vBadgeY, vBadgeW, 30, 6).fill(C.maroon).restore();
   doc.save().strokeColor(C.gold).lineWidth(0.6)
     .roundedRect(PW / 2 - vBadgeW / 2, vBadgeY, vBadgeW, 30, 6).stroke().restore();
-  doc.save().font(SERIF_B).fontSize(12).fillColor(C.goldLight)
-    .text(d.gunaMilan.verdict, PW / 2 - vBadgeW / 2, vBadgeY + 10, { width: vBadgeW, align: "center", lineBreak: false }).restore();
+  doc.save().font(SERIF_B).fontSize(lang === "hi" ? 11 : 12).fillColor(C.goldLight)
+    .text(verdictText(score, lang), PW / 2 - vBadgeW / 2, vBadgeY + 10, { width: vBadgeW, align: "center", lineBreak: false }).restore();
 
   // ── Birth details ────────────────────────────────────────────────────────────
   const detDivY = vBadgeY + 50;
   doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
     .moveTo(ML + 24, detDivY).lineTo(PW - ML - 24, detDivY).stroke().restore();
   doc.save().font(SANS_B).fontSize(7).fillColor(C.muted)
-    .text("BIRTH DETAILS", 0, detDivY + 10, { width: PW, align: "center", characterSpacing: 1.5, lineBreak: false }).restore();
+    .text(S.birthDetails, 0, detDivY + 10, { width: PW, align: "center", characterSpacing: lang === "hi" ? 0 : 1.5, lineBreak: false }).restore();
 
   const col1x = ML + 14, col2x = PW / 2 + 8;
   const colValW = PW / 2 - ML - 58;
+  const labelColW = lang === "hi" ? 44 : 36;
   const detItems = [
-    { label: "Name",  b: bName,                      g: gName },
-    { label: "Date",  b: d.boy.dateOfBirth  || "—",  g: d.girl.dateOfBirth  || "—" },
-    { label: "Time",  b: d.boy.timeOfBirth  || "—",  g: d.girl.timeOfBirth  || "—" },
-    { label: "Place", b: d.boy.placeOfBirth || "—",  g: d.girl.placeOfBirth || "—" },
+    { label: S.labelName,  b: bName,                      g: gName },
+    { label: S.labelDate,  b: d.boy.dateOfBirth  || "—",  g: d.girl.dateOfBirth  || "—" },
+    { label: S.labelTime,  b: d.boy.timeOfBirth  || "—",  g: d.girl.timeOfBirth  || "—" },
+    { label: S.labelPlace, b: d.boy.placeOfBirth || "—",  g: d.girl.placeOfBirth || "—" },
   ];
   let diy = detDivY + 26;
   detItems.forEach(item => {
     doc.save().font(SANS).fontSize(8).fillColor(C.muted)
-      .text(item.label + ":", col1x, diy, { width: 36, lineBreak: false }).restore();
+      .text(item.label + ":", col1x, diy, { width: labelColW, lineBreak: false }).restore();
     doc.save().font(SANS_B).fontSize(8).fillColor(C.cream)
-      .text(item.b, col1x + 40, diy, { width: colValW, lineBreak: false }).restore();
+      .text(item.b, col1x + labelColW + 4, diy, { width: colValW, lineBreak: false }).restore();
     doc.save().font(SANS).fontSize(8).fillColor(C.muted)
-      .text(item.label + ":", col2x, diy, { width: 36, lineBreak: false }).restore();
+      .text(item.label + ":", col2x, diy, { width: labelColW, lineBreak: false }).restore();
     doc.save().font(SANS_B).fontSize(8).fillColor(C.cream)
-      .text(item.g, col2x + 40, diy, { width: colValW, lineBreak: false }).restore();
+      .text(item.g, col2x + labelColW + 4, diy, { width: colValW, lineBreak: false }).restore();
     diy += 16;
   });
 
   // ── Bottom rule + generated date ────────────────────────────────────────────
   doc.save().strokeColor(C.goldDeep).lineWidth(0.4)
     .moveTo(PW / 2 - 70, PH - 58).lineTo(PW / 2 + 70, PH - 58).stroke().restore();
-  const dateStr = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   doc.save().font(SANS).fontSize(7.5).fillColor(C.muted)
-    .text(`Generated on ${dateStr}  ·  Powered by VedicScan`, 0, PH - 46, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(`${S.generatedOn} ${formattedDate(lang)}  ·  ${S.poweredBy}`, 0, PH - 46, { width: PW, align: "center", lineBreak: false }).restore();
 }
 
 // ─── Page 2: Executive Summary & Scores ──────────────────────────────────────
 function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
+  const lang = d.lang || "en";
+  const S = L(lang);
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
-  pageHeader(doc, "Ashta Koota Summary");
-  pageFooter(doc, 2, 11);
+  pageHeader(doc, lang);
+  pageFooter(doc, 2, 11, lang);
 
   let y = 48;
 
   // Title
   doc.save().font(SERIF_B).fontSize(18).fillColor(C.maroon)
-    .text("Ashta Koota Milan — At a Glance", ML, y, { width: W, lineBreak: false }).restore();
+    .text(S.summaryTitle, ML, y, { width: W, lineBreak: false }).restore();
   y += 28;
   hRule(doc, ML, y, W);
   y += 14;
@@ -461,13 +472,13 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
   doc.save().font(SERIF_B).fontSize(52).fillColor(vColor)
     .text(`${milan.total_score}`, ML + 18, y + 16, { lineBreak: false }).restore();
   doc.save().font(SANS_B).fontSize(8).fillColor(C.muted)
-    .text("TOTAL GUNA SCORE", ML + 18, y + 74, { characterSpacing: 1, lineBreak: false }).restore();
+    .text(S.totalGunaScore, ML + 18, y + 74, { characterSpacing: lang === "hi" ? 0 : 1, lineBreak: false }).restore();
 
   // Verdict
-  doc.save().font(SERIF_B).fontSize(15).fillColor(C.ink)
-    .text(milan.verdict, ML + 160, y + 18, { width: W - 180, lineBreak: false }).restore();
+  doc.save().font(SERIF_B).fontSize(lang === "hi" ? 13 : 15).fillColor(C.ink)
+    .text(verdictText(milan.total_score, lang), ML + 160, y + 18, { width: W - 180, lineBreak: false }).restore();
   doc.save().font(SANS).fontSize(9).fillColor(C.muted)
-    .text("Harmony Rating", ML + 160, y + 40, { lineBreak: false }).restore();
+    .text(S.harmonyRating, ML + 160, y + 40, { lineBreak: false }).restore();
   // Harmony bar
   scoreBar(doc, ML + 160, y + 56, W - 180, pct, vColor);
   doc.save().font(SANS_B).fontSize(9).fillColor(vColor)
@@ -476,13 +487,14 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
 
   // Partner summary row
   const halfW = (W - 16) / 2;
-  const drawPartnerCard = (x: number, nk: NakshatraData, person: any, label: string): number => {
+  const drawPartnerCard = (x: number, nk: NakshatraData, person: any, isGroom: boolean): number => {
+    const label = isGroom ? S.groom : S.bride;
     const rows: [string, string][] = [
-      ["Nakshatra", nk.name],
-      ["Rashi", nk.rashi_english],
-      ["Gana", nk.gana],
-      ["Nadi", nk.nadi],
-      ["Lord", nk.lord],
+      [S.nakshatra, T.nakshatra(nk.name, lang)],
+      [S.rashi, T.rashiEn(nk.rashi_english, lang)],
+      [S.gana, T.gana(nk.gana, lang)],
+      [S.nadi, T.nadi(nk.nadi, lang)],
+      [S.lord, T.planet(nk.lord, lang)],
     ];
     // Pre-calculate name height so the card expands if a long name wraps
     doc.font(SERIF_B).fontSize(14);
@@ -494,58 +506,58 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
     doc.save().strokeColor(C.rule).lineWidth(0.5).roundedRect(x, y, halfW, cardH, 6).stroke().restore();
     // Accent strip — clipped so it respects the top rounded corners
     doc.save().roundedRect(x, y, halfW, cardH, 6).clip()
-      .fillColor(label === "GROOM" ? "#D4A84B" : C.rose).rect(x, y, halfW, 4).fill().restore();
+      .fillColor(isGroom ? "#D4A84B" : C.rose).rect(x, y, halfW, 4).fill().restore();
 
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted)
-      .text(label, x + 12, y + 12, { characterSpacing: 1, lineBreak: false }).restore();
+      .text(label, x + 12, y + 12, { characterSpacing: lang === "hi" ? 0 : 1, lineBreak: false }).restore();
     doc.save().font(SERIF_B).fontSize(14).fillColor(C.ink)
       .text(person.name || label, x + 12, y + 24, { width: halfW - 24 }).restore();
 
+    const valX = lang === "hi" ? x + 78 : x + 70;
     let ry = rowsStartY;
     rows.forEach(([lbl, val]) => {
       doc.save().font(SANS).fontSize(8).fillColor(C.muted)
         .text(lbl + ":", x + 12, ry, { lineBreak: false }).restore();
       doc.save().font(SANS_B).fontSize(8).fillColor(C.inkSoft)
-        .text(val, x + 70, ry, { width: halfW - 84, lineBreak: false }).restore();
+        .text(val, valX, ry, { width: x + halfW - 12 - valX, lineBreak: false }).restore();
       ry += 13;
     });
     return cardH;
   };
-  const groomH = drawPartnerCard(ML, d.boyNakshatra, d.boy, "GROOM");
-  const brideH = drawPartnerCard(ML + halfW + 16, d.girlNakshatra, d.girl, "BRIDE");
+  const groomH = drawPartnerCard(ML, d.boyNakshatra, d.boy, true);
+  const brideH = drawPartnerCard(ML + halfW + 16, d.girlNakshatra, d.girl, false);
   y += Math.max(groomH, brideH) + 16;
 
   // Koota overview table
   doc.save().font(SERIF_B).fontSize(13).fillColor(C.maroon)
-    .text("Koota Score Overview", ML, y, { lineBreak: false }).restore();
+    .text(S.kootaOverview, ML, y, { lineBreak: false }).restore();
   y += 20;
 
   // Table header
   const cols = { name: ML, max: ML + 156, score: ML + 220, status: ML + 280 };
   doc.save().rect(ML, y, W, 20).fill(C.maroon).restore();
   doc.save().font(SANS_B).fontSize(8).fillColor(C.white)
-    .text("Koota (Quality Measured)", cols.name + 8, y + 6, { width: 150, lineBreak: false })
-    .text("Max", cols.max, y + 6, { width: 60, align: "center", lineBreak: false })
-    .text("Score", cols.score, y + 6, { width: 56, align: "center", lineBreak: false })
-    .text("Rating", cols.status, y + 6, { width: W - (cols.status - ML), lineBreak: false })
+    .text(S.colKoota, cols.name + 8, y + 6, { width: 150, lineBreak: false })
+    .text(S.colMax, cols.max, y + 6, { width: 60, align: "center", lineBreak: false })
+    .text(S.colScore, cols.score, y + 6, { width: 56, align: "center", lineBreak: false })
+    .text(S.colRating, cols.status, y + 6, { width: W - (cols.status - ML), lineBreak: false })
     .restore();
   y += 20;
 
   d.gunaMilan.koota_breakdown.forEach((k, i) => {
-    const meta = GM[k.koota];
     const rowPct = (k.score / k.max_score) * 100;
     const rColor = scoreColor(rowPct);
-    const rating = rowPct >= 75 ? "Excellent" : rowPct >= 50 ? "Good" : rowPct > 0 ? "Fair" : "Poor";
+    const rating = ratingWord(rowPct, lang);
     const bg = i % 2 === 0 ? C.white : C.creamAlt;
 
     doc.save().rect(ML, y, W, 26).fill(bg).restore();
     doc.save().strokeColor(C.rule).lineWidth(0.3).moveTo(ML, y + 26).lineTo(ML + W, y + 26).stroke().restore();
 
     doc.save().font(SANS_B).fontSize(9).fillColor(C.ink)
-      .text(k.koota, cols.name + 8, y + 4, { width: 100, lineBreak: false }).restore();
-    if (meta) {
+      .text(T.koota(k.koota, lang), cols.name + 8, y + (lang === "hi" ? 8 : 4), { width: 140, lineBreak: false }).restore();
+    if (lang !== "hi") {
       doc.save().font(SANS).fontSize(7.5).fillColor(C.muted)
-        .text(meta.sanskrit.split(" ")[0], cols.name + 8, y + 15, { width: 150, lineBreak: false }).restore();
+        .text(k.koota, cols.name + 8, y + 15, { width: 150, lineBreak: false }).restore();
     }
     doc.save().font(SANS_B).fontSize(9).fillColor(C.muted)
       .text(`${k.max_score}`, cols.max, y + 9, { width: 60, align: "center", lineBreak: false }).restore();
@@ -563,35 +575,38 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
   // Total row
   doc.save().rect(ML, y, W, 24).fill(C.maroon).restore();
   doc.save().font(SANS_B).fontSize(10).fillColor(C.white)
-    .text("Total", cols.name + 8, y + 7, { lineBreak: false })
+    .text(S.total, cols.name + 8, y + 7, { lineBreak: false })
     .text("36", cols.max, y + 7, { width: 60, align: "center", lineBreak: false })
     .text(`${milan.total_score}`, cols.score, y + 7, { width: 56, align: "center", lineBreak: false })
-    .text(`${pct}% Harmony`, cols.status, y + 7, { lineBreak: false })
+    .text(`${pct}% ${S.harmony}`, cols.status, y + 7, { lineBreak: false })
     .restore();
 }
 
 // ─── Pages 3–6: Guna Deep Dive (2 kootas per page, dynamic card height) ────────
 function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput, from: number, to: number, pageNum: number) {
+  const lang = d.lang || "en";
+  const S = L(lang);
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
-  pageHeader(doc, "Guna Analysis");
-  pageFooter(doc, pageNum, 11);
+  pageHeader(doc, lang);
+  pageFooter(doc, pageNum, 11, lang);
 
   const kootas = d.gunaMilan.koota_breakdown.slice(from, to);
   let y = 48;
 
   doc.save().font(SERIF_B).fontSize(17).fillColor(C.maroon)
-    .text("The Eight Gunas — In-Depth Analysis", ML, y, { width: W, lineBreak: false }).restore();
+    .text(S.gunaPageTitle, ML, y, { width: W, lineBreak: false }).restore();
   y += 26;
   hRule(doc, ML, y, W);
   y += 12;
 
   kootas.forEach((k) => {
-    const meta = GM[k.koota];
-    if (!meta) return;
+    const enMeta = GM[k.koota];
+    if (!enMeta) return;
+    const meta = getGM(k.koota, lang, enMeta);
     const kPct = (k.score / k.max_score) * 100;
     const kColor = scoreColor(kPct);
-    const rating = kPct >= 75 ? "EXCELLENT" : kPct >= 50 ? "GOOD" : kPct > 0 ? "FAIR" : "POOR";
+    const rating = ratingWordUpper(kPct, lang);
     const analysis = kPct >= 75 ? meta.full : kPct >= 50 ? meta.partial : meta.poor;
 
     // Pre-calculate text heights so the card can size to content
@@ -612,18 +627,16 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
 
     // Koota header row
     doc.save().font(SERIF_B).fontSize(14).fillColor(C.ink)
-      .text(k.koota, ML + 16, y + 12, { lineBreak: false }).restore();
-    // doc.save().font(SERIF_I).fontSize(10).fillColor(C.muted)
-    //   .text("  " + meta.sanskrit, ML + 16 + doc.widthOfString(k.koota) + 2, y + 15, { lineBreak: false }).restore();
+      .text(T.koota(k.koota, lang), ML + 16, y + 12, { lineBreak: false }).restore();
 
     // Score badge (top right)
     const badgeX = ML + W - 80;
     doc.save().roundedRect(badgeX, y + 10, 72, 22, 4).fill(kColor).restore();
-    doc.save().font(SANS_B).fontSize(10).fillColor(C.white)
-      .text(`${k.score} / ${k.max_score}  ${rating[0]}`, badgeX + 6, y + 16, { lineBreak: false }).restore();
+    doc.save().font(SANS_B).fontSize(11).fillColor(C.white)
+      .text(`${k.score} / ${k.max_score}`, badgeX, y + 16, { width: 72, align: "center", lineBreak: false }).restore();
 
     // Rating text
-    doc.save().font(SANS_B).fontSize(7).fillColor(kColor)
+    doc.save().font(SANS_B).fontSize(lang === "hi" ? 9 : 7).fillColor(kColor)
       .text(rating, ML + 16, y + 30, { lineBreak: false }).restore();
 
     // Mini bar
@@ -632,10 +645,11 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
       .text(`${Math.round(kPct)}%`, ML + 183, y + 41, { lineBreak: false }).restore();
 
     // Measures line
+    const measuresLabelW = doc.font(SANS_B).fontSize(7.5).widthOfString(S.measures) + 4;
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted)
-      .text("MEASURES: ", ML + 16, y + 58, { lineBreak: false }).restore();
+      .text(S.measures, ML + 16, y + 58, { lineBreak: false }).restore();
     doc.save().font(SANS).fontSize(7.5).fillColor(C.inkSoft)
-      .text(meta.measures, ML + 16 + 58, y + 58, { width: W - 90, lineBreak: false }).restore();
+      .text(meta.measures, ML + 16 + measuresLabelW, y + 58, { width: W - 48 - measuresLabelW, lineBreak: false }).restore();
 
     hRule(doc, ML + 16, y + 72, W - 32, C.rule, 0.3);
 
@@ -643,7 +657,7 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
     const classicalLabelY = y + 80;
     const classicalTextY = classicalLabelY + 12;
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.maroon)
-      .text("CLASSICAL SIGNIFICANCE:", ML + 16, classicalLabelY, { lineBreak: false }).restore();
+      .text(S.classicalSignificance, ML + 16, classicalLabelY, { lineBreak: false }).restore();
     doc.save().font(SERIF_I).fontSize(9).fillColor(C.inkSoft)
       .text(meta.classical, ML + 16, classicalTextY, { width: classicalW }).restore();
 
@@ -651,7 +665,7 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
     const analysisBoxY = classicalTextY + classicalH + 12;
     doc.save().roundedRect(ML + 10, analysisBoxY, W - 20, analysisBoxH, 4).fill(C.creamAlt).restore();
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.maroon)
-      .text("FOR THIS COUPLE:", ML + 18, analysisBoxY + 8, { lineBreak: false }).restore();
+      .text(S.forThisCouple, ML + 18, analysisBoxY + 8, { lineBreak: false }).restore();
     doc.save().font(SERIF).fontSize(9).fillColor(C.ink)
       .text(analysis, ML + 18, analysisBoxY + 20, { width: analysisW }).restore();
 
@@ -661,15 +675,17 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
 
 // ─── Page 5: Dosha Analysis ───────────────────────────────────────────────────
 function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
+  const lang = d.lang || "en";
+  const S = L(lang);
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
-  pageHeader(doc, "Dosha Analysis");
-  pageFooter(doc, 7, 11);
+  pageHeader(doc, lang);
+  pageFooter(doc, 7, 11, lang);
 
   let y = 48;
 
   doc.save().font(SERIF_B).fontSize(17).fillColor(C.maroon)
-    .text("Dosha Analysis", ML, y, { width: W, lineBreak: false }).restore();
+    .text(S.doshaTitle, ML, y, { width: W, lineBreak: false }).restore();
   y += 28;
   hRule(doc, ML, y, W);
   y += 16;
@@ -677,30 +693,24 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
   if (d.doshas.length === 0) {
     // Dosha-free certificate
     const certH = 260;
+    const [para1, para2] = doshaFreeParagraphs(d.boy.name || S.groom, d.girl.name || S.bride, lang);
     doc.save().roundedRect(ML, y, W, certH, 10).fill(C.white).restore();
     doc.save().strokeColor(C.gold).lineWidth(1.2).roundedRect(ML, y, W, certH, 10).stroke().restore();
     doc.save().strokeColor(C.rule).lineWidth(0.4).roundedRect(ML + 8, y + 8, W - 16, certH - 16, 6).stroke().restore();
 
     doc.save().font(SERIF_B).fontSize(28).fillColor(C.green)
-      .text("CLEAR", ML, y + 30, { width: W, align: "center", lineBreak: false }).restore();
+      .text(S.clear, ML, y + 30, { width: W, align: "center", lineBreak: false }).restore();
     doc.save().font(SERIF_B).fontSize(20).fillColor(C.green)
-      .text("No Doshas Detected", ML, y + 68, { width: W, align: "center", lineBreak: false }).restore();
+      .text(S.noDoshas, ML, y + 68, { width: W, align: "center", lineBreak: false }).restore();
     doc.save().font(SERIF_I).fontSize(13).fillColor(C.muted)
-      .text("Dosha-Free Union", ML, y + 96, { width: W, align: "center", lineBreak: false }).restore();
+      .text(S.doshaFree, ML, y + 96, { width: W, align: "center", lineBreak: false }).restore();
 
     ornamentRow(doc, ML, y + 120, W);
 
     doc.save().font(SERIF).fontSize(10.5).fillColor(C.inkSoft)
-      .text(
-        `This is a rare and auspicious finding. Neither Nadi Dosha nor Bhakut Dosha — the two most significant doshas in the Ashta Koota system — are present in the compatibility analysis for ${d.boy.name || "the Groom"} and ${d.girl.name || "the Bride"}.`,
-        ML + 30, y + 134, { width: W - 60, align: "center" }
-      ).restore();
-
+      .text(para1, ML + 30, y + 134, { width: W - 60, align: "center" }).restore();
     doc.save().font(SERIF).fontSize(10.5).fillColor(C.inkSoft)
-      .text(
-        "Classical Jyotisha texts regard a dosha-free union as a sign of strong karmic merit (punya) from past lives. This couple carries the blessings of their ancestors and the alignment of the stars into their new life together.",
-        ML + 30, y + 195, { width: W - 60, align: "center" }
-      ).restore();
+      .text(para2, ML + 30, y + 195, { width: W - 60, align: "center" }).restore();
 
     y += certH + 24;
   } else {
@@ -708,38 +718,40 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
     d.doshas.forEach(dosha => {
       const sevColor = dosha.severity === "High" ? C.red : dosha.severity === "Medium" ? C.amber : C.green;
       const sevBg = dosha.severity === "High" ? C.redBg : dosha.severity === "Medium" ? C.amberBg : C.greenBg;
-      const rem = DR[dosha.dosha_name];
+      const rem = getDR(dosha.dosha_name, lang, DR[dosha.dosha_name]);
+      const txt = doshaText(dosha.dosha_name, lang, { description: dosha.description, classical_reference: dosha.classical_reference });
+      const doshaName = lang === "hi" ? ({ "Nadi Dosha": "नाड़ी दोष", "Bhakut Dosha": "भकूट दोष" } as Record<string, string>)[dosha.dosha_name] || dosha.dosha_name : dosha.dosha_name;
 
       // Header
       doc.save().roundedRect(ML, y, W, 26, 6).fill(sevBg).restore();
       doc.save().strokeColor(sevColor).lineWidth(0.6).roundedRect(ML, y, W, 26, 6).stroke().restore();
       doc.save().font(SERIF_B).fontSize(13).fillColor(sevColor)
-        .text(dosha.dosha_name, ML + 14, y + 7, { lineBreak: false }).restore();
-      doc.save().roundedRect(ML + W - 80, y + 7, 70, 14, 4).fill(sevColor).restore();
+        .text(doshaName, ML + 14, y + 7, { lineBreak: false }).restore();
+      doc.save().roundedRect(ML + W - 92, y + 7, 82, 14, 4).fill(sevColor).restore();
       doc.save().font(SANS_B).fontSize(8).fillColor(C.white)
-        .text(dosha.severity + " SEVERITY", ML + W - 78, y + 11, { width: 66, align: "center", lineBreak: false }).restore();
+        .text(`${severityWord(dosha.severity, lang)} ${S.severity}`, ML + W - 90, y + 11, { width: 78, align: "center", lineBreak: false }).restore();
       y += 32;
 
       // Description
       doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon)
-        .text("DESCRIPTION", ML, y, { lineBreak: false }).restore();
+        .text(S.description, ML, y, { lineBreak: false }).restore();
       y += 14;
       doc.save().font(SERIF).fontSize(10).fillColor(C.ink)
-        .text(dosha.description, ML, y, { width: W }).restore();
-      y += doc.heightOfString(dosha.description, { width: W }) + 8;
+        .text(txt.description, ML, y, { width: W }).restore();
+      y += doc.heightOfString(txt.description, { width: W }) + 8;
 
       // Classical reference
       doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon)
-        .text("CLASSICAL REFERENCE", ML, y, { lineBreak: false }).restore();
+        .text(S.classicalReference, ML, y, { lineBreak: false }).restore();
       y += 14;
       doc.save().font(SERIF_I).fontSize(9.5).fillColor(C.inkSoft)
-        .text(dosha.classical_reference, ML, y, { width: W }).restore();
-      y += doc.heightOfString(dosha.classical_reference, { width: W }) + 14;
+        .text(txt.classical_reference, ML, y, { width: W }).restore();
+      y += doc.heightOfString(txt.classical_reference, { width: W }) + 14;
 
       // Cancellation conditions
       if (rem) {
         doc.save().font(SANS_B).fontSize(8).fillColor(C.green)
-          .text("CANCELLATION CONDITIONS — When Does This Dosha Get Nullified?", ML, y, { lineBreak: false }).restore();
+          .text(S.cancellationConditions, ML, y, { width: W, lineBreak: false }).restore();
         y += 16;
         rem.cancellation.forEach(cond => {
           doc.save().font(SERIF).fontSize(7.5).fillColor(C.muted).text("-", ML, y, { lineBreak: false }).restore();
@@ -756,55 +768,35 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
   // Note
   doc.save().roundedRect(ML, y, W, 60, 6).fill(C.creamAlt).restore();
   doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon)
-    .text("IMPORTANT NOTE ON DOSHAS", ML + 14, y + 10, { lineBreak: false }).restore();
+    .text(S.importantNoteDosha, ML + 14, y + 10, { lineBreak: false }).restore();
   doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft)
-    .text(
-      "Doshas are not condemnations — they are karmic signposts that point to areas requiring conscious attention and spiritual effort. Countless blessed marriages carry one or more doshas that were addressed through proper remedies, sincere spiritual practice, and mutual love. See the Remedies section for complete guidance.",
-      ML + 14, y + 24, { width: W - 28 }
-    ).restore();
+    .text(doshaImportantNote(lang), ML + 14, y + 24, { width: W - 28 }).restore();
 }
 
 // ─── Page 6: Sacred Remedies ─────────────────────────────────────────────────
 function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
+  const lang = d.lang || "en";
+  const S = L(lang);
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
-  pageHeader(doc, "Sacred Remedies");
-  pageFooter(doc, 8, 11);
+  pageHeader(doc, lang);
+  pageFooter(doc, 8, 11, lang);
 
   let y = 48;
 
   doc.save().font(SERIF_B).fontSize(17).fillColor(C.maroon)
-    .text("Sacred Vedic Remedies", ML, y, { width: W, lineBreak: false }).restore();
+    .text(S.remediesTitle, ML, y, { width: W, lineBreak: false }).restore();
   y += 10;
   doc.save().font(SERIF_I).fontSize(10).fillColor(C.muted)
-    .text("Prescribed prescriptions from classical Jyotisha for harmonizing celestial energies", ML, y + 16, { width: W, lineBreak: false }).restore();
+    .text(S.remediesSub, ML, y + 16, { width: W, lineBreak: false }).restore();
   y += 36;
   hRule(doc, ML, y, W);
   y += 16;
 
   // General remedies always shown
-  const generalRemedies = [
-    { section: "Auspicious Mantras for the Couple", items: [
-      { title: "Om Gam Ganapataye Namah", sub: "Ganesha Mantra — Recite together 108 times before the wedding ceremony to remove all obstacles" },
-      { title: "Om Shri Mahalakshmyai Namah", sub: "Lakshmi Mantra — Chant 108 times every Friday for marital prosperity and domestic harmony" },
-    ]},
-    { section: "Puja Recommendations", items: [
-      { title: "Satyanarayan Katha", sub: "Perform on the first Purnima (full moon) after the wedding, and every year on the anniversary" },
-      { title: "Navagrah Puja", sub: "Conducted before the wedding by a learned priest to harmonize all nine planetary energies" },
-    ]},
-    { section: "Gemstone Guidance", items: [
-      { title: "Groom: Coral (Moonga) or Ruby (Manik)", sub: "Strengthens Mars and Sun energy — set in gold, worn on the ring finger, right hand" },
-      { title: "Bride: Pearl (Moti) or White Sapphire", sub: "Strengthens Moon and Venus energy — set in silver, worn on the little finger, right hand" },
-    ]},
-    { section: "Fasting & Sacred Observances", items: [
-      { title: "Mangalvar (Tuesday) Fast — for the Groom", sub: "Offer red flowers to Lord Hanuman and donate red lentils on Tuesdays" },
-      { title: "Shukravar (Friday) Fast — for the Bride", sub: "Offer white flowers to Goddess Lakshmi and donate white sweets on Fridays" },
-    ]},
-  ];
-
-  generalRemedies.forEach(section => {
+  generalRemedies(lang).forEach(section => {
     doc.save().font(SANS_B).fontSize(8.5).fillColor(C.maroon)
-      .text(section.section.toUpperCase(), ML, y, { characterSpacing: 0.5, lineBreak: false }).restore();
+      .text(lang === "hi" ? section.section : section.section.toUpperCase(), ML, y, { characterSpacing: lang === "hi" ? 0 : 0.5, lineBreak: false }).restore();
     y += 16;
 
     section.items.forEach(item => {
@@ -825,15 +817,16 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
     hRule(doc, ML, y, W, C.rule, 0.4);
     y += 12;
     doc.save().font(SERIF_B).fontSize(13).fillColor(C.maroon)
-      .text("Dosha-Specific Remedies", ML, y, { lineBreak: false }).restore();
+      .text(S.doshaSpecificRemedies, ML, y, { lineBreak: false }).restore();
     y += 18;
 
     d.doshas.forEach(dosha => {
-      const rem = DR[dosha.dosha_name];
+      const rem = getDR(dosha.dosha_name, lang, DR[dosha.dosha_name]);
       if (!rem) return;
+      const doshaName = lang === "hi" ? ({ "Nadi Dosha": "नाड़ी दोष", "Bhakut Dosha": "भकूट दोष" } as Record<string, string>)[dosha.dosha_name] || dosha.dosha_name : dosha.dosha_name;
 
       doc.save().font(SANS_B).fontSize(9).fillColor(C.red)
-        .text(dosha.dosha_name + " — Prescribed Remedies", ML, y, { lineBreak: false }).restore();
+        .text(doshaName + S.prescribedRemedies, ML, y, { lineBreak: false }).restore();
       y += 16;
 
       rem.mantras.forEach(m => {
@@ -841,23 +834,23 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
         doc.save().font(SERIF_B).fontSize(11).fillColor(C.maroon)
           .text(m.text, ML + 12, y + 6, { width: W - 24 }).restore();
         const textH = doc.heightOfString(m.text, { width: W - 24 });
-        doc.save().font(SANS_I || SANS).fontSize(8).fillColor(C.muted)
+        doc.save().font(SANS).fontSize(8).fillColor(C.muted)
           .text(m.instruction, ML + 12, y + 8 + textH, { width: W - 24, lineBreak: false }).restore();
         y += Math.max(46, textH + 24);
       });
       y += 8;
 
-      doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon).text("Puja:", ML, y, { lineBreak: false }).restore();
+      doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon).text(S.puja, ML, y, { lineBreak: false }).restore();
       y += 13;
       doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft).text(rem.puja, ML, y, { width: W }).restore();
       y += doc.heightOfString(rem.puja, { width: W }) + 10;
 
-      doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon).text("Gemstone:", ML, y, { lineBreak: false }).restore();
+      doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon).text(S.gemstone, ML, y, { lineBreak: false }).restore();
       y += 13;
       doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft).text(rem.gemstone, ML, y, { width: W }).restore();
       y += doc.heightOfString(rem.gemstone, { width: W }) + 10;
 
-      doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon).text("Fasting & Charity:", ML, y, { lineBreak: false }).restore();
+      doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon).text(S.fastingCharity, ML, y, { lineBreak: false }).restore();
       y += 13;
       doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft).text(rem.fasting, ML, y, { width: W }).restore();
       y += doc.heightOfString(rem.fasting, { width: W }) + 10;
@@ -869,10 +862,12 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
 
 // ─── Page 7: Life Area Analysis ───────────────────────────────────────────────
 function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
+  const lang = d.lang || "en";
+  const S = L(lang);
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
-  pageHeader(doc, "Life Areas");
-  pageFooter(doc, 9, 11);
+  pageHeader(doc, lang);
+  pageFooter(doc, 9, 11, lang);
 
   let y = 48;
   const kootas = d.gunaMilan.koota_breakdown;
@@ -883,70 +878,26 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
   const total = d.gunaMilan.total_score;
 
   doc.save().font(SERIF_B).fontSize(17).fillColor(C.maroon)
-    .text("Life Compatibility Analysis", ML, y, { width: W, lineBreak: false }).restore();
+    .text(S.lifeAreasTitle, ML, y, { width: W, lineBreak: false }).restore();
   y += 10;
   doc.save().font(SERIF_I).fontSize(10).fillColor(C.muted)
-    .text("How the stars align across the six pillars of married life", ML, y + 16, { width: W, lineBreak: false }).restore();
+    .text(S.lifeAreasSub, ML, y + 16, { width: W, lineBreak: false }).restore();
   y += 36;
   hRule(doc, ML, y, W);
   y += 16;
 
-  const areas = [
-    {
-      title: "Marriage & Daily Partnership",
-      icon: "*",
-      rating: gana?.passed ? "Excellent" : total >= 21 ? "Good" : "Needs Work",
-      rColor: gana?.passed ? C.green : total >= 21 ? C.amber : C.red,
-      insight: gana?.passed
-        ? `Their ${boyN.gana} and ${girlN.gana} Gana alignment ensures natural temperamental harmony in day-to-day married life. Partners will intuitively understand each other's rhythms, moods, and needs without constant explanation.`
-        : `Their Ganas (${boyN.gana} and ${girlN.gana}) differ, creating an opportunity for profound growth. With conscious honoring of each other's fundamental nature, their differences become powerful complementary strengths in the home.`,
-    },
-    {
-      title: "Physical & Intimate Harmony",
-      icon: "*",
-      rating: (yoni?.score || 0) >= 3 ? "Excellent" : (yoni?.score || 0) >= 2 ? "Good" : "Needs Attention",
-      rColor: (yoni?.score || 0) >= 3 ? C.green : (yoni?.score || 0) >= 2 ? C.amber : C.red,
-      insight: (yoni?.passed)
-        ? `Their Yoni compatibility (${boyN.yoni}/${girlN.yoni}) promises natural physical harmony. The couple will find intimacy flowing naturally, with a strong biological and energetic resonance that deepens over years of shared life.`
-        : `Their Yoni types (${boyN.yoni}/${girlN.yoni}) are different, suggesting that their physical connection may need conscious nurturing. Patience, open-hearted communication, and genuine care will build a deeply fulfilling bond.`,
-    },
-    {
-      title: "Financial Harmony & Prosperity",
-      icon: "*",
-      rating: bhakut?.score === 7 ? "Excellent" : "Needs Attention",
-      rColor: bhakut?.score === 7 ? C.green : C.amber,
-      insight: bhakut?.passed
-        ? `Bhakut alignment between their Moon signs (${boyN.rashi_english} and ${girlN.rashi_english}) bodes excellently for shared prosperity. They will naturally motivate each other's ambitions and support each other's financial growth without resentment.`
-        : `The Bhakut configuration between ${boyN.rashi_english} and ${girlN.rashi_english} requires attention in financial matters. Joint spiritual practices, transparent financial communication, and aligned goals will help build lasting abundance together.`,
-    },
-    {
-      title: "Intellectual & Psychological Bond",
-      icon: "*",
-      rating: (maitri?.score || 0) >= 4 ? "Excellent" : (maitri?.score || 0) >= 3 ? "Good" : "Needs Work",
-      rColor: (maitri?.score || 0) >= 4 ? C.green : (maitri?.score || 0) >= 3 ? C.amber : C.red,
-      insight: maitri?.passed
-        ? `The friendship between their ruling planets (${boyN.lord} and ${girlN.lord}) creates an exceptional mental bond. They will find intellectual conversation effortless, and their psychological attunement will make this partnership deeply comforting.`
-        : `Different planetary lords (${boyN.lord} and ${girlN.lord}) mean they approach the world differently. Celebrating — rather than resenting — these different ways of thinking will enrich their intellectual partnership immensely.`,
-    },
-    {
-      title: "Health, Genetics & Progeny",
-      icon: "*",
-      rating: nadi?.score === 8 ? "Excellent" : "Needs Guidance",
-      rColor: nadi?.score === 8 ? C.green : C.red,
-      insight: nadi?.passed
-        ? `Complementary Nadis (${boyN.nadi} and ${girlN.nadi}) indicate excellent genetic compatibility. This bodes beautifully for the health of their children and the overall vitality and longevity of the couple together.`
-        : `Both sharing the same Nadi (${boyN.nadi}) creates a Nadi Dosha that requires specific remedial measures to support good health for their progeny. Please follow the Dosha Remedies section carefully.`,
-    },
-    {
-      title: "Destiny, Fortune & Spiritual Path",
-      icon: "*",
-      rating: (tara?.score || 0) >= 2 ? "Excellent" : total >= 21 ? "Good" : "Needs Practice",
-      rColor: (tara?.score || 0) >= 2 ? C.green : total >= 21 ? C.amber : C.red,
-      insight: boyN.gana === girlN.gana
-        ? `The unified ${boyN.gana} Gana energy of both partners creates a harmoniously aligned spiritual vibration. They will naturally support each other's devotional practices, dharmic path, and growth toward higher consciousness.`
-        : `Their different Gana energies (${boyN.gana} and ${girlN.gana}) offer complementary spiritual perspectives. Their different spiritual inclinations, when mutually honored, create a beautifully balanced devotional household — each enriching the other's path.`,
-    },
+  // Localized title/rating/insight text from the i18n builder …
+  const built = lifeAreas(boyN, girlN, kootas, total, lang);
+  // … while colour thresholds stay here (presentation) in the same order.
+  const colors = [
+    gana?.passed ? C.green : total >= 21 ? C.amber : C.red,
+    (yoni?.score || 0) >= 3 ? C.green : (yoni?.score || 0) >= 2 ? C.amber : C.red,
+    bhakut?.score === 7 ? C.green : C.amber,
+    (maitri?.score || 0) >= 4 ? C.green : (maitri?.score || 0) >= 3 ? C.amber : C.red,
+    nadi?.score === 8 ? C.green : C.red,
+    (tara?.score || 0) >= 2 ? C.green : total >= 21 ? C.amber : C.red,
   ];
+  const areas = built.map((a, i) => ({ ...a, rColor: colors[i], icon: "*" }));
 
   const halfW = (W - 12) / 2;
 
@@ -965,7 +916,7 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
       .text(area.title, x + 30, y + 13, { width: halfW - 100, lineBreak: false }).restore();
     doc.save().roundedRect(x + halfW - 72, y + 10, 64, 15, 4).fill(area.rColor).restore();
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.white)
-      .text(area.rating.toUpperCase(), x + halfW - 72, y + 14, { width: 64, align: "center", lineBreak: false }).restore();
+      .text(lang === "hi" ? area.rating : area.rating.toUpperCase(), x + halfW - 72, y + 14, { width: 64, align: "center", lineBreak: false }).restore();
 
     hRule(doc, x + 10, y + 34, halfW - 20, C.rule, 0.3);
 
@@ -976,21 +927,23 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
 
 // ─── Page 8: Nakshatra Profiles ───────────────────────────────────────────────
 function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
+  const lang = d.lang || "en";
+  const S = L(lang);
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
-  pageHeader(doc, "Nakshatra Profiles");
-  pageFooter(doc, 10, 11);
+  pageHeader(doc, lang);
+  pageFooter(doc, 10, 11, lang);
 
   let y = 48;
 
   doc.save().font(SERIF_B).fontSize(17).fillColor(C.maroon)
-    .text("Nakshatra Deep Profiles", ML, y, { width: W, lineBreak: false }).restore();
+    .text(S.nakshatraProfilesTitle, ML, y, { width: W, lineBreak: false }).restore();
   y += 28;
   hRule(doc, ML, y, W);
   y += 16;
 
   const drawNakshatraCard = (nk: NakshatraData, person: any, label: string, accentColor: string) => {
-    const extra = NX[nk.name];
+    const extra = getNX(nk.name, lang, NX[nk.name]);
     const leftW = 220;
     const rightW = W - leftW - 16;
     const lx = ML + 16;
@@ -999,15 +952,15 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
 
     // Left column specs
     const specs: [string, string][] = [
-      ["Deity (Devata)", extra?.deity || "—"],
-      ["Symbol", extra?.symbol || "—"],
-      ["Zodiac Sign", `${nk.rashi_english} (${nk.rashi})`],
-      ["Ruling Planet", nk.lord],
-      ["Varna", nk.varna],
-      ["Gana", nk.gana],
-      ["Nadi", nk.nadi],
-      ["Yoni", nk.yoni],
-      ["Vashya", nk.vashya],
+      [S.deityDevata, extra?.deity || "—"],
+      [S.symbol, extra?.symbol || "—"],
+      [S.zodiacSign, rashiDisplay(nk.rashi_english, nk.rashi, lang)],
+      [S.rulingPlanet, T.planet(nk.lord, lang)],
+      [S.varna, T.varna(nk.varna, lang)],
+      [S.gana, T.gana(nk.gana, lang)],
+      [S.nadi, T.nadi(nk.nadi, lang)],
+      [S.yoni, T.yoni(nk.yoni, lang)],
+      [S.vashya, T.vashya(nk.vashya, lang)],
     ];
 
     // Pre-calculate left column height (each row height = max of label vs wrapped value)
@@ -1038,21 +991,21 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
     doc.save().roundedRect(ML, y, W, 8, 4).fill(accentColor).restore();
 
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.goldLight)
-      .text(label, ML + 16, y + 12, { characterSpacing: 1.2, lineBreak: false }).restore();
+      .text(label, ML + 16, y + 12, { characterSpacing: lang === "hi" ? 0 : 1.2, lineBreak: false }).restore();
     doc.save().font(SERIF_B).fontSize(15).fillColor(C.white)
-      .text(`${nk.name} Nakshatra`, ML + 16, y + 23, { lineBreak: false }).restore();
+      .text(`${T.nakshatra(nk.name, lang)} ${S.nakshatraSuffix}`, ML + 16, y + 23, { lineBreak: false }).restore();
     doc.save().font(SERIF_I).fontSize(10).fillColor(C.goldLight)
-      .text(`${nk.rashi_english} (${nk.rashi})  ·  Lord: ${nk.lord}`, ML + W - 200, y + 26, { width: 190, align: "right", lineBreak: false }).restore();
+      .text(`${rashiDisplay(nk.rashi_english, nk.rashi, lang)}  ·  ${S.lord}: ${T.planet(nk.lord, lang)}`, ML + W - 200, y + 26, { width: 190, align: "right", lineBreak: false }).restore();
 
     // Left column — technical data
     let ky = y + 46;
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.maroon)
-      .text("BIRTH STAR PROFILE", lx, ky, { lineBreak: false }).restore();
+      .text(S.birthStarProfile, lx, ky, { lineBreak: false }).restore();
     ky += 14;
     specs.forEach(([lbl, val], si) => {
       const rowH = specRowHeights[si];
       doc.save().font(SANS).fontSize(8).fillColor(C.muted)
-        .text(lbl + ":", lx, ky, { width: 90, lineBreak: false }).restore();
+        .text(lbl + ":", lx, ky, { width: 100, lineBreak: false }).restore();
       doc.save().font(SANS_B).fontSize(8).fillColor(C.inkSoft)
         .text(val, lx + 92, ky, { width: specValW }).restore();
       ky += rowH;
@@ -1061,23 +1014,23 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
     // Right column — qualities
     let rky = y + 46;
     doc.save().font(SANS_B).fontSize(7.5).fillColor(C.maroon)
-      .text("ESSENCE & CHARACTER", rx, rky, { lineBreak: false }).restore();
+      .text(S.essenceCharacter, rx, rky, { lineBreak: false }).restore();
     rky += 14;
 
     if (extra) {
-      doc.save().font(SANS_B).fontSize(7.5).fillColor(C.inkSoft).text("Essence:", rx, rky, { lineBreak: false }).restore();
+      doc.save().font(SANS_B).fontSize(7.5).fillColor(C.inkSoft).text(S.essence, rx, rky, { lineBreak: false }).restore();
       rky += 12;
       doc.save().font(SERIF_I).fontSize(9).fillColor(C.inkSoft)
         .text(`"${extra.essence}"`, rx, rky, { width: rightW }).restore();
       rky += doc.heightOfString(`"${extra.essence}"`, { width: rightW }) + 8;
 
-      doc.save().font(SANS_B).fontSize(7.5).fillColor(C.green).text("Natural Gifts:", rx, rky, { lineBreak: false }).restore();
+      doc.save().font(SANS_B).fontSize(7.5).fillColor(C.green).text(S.naturalGifts, rx, rky, { lineBreak: false }).restore();
       rky += 12;
       doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft)
         .text(extra.traits, rx, rky, { width: rightW }).restore();
       rky += doc.heightOfString(extra.traits, { width: rightW }) + 8;
 
-      doc.save().font(SANS_B).fontSize(7.5).fillColor(C.red).text("Shadow Qualities:", rx, rky, { lineBreak: false }).restore();
+      doc.save().font(SANS_B).fontSize(7.5).fillColor(C.red).text(S.shadowQualities, rx, rky, { lineBreak: false }).restore();
       rky += 12;
       doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft)
         .text(extra.shadow, rx, rky, { width: rightW }).restore();
@@ -1086,14 +1039,11 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
     y += cardH + 16;
   };
 
-  drawNakshatraCard(d.boyNakshatra, d.boy, "GROOM'S NAKSHATRA", "#D4A84B");
-  drawNakshatraCard(d.girlNakshatra, d.girl, "BRIDE'S NAKSHATRA", C.rose);
+  drawNakshatraCard(d.boyNakshatra, d.boy, S.groomNakshatra, "#D4A84B");
+  drawNakshatraCard(d.girlNakshatra, d.girl, S.brideNakshatra, C.rose);
 
   // Energetic interaction section — dynamic height based on content
-  const sameGana = d.boyNakshatra.gana === d.girlNakshatra.gana;
-  const interaction = sameGana
-    ? `Both ${d.boyNakshatra.name} and ${d.girlNakshatra.name} belong to the ${d.boyNakshatra.gana} Gana — the same fundamental temperament family. This creates an immediate recognition and resonance between partners: they approach life's challenges and joys with the same underlying spirit. Their home will feel naturally harmonious, their communication will be intuitively understood, and their daily rhythms will align with minimum friction.`
-    : `${d.boyNakshatra.name} (${d.boyNakshatra.gana} Gana) and ${d.girlNakshatra.name} (${d.girlNakshatra.gana} Gana) come from different temperament families — creating a dynamic, textured partnership. The ${d.boyNakshatra.gana} energy offers ${d.boyNakshatra.gana === "Deva" ? "grace, lightness, and idealism" : d.boyNakshatra.gana === "Manushya" ? "practicality, emotional depth, and balance" : "intensity, passion, and transformative power"}, while the ${d.girlNakshatra.gana} energy brings ${d.girlNakshatra.gana === "Deva" ? "grace, lightness, and spiritual aspiration" : d.girlNakshatra.gana === "Manushya" ? "grounded warmth and human wisdom" : "fierce devotion and transformative strength"}. Together, they can create a beautifully complementary whole.`;
+  const interaction = interactionParagraph(d.boyNakshatra, d.girlNakshatra, lang);
 
   doc.font(SERIF).fontSize(9.5);
   const interactionTextH = doc.heightOfString(interaction, { width: W - 28 });
@@ -1101,7 +1051,7 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
   doc.save().roundedRect(ML, y, W, interactionBoxH, 6).fill(C.creamAlt).restore();
   doc.save().strokeColor(C.gold).lineWidth(0.5).roundedRect(ML, y, W, interactionBoxH, 6).stroke().restore();
   doc.save().font(SANS_B).fontSize(8.5).fillColor(C.maroon)
-    .text("THEIR ENERGETIC INTERACTION", ML + 14, y + 10, { lineBreak: false }).restore();
+    .text(S.energeticInteraction, ML + 14, y + 10, { lineBreak: false }).restore();
 
   doc.save().font(SERIF).fontSize(9.5).fillColor(C.inkSoft)
     .text(interaction, ML + 14, y + 24, { width: W - 28 }).restore();
@@ -1109,6 +1059,8 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
 
 // ─── Page 9: Conclusion & Blessing ───────────────────────────────────────────
 function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDFInput) {
+  const lang = d.lang || "en";
+  const S = L(lang);
   doc.rect(0, 0, PW, PH).fill(C.maroonDeep);
   drawWatermark(doc, true);
 
@@ -1120,18 +1072,18 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
 
   const score = d.gunaMilan.total_score;
   const pct = d.gunaMilan.percentage;
-  const bName = d.boy.name || "Groom";
-  const gName = d.girl.name || "Bride";
+  const bName = d.boy.name || S.groom;
+  const gName = d.girl.name || S.bride;
   const verdictColor = pct >= 75 ? "#4ADE80" : pct >= 55 ? C.gold : "#F87171";
 
   let y = 52;
 
   // Header
   doc.save().font(SANS_B).fontSize(8).fillColor(C.goldLight)
-    .text("CONCLUSION & BLESSING", 0, y, { width: PW, align: "center", characterSpacing: 3, lineBreak: false }).restore();
+    .text(S.conclusionBlessing, 0, y, { width: PW, align: "center", characterSpacing: lang === "hi" ? 0 : 3, lineBreak: false }).restore();
   y += 22;
   doc.save().font(SERIF_I).fontSize(11).fillColor(C.muted)
-    .text("VedicScan · Vivah Compatibility Analysis", 0, y, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(S.conclusionSub, 0, y, { width: PW, align: "center", lineBreak: false }).restore();
   y += 28;
   ornamentRow(doc, ML, y, W);
   y += 22;
@@ -1140,11 +1092,11 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
   doc.save().fillOpacity(0.3).roundedRect(PW / 2 - 130, y, 260, 80, 8).fill('#000000').restore();
   doc.save().strokeColor(C.gold).lineWidth(0.7).roundedRect(PW / 2 - 130, y, 260, 80, 8).stroke().restore();
   doc.save().font(SANS_B).fontSize(9).fillColor(C.muted)
-    .text("FINAL COMPATIBILITY SCORE", PW / 2 - 130, y + 12, { width: 260, align: "center", characterSpacing: 1.5, lineBreak: false }).restore();
+    .text(S.finalScore, PW / 2 - 130, y + 12, { width: 260, align: "center", characterSpacing: lang === "hi" ? 0 : 1.5, lineBreak: false }).restore();
   doc.save().font(SERIF_B).fontSize(36).fillColor(C.goldLight)
     .text(`${score} / 36`, PW / 2 - 130, y + 26, { width: 260, align: "center", lineBreak: false }).restore();
-  doc.save().font(SERIF_B).fontSize(13).fillColor(verdictColor)
-    .text(d.gunaMilan.verdict, PW / 2 - 130, y + 62, { width: 260, align: "center", lineBreak: false }).restore();
+  doc.save().font(SERIF_B).fontSize(lang === "hi" ? 11 : 13).fillColor(verdictColor)
+    .text(verdictText(score, lang), PW / 2 - 130, y + 62, { width: 260, align: "center", lineBreak: false }).restore();
   y += 96;
 
   // Names
@@ -1152,7 +1104,7 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
     .text(`${bName}  &  ${gName}`, 0, y, { width: PW, align: "center", lineBreak: false }).restore();
   y += 22;
   doc.save().font(SERIF_I).fontSize(10).fillColor(C.muted)
-    .text(`${d.boyNakshatra.name} Nakshatra  ·  ${d.girlNakshatra.name} Nakshatra`, 0, y, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(`${T.nakshatra(d.boyNakshatra.name, lang)} ${S.nakshatraSuffix}  ·  ${T.nakshatra(d.girlNakshatra.name, lang)} ${S.nakshatraSuffix}`, 0, y, { width: PW, align: "center", lineBreak: false }).restore();
   y += 32;
 
   ornamentRow(doc, ML, y, W);
@@ -1160,18 +1112,14 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
 
   // Vedic blessing
   doc.save().font(SERIF_I).fontSize(13).fillColor(C.goldLight)
-    .text("Om Sarve Bhavantu Sukhinah", 0, y, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(S.blessingSanskrit, 0, y, { width: PW, align: "center", lineBreak: false }).restore();
   y += 22;
   doc.save().font(SERIF_I).fontSize(10).fillColor(C.muted)
-    .text("May all beings be happy · May all beings be at peace", 0, y, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(S.blessingGloss, 0, y, { width: PW, align: "center", lineBreak: false }).restore();
   y += 28;
 
   // Summary paragraph
-  const summaryText = pct >= 75
-    ? `The stars smile upon this union. With a rare score of ${score} out of 36 Gunas, ${bName} and ${gName} stand among the most divinely aligned couples that Vedic astrology can recognize. Their nakshatras — ${d.boyNakshatra.name} and ${d.girlNakshatra.name} — carry complementary celestial energies that when united, create something greater than either could build alone. We offer our deepest blessings for a long, joyful, and spiritually rich life together.`
-    : pct >= 55
-    ? `With a score of ${score} out of 36 Gunas, ${bName} and ${gName} share a meaningful and workable compatibility. The gunas reveal both areas of natural harmony and specific places where conscious effort and love will be required. All great marriages are built not only on stars, but on the daily choice to love, honor, and grow together. With the recommended remedies and a sincere commitment to each other, this union holds genuine promise.`
-    : `A score of ${score} out of 36 Gunas calls for honesty, courage, and a deep commitment to the remedial path. The Rishis who composed the Ashta Koota system were wise: they did not forbid marriages with lower scores, they provided the remedial tools to support them. ${bName} and ${gName} are advised to complete all recommended pujas, observe the prescribed remedies faithfully, and approach their union with open eyes and open hearts. Love, sustained by spiritual practice, can transcend the stars.`;
+  const summaryText = conclusionSummary(score, pct, bName, gName, d.boyNakshatra, d.girlNakshatra, lang);
 
   doc.save().font(SERIF).fontSize(10).fillColor(C.cream)
     .text(summaryText, ML + 30, y, { width: W - 60, align: "center" }).restore();
@@ -1182,28 +1130,24 @@ function drawConclusionPage(doc: InstanceType<typeof PDFDocument>, d: Compatibil
 
   // Maharishi quote
   doc.save().font(SERIF_I).fontSize(11).fillColor(C.goldLight)
-    .text('"The highest compatibility is not between stars — it is between two hearts determined to choose each other every day."', ML + 30, y, { width: W - 60, align: "center" }).restore();
+    .text(S.maharishiQuote, ML + 30, y, { width: W - 60, align: "center" }).restore();
   y += 46;
 
   doc.save().font(SANS).fontSize(8).fillColor(C.muted)
-    .text("— Maharishi Vedic Wisdom", 0, y, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(S.maharishiAttribution, 0, y, { width: PW, align: "center", lineBreak: false }).restore();
   y += 36;
 
   // Disclaimer
   doc.save().fillOpacity(0.2).roundedRect(ML + 20, y, W - 40, 68, 6).fill('#000000').restore();
   doc.save().font(SANS_B).fontSize(7.5).fillColor(C.muted)
-    .text("DISCLAIMER", ML + 32, y + 10, { characterSpacing: 0.8, lineBreak: false }).restore();
+    .text(S.disclaimer, ML + 32, y + 10, { characterSpacing: lang === "hi" ? 0 : 0.8, lineBreak: false }).restore();
   doc.save().font(SANS).fontSize(7.5).fillColor(C.muted)
-    .text(
-      "This report is based on classical Vedic Jyotisha principles and is offered for spiritual reflection and guidance only. It does not constitute professional astrological, medical, legal, or marital advice. The final decision regarding marriage rests entirely with the individuals involved and their families. VedicScan does not guarantee any particular life outcome based on this analysis.",
-      ML + 32, y + 24, { width: W - 64 }
-    ).restore();
+    .text(S.disclaimerText, ML + 32, y + 24, { width: W - 64 }).restore();
   y += 84;
 
   // Generated
-  const dateStr = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   doc.save().font(SANS).fontSize(7.5).fillColor(C.muted)
-    .text(`Generated by VedicScan on ${dateStr}  ·  Premium Compatibility Report`, 0, PH - 40, { width: PW, align: "center", lineBreak: false }).restore();
+    .text(`${S.generatedByOn} ${formattedDate(lang)}  ·  ${S.premiumReport}`, 0, PH - 40, { width: PW, align: "center", lineBreak: false }).restore();
 }
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
@@ -1221,6 +1165,25 @@ export function generateCompatibilityPDF(input: CompatibilityPDFInput): Promise<
         },
         autoFirstPage: false,
       });
+
+      // Hindi mode: override PDFKit's built-in Times/Helvetica names with bundled
+      // Noto Devanagari fonts so every existing `.font(SERIF)` call renders Devanagari.
+      // Deleting the pre-cached _fontFamilies entry forces re-open from the new source.
+      if (input.lang === "hi") {
+        const FD = path.join(__dirname, "../../../../assets/fonts/");
+        const overrides: Record<string, string> = {
+          "Times-Roman": "NotoSerifDevanagari-Regular.ttf",
+          "Times-Bold": "NotoSerifDevanagari-Bold.ttf",
+          "Times-Italic": "NotoSerifDevanagari-Regular.ttf",
+          "Helvetica": "NotoSansDevanagari-Regular.ttf",
+          "Helvetica-Bold": "NotoSansDevanagari-Bold.ttf",
+          "Helvetica-Oblique": "NotoSansDevanagari-Regular.ttf",
+        };
+        for (const [std, file] of Object.entries(overrides)) {
+          doc.registerFont(std, path.join(FD, file));
+          delete (doc as any)._fontFamilies[std];
+        }
+      }
 
       const chunks: Buffer[] = [];
       doc.on("data", (c: Buffer) => chunks.push(c));

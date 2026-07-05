@@ -71,7 +71,24 @@
       "Bash(git -C d:/Vedicscan1 ls-files backend/dist/)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(grep -v \"^.*://\\\\s*console\")",
+      "Read(//c/Windows/Fonts//**)",
+      "Bash(curl -sI --max-time 15 https://github.com)",
+      "Bash(curl -s -A \"Mozilla/4.0 \\(compatible; MSIE 6.0\\)\" \"https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;700\")",
+      "Bash(cd /tmp)",
+      "Bash(curl -s -A \"Mozilla/4.0 \\(compatible; MSIE 6.0; Windows NT 5.1\\)\" \"https://fonts.googleapis.com/css?family=Noto+Serif+Devanagari\")",
+      "Bash(curl -s --max-time 20 \"https://api.github.com/repos/google/fonts/contents/ofl/notoserifdevanagari\")",
+      "Bash(xxd)",
+      "Bash(curl -sL --max-time 30 -o assets/fonts/OFL.txt \"https://raw.githubusercontent.com/google/fonts/main/ofl/notoserifdevanagari/OFL.txt\")",
+      "Bash(python -c \"import fitz; print\\('PyMuPDF', fitz.__doc__[:40]\\)\")",
+      "Bash(python -c \"import pdf2image; print\\('pdf2image ok'\\)\")",
+      "Bash(where pdftoppm *)",
+      "Bash(python -c \"import pypdf; print\\('pypdf ok'\\)\")",
+      "Bash(python -m pip install --quiet pymupdf)",
+      "Bash(python -c \"import fitz; print\\('fitz', fitz.VersionBind\\)\")",
+      "Bash(python - C:/Users/Shivam/AppData/Local/Temp/claude/d--Vedicscan1/c959738a-f9a6-4e8f-b04e-a6c8dc4f46c2/scratchpad)",
+      "Bash(grep -nE '\\\\.text\\\\\\(\"[A-Z]|contentHeader\\\\\\(doc, L, pageW, \"|sectionHeader\\\\\\(\\\\s*$|\"[A-Z][a-z]+:' src/modules/kundali/services/pdf.service.ts)"
     ],
     "additionalDirectories": [
       "d:\\Vedicscan1\\video\\src"

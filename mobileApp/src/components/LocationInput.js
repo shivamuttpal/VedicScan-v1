@@ -97,7 +97,7 @@ const LocationInput = ({
       const uniqueResults = [...new Set(results)];
       setSuggestions(uniqueResults);
     } catch (error) {
-      console.error('Location search error:', error);
+      console.log('Location search error:', error);
     } finally {
       setLoading(false);
     }
@@ -208,10 +208,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   dropdown: {
-    position: 'absolute',
-    top: 58,
-    left: 0,
-    right: 0,
+    marginTop: 8,
     backgroundColor: C.white,
     borderRadius: radius.md,
     zIndex: 10000,

@@ -136,7 +136,7 @@ export const compatibilityController = {
                 return;
             }
 
-            const { boy, girl } = req.body;
+            const { boy, girl, lang } = req.body;
             if (!boy || !girl) {
                 res.status(400).json({ success: false, message: 'Boy and Girl details are required.' });
                 return;
@@ -152,6 +152,7 @@ export const compatibilityController = {
                 girl,
                 boyNakshatra: boyN,
                 girlNakshatra: girlN,
+                lang: lang === 'hi' ? 'hi' : 'en',
                 gunaMilan,
                 doshas,
             });

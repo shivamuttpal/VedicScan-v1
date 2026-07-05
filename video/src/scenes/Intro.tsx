@@ -55,7 +55,7 @@ export const Intro: React.FC = () => {
       {/* ── Background: celestial zodiac wheel ── */}
       <AbsoluteFill style={{ overflow: "hidden" }}>
         <Img
-          src={staticFile("home/hero-celestial.jpg")}
+          src={staticFile("home/banner.png")}
           style={{
             width: "100%",
             height: "100%",

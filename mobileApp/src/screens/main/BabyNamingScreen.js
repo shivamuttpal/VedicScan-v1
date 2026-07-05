@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   Alert, ActivityIndicator, Platform, TextInput, Modal, Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Location from 'expo-location';
 import { C, spacing, radius, fontSize } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../config/api';
 import LocationInput from '../../components/LocationInput';
+import CalendarDatePicker from '../../components/CalendarDatePicker';
+import CustomTimePicker from '../../components/CustomTimePicker';
 
 const LOGO = require('../../../assets/logo.jpeg');
 const BANNER = require('../../../assets/banner.png');
@@ -28,6 +29,21 @@ const BabyNamingScreen = ({ navigation }) => {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [dateObj, setDateObj] = useState(new Date(1990, 0, 1));
   const [fetchingLocation, setFetchingLocation] = useState(false);
+
+  const scrollViewRef = useRef(null);
+  const locationFieldRef = useRef(null);
+
+  const scrollToLocationField = () => {
+    setTimeout(() => {
+      if (locationFieldRef.current && scrollViewRef.current) {
+        locationFieldRef.current.measureLayout(
+          scrollViewRef.current,
+          (x, y) => scrollViewRef.current?.scrollTo({ y: y - 20, animated: true }),
+          () => {}
+        );
+      }
+    }, 150);
+  };
 
   // Modal State
   const [selectedName, setSelectedName] = useState(null);
@@ -55,27 +71,6 @@ const BabyNamingScreen = ({ navigation }) => {
       setExplanation('Unable to fetch deeper AI meaning. Try again later.');
     } finally {
       setExplanationLoading(false);
-    }
-  };
-
-  const onDateChange = (event, selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDateObj(selectedDate);
-      const d = selectedDate.getDate().toString().padStart(2, '0');
-      const m = (selectedDate.getMonth() + 1).toString().padStart(2, '0');
-      const y = selectedDate.getFullYear();
-      setDateOfBirth(`${d}-${m}-${y}`);
-    }
-  };
-
-  const onTimeChange = (event, selectedDate) => {
-    setShowTimePicker(false);
-    if (selectedDate) {
-      setDateObj(selectedDate);
-      const h = selectedDate.getHours().toString().padStart(2, '0');
-      const min = selectedDate.getMinutes().toString().padStart(2, '0');
-      setTimeOfBirth(`${h}:${min}`);
     }
   };
 
@@ -152,7 +147,7 @@ const BabyNamingScreen = ({ navigation }) => {
         <Text style={styles.headerSub}>Auspicious names by Nakshatra & Rashi.</Text>
       </LinearGradient>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         <View style={styles.inputSection}>
           <Text style={styles.selectLabel}>Date of Birth *</Text>
@@ -164,16 +159,20 @@ const BabyNamingScreen = ({ navigation }) => {
               {dateOfBirth || "DD-MM-YYYY"}
             </Text>
           </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={dateObj}
-              mode="date"
-              display="spinner"
-              minimumDate={new Date(1900, 0, 1)}
-              maximumDate={new Date()}
-              onChange={onDateChange}
-            />
-          )}
+          <CalendarDatePicker
+            visible={showDatePicker}
+            value={dateObj}
+            title="Date of Birth"
+            minDate={new Date(1900, 0, 1)}
+            maxDate={new Date()}
+            onClose={() => setShowDatePicker(false)}
+            onConfirm={(dateStr) => {
+              const [y, m, d] = dateStr.split('-');
+              setDateObj(new Date(Number(y), Number(m) - 1, Number(d)));
+              setDateOfBirth(`${d}-${m}-${y}`);
+              setShowDatePicker(false);
+            }}
+          />
 
           <Text style={styles.selectLabel}>Time of Birth *</Text>
           <TouchableOpacity
@@ -184,30 +183,25 @@ const BabyNamingScreen = ({ navigation }) => {
               {timeOfBirth || "HH:MM (24-hour)"}
             </Text>
           </TouchableOpacity>
-          {showTimePicker && (
-            <DateTimePicker
-              value={(() => {
-                const t = new Date();
-                if (timeOfBirth) {
-                  const [h, min] = timeOfBirth.split(':').map(Number);
-                  t.setHours(h, min, 0, 0);
-                }
-                return t;
-              })()}
-              mode="time"
-              is24Hour={true}
-              display="spinner"
-              onChange={onTimeChange}
-            />
-          )}
+          <CustomTimePicker
+            visible={showTimePicker}
+            value={timeOfBirth}
+            title="Time of Birth"
+            onClose={() => setShowTimePicker(false)}
+            onConfirm={(timeStr) => {
+              setTimeOfBirth(timeStr);
+              setShowTimePicker(false);
+            }}
+          />
 
           <Text style={styles.selectLabel}>Place of Birth *</Text>
-          <View style={{ zIndex: 9999 }}>
+          <View ref={locationFieldRef} collapsable={false} style={{ zIndex: 9999 }}>
             <LocationInput
               value={placeOfBirth}
               onChangeText={setPlaceOfBirth}
               placeholder="e.g., Mumbai, India"
               style={{ marginBottom: 16 }}
+              onFocus={scrollToLocationField}
             />
           </View>
 

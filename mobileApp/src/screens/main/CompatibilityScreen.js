@@ -4,8 +4,9 @@ import {
   Alert, ActivityIndicator, TextInput, Platform, KeyboardAvoidingView,
   Image, Modal,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import LocationInput from '../../components/LocationInput';
+import CalendarDatePicker from '../../components/CalendarDatePicker';
+import CustomTimePicker from '../../components/CustomTimePicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
@@ -47,17 +48,6 @@ const formatVerdict = (verdict, language) => {
   return verdict;
 };
 
-const parseDateLocal = (str) => {
-  const [y, m, d] = str.split('-').map(Number);
-  return new Date(y, m - 1, d);
-};
-const formatLocalDate = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
-
 const getScoreColor = (score, maxScore) => {
   const percentage = (score / maxScore) * 100;
   if (percentage >= 75) return C.green;
@@ -74,18 +64,18 @@ const getVerdictTheme = (verdict) => {
 
 // Premium report features shown in the paywall
 const PREMIUM_FEATURES = [
-  { icon: 'book-open-variant', text: '11-page detailed PDF report' },
-  { icon: 'chart-bar', text: 'Deep dive on all 8 Gunas with classical references' },
-  { icon: 'star-four-points', text: 'Best & worst matching analysis with explanations' },
-  { icon: 'shield-alert', text: 'Complete Dosha report with cancellation conditions' },
-  { icon: 'spa', text: 'Sacred remedies — mantras, puja, gemstones, fasting' },
-  { icon: 'heart-pulse', text: 'Life area analysis: marriage, finance, health, children' },
-  { icon: 'moon-waning-crescent', text: 'Detailed Nakshatra profiles for both partners' },
-  { icon: 'crown', text: 'Luxury gold & maroon VedicScan design — shareable PDF' },
+  { icon: 'book-open-variant', key: 'compatFeaturePdf' },
+  { icon: 'chart-bar', key: 'compatFeatureGunas' },
+  { icon: 'star-four-points', key: 'compatFeatureMatching' },
+  { icon: 'shield-alert', key: 'compatFeatureDosha' },
+  { icon: 'spa', key: 'compatFeatureRemedies' },
+  { icon: 'heart-pulse', key: 'compatFeatureLifeAreas' },
+  { icon: 'moon-waning-crescent', key: 'compatFeatureNakshatra' },
+  { icon: 'crown', key: 'compatFeatureDesign' },
 ];
 
 // ─── Premium Paywall Modal ────────────────────────────────────────────────────
-const PremiumReportModal = ({ visible, onClose, onUpgrade, onPurchase, language }) => (
+const PremiumReportModal = ({ visible, onClose, onUpgrade, onPurchase, language, t }) => (
   <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
     <View style={modal.overlay}>
       <View style={modal.sheet}>
@@ -97,7 +87,7 @@ const PremiumReportModal = ({ visible, onClose, onUpgrade, onPurchase, language 
           <View style={modal.crownWrap}>
             <MaterialCommunityIcons name="crown" size={28} color="#C8A45A" />
           </View>
-          <Text style={modal.headerTitle}>Full Compatibility Report</Text>
+          <Text style={modal.headerTitle}>{t('compatModalTitle')}</Text>
           <Text style={modal.headerSub}>
             {language === 'hi'
               ? 'सम्पूर्ण वैदिक विवाह विश्लेषण रिपोर्ट'
@@ -105,59 +95,57 @@ const PremiumReportModal = ({ visible, onClose, onUpgrade, onPurchase, language 
           </Text>
           {/* Score preview badge */}
           <View style={modal.previewBadge}>
-            <Text style={modal.previewBadgeText}>✦  PREMIUM REPORT  ✦</Text>
+            <Text style={modal.previewBadgeText}>✦  {t('compatModalBadge')}  ✦</Text>
           </View>
         </LinearGradient>
 
         <ScrollView style={modal.body} showsVerticalScrollIndicator={false}>
           {/* Feature list */}
-          <Text style={modal.sectionLabel}>WHAT'S INCLUDED</Text>
+          <Text style={modal.sectionLabel}>{t('compatWhatsIncluded')}</Text>
           {PREMIUM_FEATURES.map((f, i) => (
             <View key={i} style={modal.featureRow}>
               <View style={modal.featureIconWrap}>
                 <MaterialCommunityIcons name={f.icon} size={16} color="#C8A45A" />
               </View>
-              <Text style={modal.featureText}>{f.text}</Text>
+              <Text style={modal.featureText}>{t(f.key)}</Text>
             </View>
           ))}
 
           <View style={modal.divider} />
 
           {/* Price options */}
-          <Text style={modal.sectionLabel}>UNLOCK OPTIONS</Text>
+          <Text style={modal.sectionLabel}>{t('compatUnlockOptions')}</Text>
 
           {/* Premium subscription */}
           <TouchableOpacity style={modal.optionCard} onPress={onUpgrade} activeOpacity={0.82}>
             <LinearGradient colors={['#4A0C1F', '#6E142F']} style={modal.optionGrad}>
               <View style={modal.optionLeft}>
                 <Text style={modal.optionTitle}>VedicScan Premium</Text>
-                <Text style={modal.optionDesc}>Unlimited reports + all features + AI chats</Text>
+                <Text style={modal.optionDesc}>{t('compatPremiumPlanDesc')}</Text>
               </View>
               <View style={modal.optionRight}>
                 <Text style={modal.optionPrice}>₹499</Text>
-                <Text style={modal.optionPer}>/month</Text>
+                <Text style={modal.optionPer}>{t('compatPerMonth')}</Text>
               </View>
             </LinearGradient>
             <View style={modal.optionBadge}>
-              <Text style={modal.optionBadgeText}>BEST VALUE</Text>
+              <Text style={modal.optionBadgeText}>{t('compatBestValue')}</Text>
             </View>
           </TouchableOpacity>
 
           {/* One-time purchase */}
           <TouchableOpacity style={[modal.optionCard, modal.optionCardAlt]} onPress={onPurchase} activeOpacity={0.82}>
             <View style={modal.optionLeft}>
-              <Text style={[modal.optionTitle, { color: '#5A3948' }]}>This Report Only</Text>
-              <Text style={[modal.optionDesc, { color: '#8A7070' }]}>One-time download, no subscription</Text>
+              <Text style={[modal.optionTitle, { color: '#5A3948' }]}>{t('compatReportOnlyTitle')}</Text>
+              <Text style={[modal.optionDesc, { color: '#8A7070' }]}>{t('compatReportOnlyDesc')}</Text>
             </View>
             <View style={modal.optionRight}>
               <Text style={[modal.optionPrice, { color: '#5A3948' }]}>₹1,499</Text>
-              <Text style={[modal.optionPer, { color: '#8A7070' }]}>once</Text>
+              <Text style={[modal.optionPer, { color: '#8A7070' }]}>{t('compatOnce')}</Text>
             </View>
           </TouchableOpacity>
 
-          <Text style={modal.footerNote}>
-            ✦ Premium subscribers get unlimited compatibility reports, kundali generation, AI Maharishi chats, and more. Cancel anytime.
-          </Text>
+          <Text style={modal.footerNote}>{t('compatModalFooterNote')}</Text>
         </ScrollView>
       </View>
     </View>
@@ -177,6 +165,20 @@ const CompatibilityScreen = ({ navigation }) => {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState('free');
   const scrollRef = React.useRef(null);
+  const boyLocationFieldRef = React.useRef(null);
+  const girlLocationFieldRef = React.useRef(null);
+
+  const scrollToLocationField = (fieldRef) => {
+    setTimeout(() => {
+      if (fieldRef.current && scrollRef.current) {
+        fieldRef.current.measureLayout(
+          scrollRef.current,
+          (x, y) => scrollRef.current?.scrollTo({ y: y - 20, animated: true }),
+          () => {}
+        );
+      }
+    }, 150);
+  };
 
   const [boyData, setBoyData] = useState({ name: '', dateOfBirth: '', timeOfBirth: '', placeOfBirth: '' });
   const [girlData, setGirlData] = useState({ name: '', dateOfBirth: '', timeOfBirth: '', placeOfBirth: '' });
@@ -352,6 +354,7 @@ const CompatibilityScreen = ({ navigation }) => {
       const payload = {
         boy: { ...boyData, name: boyData.name || 'Groom' },
         girl: { ...girlData, name: girlData.name || 'Bride' },
+        lang: language,
       };
       const res = await api.post('/api/compatibility/report', payload);
 
@@ -443,42 +446,40 @@ const CompatibilityScreen = ({ navigation }) => {
             </View>
           </View>
 
-          <View style={styles.fieldGroup}>
+          <View style={styles.fieldGroup} ref={isBoy ? boyLocationFieldRef : girlLocationFieldRef} collapsable={false}>
             <Text style={styles.fieldLabel}>{t('compatBirthPlace')}</Text>
             <LocationInput
               value={data.placeOfBirth}
               onChangeText={(val) => setData({ ...data, placeOfBirth: val })}
               placeholder={t('compatEnterBirthCity')}
               soft
-              onFocus={() => {
-                if (type === 'Girl') setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
-              }}
+              onFocus={() => scrollToLocationField(isBoy ? boyLocationFieldRef : girlLocationFieldRef)}
             />
           </View>
         </View>
 
-        {showDatePicker && (
-          <DateTimePicker
-            value={data.dateOfBirth ? parseDateLocal(data.dateOfBirth) : new Date(1990, 0, 1)}
-            mode="date" display="spinner"
-            minimumDate={new Date(1900, 0, 1)} maximumDate={new Date()}
-            onChange={(e, date) => { setShowDatePicker(false); if (date) setData({ ...data, dateOfBirth: formatLocalDate(date) }); }}
-          />
-        )}
-        {showTimePicker && (
-          <DateTimePicker
-            value={(() => {
-              const d = new Date();
-              if (data.timeOfBirth) { const [h, m] = data.timeOfBirth.split(':'); d.setHours(parseInt(h), parseInt(m)); }
-              return d;
-            })()}
-            mode="time" display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={(e, time) => {
-              setShowTimePicker(false);
-              if (time) setData({ ...data, timeOfBirth: time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) });
-            }}
-          />
-        )}
+        <CalendarDatePicker
+          visible={showDatePicker}
+          value={data.dateOfBirth}
+          title={isBoy ? t('compatGroomDetails') : t('compatBrideDetails')}
+          minDate={new Date(1900, 0, 1)}
+          maxDate={new Date()}
+          onClose={() => setShowDatePicker(false)}
+          onConfirm={(dateStr) => {
+            setData({ ...data, dateOfBirth: dateStr });
+            setShowDatePicker(false);
+          }}
+        />
+        <CustomTimePicker
+          visible={showTimePicker}
+          value={data.timeOfBirth}
+          title={isBoy ? t('compatGroomDetails') : t('compatBrideDetails')}
+          onClose={() => setShowTimePicker(false)}
+          onConfirm={(timeStr) => {
+            setData({ ...data, timeOfBirth: timeStr });
+            setShowTimePicker(false);
+          }}
+        />
       </View>
     );
   };
@@ -632,7 +633,7 @@ const CompatibilityScreen = ({ navigation }) => {
           )}
 
           {/* AI Insight */}
-          <View style={styles.aiDashboardSection}>
+          {/* <View style={styles.aiDashboardSection}>
             <LinearGradient colors={['#FFFDF8', '#FFF']} style={styles.aiInsightBox}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -653,7 +654,7 @@ const CompatibilityScreen = ({ navigation }) => {
                 </TouchableOpacity>
               )}
             </LinearGradient>
-          </View>
+          </View> */}
 
           <TouchableOpacity style={styles.resetBtnDashboard} onPress={() => { setResult(null); setAiExplanation(''); }}>
             <Text style={styles.resetBtnText}>{t('compatMatchAnother')}</Text>
@@ -667,6 +668,7 @@ const CompatibilityScreen = ({ navigation }) => {
           onUpgrade={handleUpgrade}
           onPurchase={handlePurchaseReport}
           language={language}
+          t={t}
         />
       </View>
     );
