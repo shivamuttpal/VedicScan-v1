@@ -11,7 +11,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth.middleware';
 import { UserUsage, getISTMidnight, getISTMonthStart } from '../modules/subscription/model/subscription.model';
-import { getPlanLimits, PlanType } from '../config/plans';
+import { getPlanLimits, PlanType, PAYMENTS_ENABLED, UNLIMITED_LIMITS } from '../config/plans';
 import { User } from '../modules/user/model/user.model';
 
 export const usageLimitMiddleware = async (
@@ -48,7 +48,9 @@ export const usageLimitMiddleware = async (
       await User.updateOne({ _id: userId }, { $set: { isSubscriber: false } });
     }
 
-    const limits = getPlanLimits(plan);
+    // TEMP: payments disabled — grant effectively-unlimited limits so the daily/
+    // monthly/word checks below never trip. Usage is still tracked for analytics.
+    const limits = PAYMENTS_ENABLED ? getPlanLimits(plan) : UNLIMITED_LIMITS;
 
     // ─── Auto-reset daily counters ───
     const todayMidnight = getISTMidnight();

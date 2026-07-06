@@ -9,8 +9,9 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, fontSize } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import api from '../../config/api';
-import { sampleQuestions } from '../../data/signs';
+import { getSampleQuestions } from '../../data/signs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -39,38 +40,53 @@ const ASTROLOGERS = [
   {
     id: 'maharishi',
     name: 'Maharishi',
+    nameHi: 'महर्षि',
     title: 'Vedic Sage',
+    titleHi: 'वैदिक ऋषि',
     specialty: 'Career & Life Purpose',
+    specialtyHi: 'करियर एवं जीवन-उद्देश्य',
     rating: 4.9,
     reviews: '12.4k',
     charImage: MAHA_CHAR,
     videoSource: MAHA_VIDEO,
     bio: 'A seasoned Vedic sage who reads your dashas and planetary periods to illuminate your career, purpose, and the timing of your biggest decisions.',
+    bioHi: 'एक अनुभवी वैदिक ऋषि जो आपकी दशाओं एवं ग्रह-कालों को पढ़कर आपके करियर, उद्देश्य एवं आपके सबसे बड़े निर्णयों के सही समय को प्रकाशित करते हैं।',
     greeting: 'Namaste 🙏 I am Maharishi, your Vedic sage. The cosmic energies are beautifully aligned today.\n\nYour birth chart carries profound secrets about your life\'s purpose.\n\nWhat aspect of your journey shall we illuminate?',
+    greetingHi: 'नमस्ते 🙏 मैं महर्षि हूँ, आपका वैदिक ऋषि। आज ब्रह्मांडीय ऊर्जाएँ सुंदर रूप से संरेखित हैं।\n\nआपकी जन्म कुंडली आपके जीवन-उद्देश्य के गहन रहस्य समेटे हुए है।\n\nआपकी यात्रा के किस पहलू को हम प्रकाशित करें?',
   },
   {
     id: 'reva',
     name: 'Reva',
+    nameHi: 'रेवा',
     title: 'Wellness Guide',
+    titleHi: 'स्वास्थ्य मार्गदर्शक',
     specialty: 'Health & Wellbeing',
+    specialtyHi: 'स्वास्थ्य एवं कल्याण',
     rating: 4.8,
     reviews: '9.1k',
     charImage: REVA_CHAR,
     videoSource: REVA_VIDEO,
     bio: 'A gentle wellness guide who maps your chart to your body, mind, and vitality — helping you understand your healing journey and when to rest or rebuild.',
+    bioHi: 'एक सौम्य स्वास्थ्य मार्गदर्शक जो आपकी कुंडली को आपके शरीर, मन एवं जीवन-शक्ति से जोड़ती हैं — आपकी आरोग्य-यात्रा एवं कब विश्राम या पुनर्निर्माण करना है, यह समझने में सहायता करती हैं।',
     greeting: 'Namaste 🙏 I am Reva, your guide for health and wellbeing. The planets hold deep wisdom about your body, mind, and vitality.\n\nYour birth chart is a map of your healing journey.\n\nWhat would you like to understand about your health or wellbeing today?',
+    greetingHi: 'नमस्ते 🙏 मैं रेवा हूँ, आपके स्वास्थ्य एवं कल्याण की मार्गदर्शक। ग्रह आपके शरीर, मन एवं जीवन-शक्ति के विषय में गहन ज्ञान समेटे हैं।\n\nआपकी जन्म कुंडली आपकी आरोग्य-यात्रा का मानचित्र है।\n\nआज आप अपने स्वास्थ्य या कल्याण के विषय में क्या समझना चाहेंगे?',
   },
   {
     id: 'mukti',
     name: 'Mukti',
+    nameHi: 'मुक्ति',
     title: 'Relationship Expert',
+    titleHi: 'संबंध विशेषज्ञ',
     specialty: 'Love & Relationships',
+    specialtyHi: 'प्रेम एवं संबंध',
     rating: 4.7,
     reviews: '7.3k',
     charImage: MUKTI_CHAR,
     videoSource: MUKTI_VIDEO,
     bio: 'A warm relationship expert who reads the houses of love and marriage in your chart to guide your connections, compatibility, and the timing of the heart.',
+    bioHi: 'एक स्नेहमयी संबंध विशेषज्ञ जो आपकी कुंडली में प्रेम एवं विवाह के भावों को पढ़कर आपके संबंधों, अनुकूलता एवं हृदय के सही समय का मार्गदर्शन करती हैं।',
     greeting: 'Namaste 💫 I am Mukti, your guide for love and relationships. The stars have much to reveal about your heart and connections.\n\nEvery bond in your life is written in the cosmos.\n\nWhat matters of the heart shall we explore together?',
+    greetingHi: 'नमस्ते 💫 मैं मुक्ति हूँ, आपके प्रेम एवं संबंधों की मार्गदर्शक। तारे आपके हृदय एवं संबंधों के विषय में बहुत कुछ प्रकट करने वाले हैं।\n\nआपके जीवन का हर बंधन ब्रह्मांड में लिखा है।\n\nहृदय के किन विषयों को हम साथ मिलकर खोजें?',
   },
 ];
 
@@ -246,6 +262,10 @@ const splitBubbles = (text, baseId, astrologerId) => {
 // ── ChatScreen ────────────────────────────────────────────────────────────────
 const ChatScreen = ({ navigation }) => {
   const { hasProfile, userId } = useAuth();
+  const { language, t } = useLanguage();
+  // Guide field accessor — returns the Hindi variant when the app is in Hindi.
+  const gv = (guide, field) => (language === 'hi' ? (guide?.[`${field}Hi`] || guide?.[field]) : guide?.[field]) || '';
+  const sampleQuestions = getSampleQuestions(language);
   const [messages, setMessages]                 = useState([]);
   const [inputText, setInputText]               = useState('');
   const [loading, setLoading]                   = useState(false);
@@ -379,8 +399,8 @@ const ChatScreen = ({ navigation }) => {
       id: baseId, astrologerId: selected.id,
       blockGroup: baseId, isLastInGroup: false,
     };
-    // Then: staggered greeting text bubbles
-    const greetParts = selected.greeting.split(/\n\n+/).filter(Boolean);
+    // Then: staggered greeting text bubbles (localized)
+    const greetParts = gv(selected, 'greeting').split(/\n\n+/).filter(Boolean);
     const greetBubbles = greetParts.map((p, i) => ({
       role: 'assistant', content: p,
       id: baseId + 1 + i, astrologerId: selected.id,
@@ -430,7 +450,7 @@ const ChatScreen = ({ navigation }) => {
     setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 80);
 
     try {
-      const payload = { message: userMsg };
+      const payload = { message: userMsg, lang: language };
       if (conversationId) payload.conversationId = conversationId;
       if (astrologer) payload.astrologer = astrologer.id;
       if (selectedProfile) payload.profileId = selectedProfile._id || selectedProfile.id;
@@ -458,12 +478,12 @@ const ChatScreen = ({ navigation }) => {
       const errBubble = isQuota
         ? {
             role: 'assistant', type: 'upgrade',
-            content: 'You have reached your reading limit for today. Upgrade your plan to continue receiving cosmic guidance.',
+            content: t('chatErrLimit'),
             id: Date.now() + 1, isLastInGroup: true,
           }
         : {
             role: 'assistant',
-            content: 'The stars are a little quiet right now. Please try again in a moment.',
+            content: t('chatErrGeneric'),
             id: Date.now() + 1, isLastInGroup: true,
           };
       const withErr = [...newMsgs, errBubble];
@@ -476,10 +496,10 @@ const ChatScreen = ({ navigation }) => {
   };
 
   const clearChat = () => {
-    Alert.alert('New Chat', 'Clear this conversation and choose a new guide?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('chatNewChatTitle'), t('chatNewChatMsg'), [
+      { text: t('chatCancel'), style: 'cancel' },
       {
-        text: 'Clear', style: 'destructive',
+        text: t('chatClear'), style: 'destructive',
         onPress: async () => {
           const aid = astrologerRef.current?.id;
           setMessages([]); setConversationId(null); setAstrologer(null); setShowSelector(true);
@@ -520,7 +540,7 @@ const ChatScreen = ({ navigation }) => {
               onPress={() => navigation.navigate('Pricing')}
               activeOpacity={0.85}
             >
-              <Text style={S.upgradeBtnTxt}>✨  Upgrade Plan</Text>
+              <Text style={S.upgradeBtnTxt}>{t('chatUpgradePlan')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -574,16 +594,16 @@ const ChatScreen = ({ navigation }) => {
               <Text style={SM.backIcon}>‹</Text>
             </TouchableOpacity>
             <View style={SM.hdrCenter}>
-              <Text style={SM.title}>Choose Your Guide</Text>
-              <Text style={SM.sub}>Swipe to meet each specialist</Text>
+              <Text style={SM.title}>{t('chatChooseGuide')}</Text>
+              <Text style={SM.sub}>{t('chatSwipeSpecialist')}</Text>
             </View>
             <View style={SM.backBtn} />
           </View>
 
           {/* Featured intro — follows the active card */}
           <View style={SM.intro}>
-            <Text style={SM.introName}>{ASTROLOGERS[guideIndex]?.name}</Text>
-            <Text style={SM.introBio}>{ASTROLOGERS[guideIndex]?.bio}</Text>
+            <Text style={SM.introName}>{gv(ASTROLOGERS[guideIndex], 'name')}</Text>
+            <Text style={SM.introBio}>{gv(ASTROLOGERS[guideIndex], 'bio')}</Text>
           </View>
 
           {/* Horizontal glassy carousel */}
@@ -615,16 +635,16 @@ const ChatScreen = ({ navigation }) => {
                   <Text style={GS.ratingTxt}>★ {a.rating}</Text>
                 </View>
                 <View style={GS.footer}>
-                  <Text style={GS.name}>{a.name}</Text>
-                  <Text style={GS.title}>{a.title}</Text>
+                  <Text style={GS.name}>{gv(a, 'name')}</Text>
+                  <Text style={GS.title}>{gv(a, 'title')}</Text>
                   <View style={GS.specRow}>
                     <View style={GS.specPill}>
-                      <Text style={GS.specPillTxt}>{a.specialty}</Text>
+                      <Text style={GS.specPillTxt}>{gv(a, 'specialty')}</Text>
                     </View>
-                    <Text style={GS.reads}>{a.reviews} reads</Text>
+                    <Text style={GS.reads}>{a.reviews} {t('chatReads')}</Text>
                   </View>
                   <TouchableOpacity style={GS.cta} onPress={() => handleSelect(a)} activeOpacity={0.85}>
-                    <Text style={GS.ctaTxt}>Begin Reading  →</Text>
+                    <Text style={GS.ctaTxt}>{t('chatBeginReading')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -645,7 +665,7 @@ const ChatScreen = ({ navigation }) => {
         <View style={PS.backdrop}>
           <View style={PS.sheet}>
             <View style={PS.sheetHandle} />
-            <Text style={PS.sheetTitle}>Reading for</Text>
+            <Text style={PS.sheetTitle}>{t('chatReadingFor')}</Text>
             {profiles.map((p) => {
               const active = (selectedProfile?._id || selectedProfile?.id) === (p._id || p.id);
               return (
@@ -670,7 +690,7 @@ const ChatScreen = ({ navigation }) => {
               );
             })}
             <TouchableOpacity style={PS.cancel} onPress={() => setShowProfilePicker(false)}>
-              <Text style={PS.cancelTxt}>Cancel</Text>
+              <Text style={PS.cancelTxt}>{t('chatCancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -681,17 +701,17 @@ const ChatScreen = ({ navigation }) => {
         <View style={S.hdrLeft}>
           <Image source={cur.charImage} style={S.hdrAvatar} />
           <View>
-            <Text style={S.hdrName}>{astrologer ? cur.name : 'Vedic AI'}</Text>
+            <Text style={S.hdrName}>{astrologer ? gv(cur, 'name') : t('chatVedicAI')}</Text>
             <View style={S.hdrSubRow}>
               <View style={S.onlineDot} />
-              <Text style={S.hdrSub}>{astrologer ? cur.specialty : 'Choose your guide'}</Text>
+              <Text style={S.hdrSub}>{astrologer ? gv(cur, 'specialty') : t('chatChooseGuideShort')}</Text>
             </View>
           </View>
         </View>
         <View style={S.hdrRight}>
           {astrologer && (
             <TouchableOpacity style={S.switchBtn} onPress={() => setShowSelector(true)}>
-              <Text style={S.switchTxt}>Switch</Text>
+              <Text style={S.switchTxt}>{t('chatSwitch')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity onPress={clearChat} style={S.iconBtn}>
@@ -704,11 +724,11 @@ const ChatScreen = ({ navigation }) => {
       {selectedProfile && !showProfilePicker && (
         <View style={S.profileBar}>
           <Text style={S.profileTxt}>
-            Reading for: <Text style={S.profileName}>{selectedProfile.name}</Text>
+            {t('chatReadingFor')}: <Text style={S.profileName}>{selectedProfile.name}</Text>
           </Text>
           {profiles.length > 1 && (
             <TouchableOpacity onPress={() => setShowProfilePicker(true)}>
-              <Text style={S.changeLink}>Change</Text>
+              <Text style={S.changeLink}>{t('chatChange')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -726,12 +746,12 @@ const ChatScreen = ({ navigation }) => {
             {messages.length === 0 && !showSelector ? (
               <ScrollView contentContainerStyle={S.empty} showsVerticalScrollIndicator={false}>
                 <Image source={cur.charImage} style={S.emptyPortrait} />
-                <Text style={S.emptyName}>{cur.name}</Text>
-                <Text style={S.emptySpec}>{cur.title} · {cur.specialty}</Text>
+                <Text style={S.emptyName}>{gv(cur, 'name')}</Text>
+                <Text style={S.emptySpec}>{gv(cur, 'title')} · {gv(cur, 'specialty')}</Text>
 
                 {showProfilePicker && profiles.length > 1 ? (
                   <View style={S.profList}>
-                    <Text style={S.profListTitle}>Select a profile:</Text>
+                    <Text style={S.profListTitle}>{t('chatSelectProfile')}</Text>
                     {profiles.map((p) => (
                       <TouchableOpacity
                         key={p._id || p.id}
@@ -834,7 +854,9 @@ const ChatScreen = ({ navigation }) => {
                 style={S.input}
                 value={inputText}
                 onChangeText={setInputText}
-                placeholder={astrologer ? `Ask ${cur.name}...` : 'Type a message...'}
+                placeholder={astrologer
+                  ? (language === 'hi' ? `${gv(cur, 'name')} से पूछें...` : `Ask ${cur.name}...`)
+                  : t('chatTypeMessage')}
                 placeholderTextColor="#B0A898"
                 multiline
                 maxLength={1000}

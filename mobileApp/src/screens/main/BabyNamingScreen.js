@@ -199,7 +199,7 @@ const BabyNamingScreen = ({ navigation }) => {
             <LocationInput
               value={placeOfBirth}
               onChangeText={setPlaceOfBirth}
-              placeholder="e.g., Mumbai, India"
+              placeholder="Enter city, state, country"
               style={{ marginBottom: 16 }}
               onFocus={scrollToLocationField}
             />

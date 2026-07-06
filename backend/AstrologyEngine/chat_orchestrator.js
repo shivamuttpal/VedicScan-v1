@@ -65,7 +65,7 @@ function extractChartFacts(chartData) {
   };
 }
 
-function buildMaharshiPrompt({ userQuestion, chartData, memory, userMood, isFirstMessage = false }) {
+function buildMaharshiPrompt({ userQuestion, chartData, memory, userMood, isFirstMessage = false, lang = 'en' }) {
   // STEP 1 — Extract concrete chart facts for specific, date-accurate answers
   const chartFacts = extractChartFacts(chartData);
 
@@ -86,6 +86,7 @@ function buildMaharshiPrompt({ userQuestion, chartData, memory, userMood, isFirs
     userMood,
     isFirstMessage,
     chartFacts,
+    lang,
   });
 
   // STEP 6 — Update memory for next turn

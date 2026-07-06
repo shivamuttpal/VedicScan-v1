@@ -5,6 +5,7 @@ import { generateCompatibilityPDF } from '../services/compatibility.pdf.service'
 import { AuthRequest } from '../../../middlewares/auth.middleware';
 import { User } from '../../user/model/user.model';
 import { UserUsage } from '../../subscription/model/subscription.model';
+import { PAYMENTS_ENABLED } from '../../../config/plans';
 
 /**
  * Resolve Janma Nakshatra for a person using the Moon's actual astronomical
@@ -113,27 +114,30 @@ export const compatibilityController = {
                 return;
             }
 
-            // Check for premium plan or one-time purchase of 'compatibility-report'
-            const [user, usage] = await Promise.all([
-                User.findById(userId).select('role purchasedFeatures'),
-                UserUsage.findOne({ userId }).select('plan planEndDate'),
-            ]);
+            // TEMP: payments disabled — skip the premium/purchase gate entirely.
+            if (PAYMENTS_ENABLED) {
+                // Check for premium plan or one-time purchase of 'compatibility-report'
+                const [user, usage] = await Promise.all([
+                    User.findById(userId).select('role purchasedFeatures'),
+                    UserUsage.findOne({ userId }).select('plan planEndDate'),
+                ]);
 
-            const isAdmin = user?.role === 'admin';
-            const hasPurchased = user?.purchasedFeatures?.includes('compatibility-report');
-            const isPremium = usage?.plan === 'premium' && (!usage.planEndDate || new Date() <= usage.planEndDate);
+                const isAdmin = user?.role === 'admin';
+                const hasPurchased = user?.purchasedFeatures?.includes('compatibility-report');
+                const isPremium = usage?.plan === 'premium' && (!usage.planEndDate || new Date() <= usage.planEndDate);
 
-            if (!isAdmin && !hasPurchased && !isPremium) {
-                res.status(403).json({
-                    success: false,
-                    message: 'The Full Compatibility Report requires a VedicScan Premium subscription or a one-time purchase.',
-                    detail: {
-                        type: 'feature_locked',
-                        feature: 'compatibility-report',
-                        upgrade_url: '/subscription',
-                    },
-                });
-                return;
+                if (!isAdmin && !hasPurchased && !isPremium) {
+                    res.status(403).json({
+                        success: false,
+                        message: 'The Full Compatibility Report requires a VedicScan Premium subscription or a one-time purchase.',
+                        detail: {
+                            type: 'feature_locked',
+                            feature: 'compatibility-report',
+                            upgrade_url: '/subscription',
+                        },
+                    });
+                    return;
+                }
             }
 
             const { boy, girl, lang } = req.body;

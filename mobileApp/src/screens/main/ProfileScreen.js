@@ -325,7 +325,7 @@ const ProfileScreen = ({ route, navigation }) => {
                     style={styles.input}
                     value={form.placeOfBirth}
                     onChangeText={(t) => setForm({ ...form, placeOfBirth: t })}
-                    placeholder="Mumbai, Maharashtra"
+                    placeholder="Enter city, state, country"
                     onFocus={scrollToLocationField}
                   />
                 </View>

@@ -205,7 +205,7 @@ const BabyNaming = () => {
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g., Mumbai, India"
+                      placeholder="Enter city, state, country"
                       value={formData.placeOfBirth}
                       onChange={(e) => handleInputChange('placeOfBirth', e.target.value)}
                       className="vedic-input"

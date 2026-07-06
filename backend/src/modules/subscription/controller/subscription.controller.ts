@@ -12,6 +12,8 @@ import {
   isOneTimeFeature,
   isSubscriptionPlan,
   PLAN_DISPLAY_NAMES,
+  PAYMENTS_ENABLED,
+  UNLIMITED_LIMITS,
 } from '../../../config/plans';
 import { paymentService } from '../services/payment.service';
 import { User } from '../../user/model/user.model';
@@ -104,7 +106,10 @@ export const subscriptionController = {
         await User.updateOne({ _id: userId }, { $set: { isSubscriber: false } });
       }
 
-      const limits = getPlanLimits(plan);
+      // TEMP: payments disabled — report everyone as Premium with unlimited usage
+      // so the app unlocks all features. Restore honest status by flipping PAYMENTS_ENABLED.
+      const reportPlan: PlanType = PAYMENTS_ENABLED ? plan : 'premium';
+      const limits = PAYMENTS_ENABLED ? getPlanLimits(plan) : UNLIMITED_LIMITS;
 
       // Auto-reset counters if needed
       const todayMidnight = getISTMidnight();
@@ -136,15 +141,17 @@ export const subscriptionController = {
       const userRecord = await User.findById(userId).select('emailUnsubscribed').lean();
 
       res.json({
-        plan,
+        plan: reportPlan,
         planEndDate: usage.planEndDate?.toISOString() || null,
         billingCycle: usage.billingCycle,
         emailUnsubscribed: userRecord?.emailUnsubscribed ?? true,
         usage: {
           questions_asked: usage.dailyQuestionsUsed,
           limit: limits.dailyQuestions,
-          can_ask: usage.dailyQuestionsUsed < limits.dailyQuestions &&
-                   usage.monthlyQuestionsUsed < limits.monthlyQuestions,
+          can_ask: PAYMENTS_ENABLED
+            ? (usage.dailyQuestionsUsed < limits.dailyQuestions &&
+               usage.monthlyQuestionsUsed < limits.monthlyQuestions)
+            : true,
           daily: {
             used: usage.dailyQuestionsUsed,
             limit: limits.dailyQuestions,

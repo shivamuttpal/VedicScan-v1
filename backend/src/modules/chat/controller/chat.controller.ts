@@ -22,7 +22,8 @@ export const chatController = {
    */
   async handleMessage(req: AuthRequest, res: Response) {
     try {
-      const { message, conversationId, userProfile, profileId } = req.body;
+      const { message, conversationId, userProfile, profileId, lang } = req.body;
+      const replyLang: 'en' | 'hi' = lang === 'hi' ? 'hi' : 'en';
       const userId = req.user!.userId;
       const userUsage = (req as any).userUsage as InstanceType<typeof UserUsage> | undefined;
       const planLimits = (req as any).planLimits as PlanLimits | undefined;
@@ -166,7 +167,8 @@ export const chatController = {
             chat.metadata, // Pass persistent memory
             isFirstMessage,
             maxTokens,
-            maxContext
+            maxContext,
+            replyLang
           );
 
           botResponse = result.response;
@@ -182,10 +184,14 @@ export const chatController = {
           }
         } catch (aiError: any) {
           console.error('OpenAI API error:', aiError?.message || aiError);
-          botResponse = 'I am so sorry, but I am finding it a little difficult to connect with the cosmos right now. Could you please give me just a moment and try again? 🙏';
+          botResponse = replyLang === 'hi'
+            ? 'क्षमा करें, इस समय ब्रह्मांड से जुड़ने में मुझे थोड़ी कठिनाई हो रही है। कृपया एक क्षण रुककर पुनः प्रयास करें। 🙏'
+            : 'I am so sorry, but I am finding it a little difficult to connect with the cosmos right now. Could you please give me just a moment and try again? 🙏';
         }
       } else {
-        botResponse = `Namaste! 🙏\n\nAI Assistant is not yet configured. Please set OPENAI_ASSISTANT_ID in .env.`;
+        botResponse = replyLang === 'hi'
+          ? `नमस्ते! 🙏\n\nAI सहायक अभी कॉन्फ़िगर नहीं हुआ है। कृपया .env में OPENAI_ASSISTANT_ID सेट करें।`
+          : `Namaste! 🙏\n\nAI Assistant is not yet configured. Please set OPENAI_ASSISTANT_ID in .env.`;
       }
 
       // Add bot message and save session

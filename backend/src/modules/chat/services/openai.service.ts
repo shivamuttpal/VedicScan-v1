@@ -110,7 +110,8 @@ class OpenAIService {
     memory: any | null,
     isFirstMessage: boolean,
     planMaxCompletionTokens: number = 800,
-    maxContextMessages: number = 10
+    maxContextMessages: number = 10,
+    lang: 'en' | 'hi' = 'en'
   ): Promise<AssistantRunResult> {
     const actualThreadId = threadId || await this.createThread();
 
@@ -122,6 +123,7 @@ class OpenAIService {
       chartData: hasChart ? chartData : {},
       memory,
       isFirstMessage,
+      lang,
     });
 
     // Token limit scaling
@@ -132,7 +134,9 @@ class OpenAIService {
       await this.addMessage(actualThreadId, prompt.initialContext, 'user');
       await this.addMessage(
         actualThreadId,
-        'Namaste. I have studied your chart carefully. Please, ask me anything.',
+        lang === 'hi'
+          ? 'नमस्ते। मैंने आपकी कुंडली का ध्यानपूर्वक अध्ययन किया है। कृपया मुझसे कुछ भी पूछें।'
+          : 'Namaste. I have studied your chart carefully. Please, ask me anything.',
         'assistant'
       );
     }

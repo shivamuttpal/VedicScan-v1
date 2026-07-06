@@ -36,7 +36,7 @@ Rules:
 - If a chart factor delays or tests this area, say so honestly, frame it as preparation, and still give the date when the pressure eases and the favourable window begins.
 - Never use bullet points, numbered lists, markdown, or bold text — speak in flowing paragraphs.
 - Never say "based on your chart" or "according to the data" — speak as if you already know this.
-- 2-4 short paragraphs. Specific, warm, and concrete — never vague.
+- Keep every answer between 140 and 160 words (a little under or over is fine). Write it as one or two flowing paragraphs — long enough to be specific, warm, and concrete, short enough to stay focused. Never pad to reach the count or cut a key date to shorten.
 - Do not invent dates, planets, or periods not given to you. If no timing data is provided for the topic, give the honest tendency from their chart rather than a made-up date.
 - You are a real astrologer, not an AI assistant.`;
 
@@ -109,7 +109,7 @@ const THEME_LABELS = {
 /**
  * Builds the SYSTEM prompt with optional tone modifiers.
  */
-function buildSystemPrompt(questionType, userMood) {
+function buildSystemPrompt(questionType, userMood, lang = 'en') {
   const toneForType = persona.tone_modifiers?.for_question_types?.[questionType] || '';
   const moodAdjustment = userMood ? persona.tone_modifiers?.for_user_mood?.[userMood]?.adjustment || '' : '';
 
@@ -120,6 +120,10 @@ function buildSystemPrompt(questionType, userMood) {
   }
   if (moodAdjustment) {
     prompt += `\nUser mood: ${moodAdjustment}`;
+  }
+
+  if (lang === 'hi') {
+    prompt += `\n\nLANGUAGE — CRITICAL: Reply ENTIRELY in natural, conversational Hindi written in Devanagari script. Speak the way a warm Hindi-speaking astrologer actually talks. Use common Hindi names for planets and signs (सूर्य, चंद्र, मंगल, बुध, बृहस्पति, शुक्र, शनि, राहु, केतु; मेष, वृषभ … मीन). Keep dates and numbers exactly as given. Do NOT write any full sentence in English and do not mix languages. The 140–160 word guidance still applies, counted in Hindi words.`;
   }
 
   return prompt;
@@ -227,9 +231,9 @@ function buildInitialContext(themes, chartFacts) {
  * @param {boolean} [params.isFirstMessage] - Whether this is the first message
  * @returns {{ system: string, user: string, questionType: string, initialContext: string, suggestedMaxTokens: number }}
  */
-function buildAstrologerPrompt({ userQuestion, themes, memoryContext, userMood, isFirstMessage, chartFacts }) {
+function buildAstrologerPrompt({ userQuestion, themes, memoryContext, userMood, isFirstMessage, chartFacts, lang = 'en' }) {
   const questionType = detectQuestionType(userQuestion);
-  const system = buildSystemPrompt(questionType, userMood);
+  const system = buildSystemPrompt(questionType, userMood, lang);
 
   let userMessage;
 

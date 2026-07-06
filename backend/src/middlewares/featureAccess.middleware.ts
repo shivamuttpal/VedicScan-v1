@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth.middleware';
 import { User } from '../modules/user/model/user.model';
 import { UserUsage } from '../modules/subscription/model/subscription.model';
-import { isOneTimeFeature, PLAN_DISPLAY_NAMES, SUBSCRIPTION_PLANS } from '../config/plans';
+import { isOneTimeFeature, PLAN_DISPLAY_NAMES, SUBSCRIPTION_PLANS, PAYMENTS_ENABLED } from '../config/plans';
 
 /**
  * Middleware to check if a user has access to a one-time feature.
@@ -26,6 +26,11 @@ export const checkFeatureAccess = (feature: string) => {
 
   return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
+      // TEMP: payments disabled — everyone has access to every feature.
+      if (!PAYMENTS_ENABLED) {
+        return next();
+      }
+
       const userId = req.user?.userId;
       if (!userId) {
         res.status(401).json({ success: false, message: 'Authentication required.' });

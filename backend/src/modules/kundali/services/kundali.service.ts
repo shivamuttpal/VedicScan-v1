@@ -48,7 +48,7 @@ function geocode(place: string): Promise<{ lat: number; lon: number }> {
             if (!Array.isArray(data) || data.length === 0) {
               return reject(
                 new Error(
-                  `Cannot geocode "${place}". Try a more specific name (e.g., "Mumbai, India").`
+                  `Cannot geocode "${place}". Try a more specific name (e.g., "Enter city, state, country").`
                 )
               );
             }

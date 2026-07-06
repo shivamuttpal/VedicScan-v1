@@ -42,3 +42,15 @@ export const sampleQuestions = [
   'When is the auspicious time for buying property?',
   'Can you analyze my relationship compatibility?',
 ];
+
+export const sampleQuestionsHi = [
+  'मेरा विवाह कब होगा?',
+  'क्या मैं विदेश में पढ़ूँगा/पढ़ूँगी?',
+  'क्या मुझे अपना व्यवसाय शुरू करना चाहिए?',
+  'मेरी कुंडली के अनुसार मेरे लिए सर्वश्रेष्ठ करियर कौन-सा है?',
+  'संपत्ति खरीदने का शुभ समय कब है?',
+  'क्या आप मेरी संबंध अनुकूलता का विश्लेषण कर सकते हैं?',
+];
+
+// Language-aware accessor
+export const getSampleQuestions = (lang) => (lang === 'hi' ? sampleQuestionsHi : sampleQuestions);

@@ -5,7 +5,7 @@ export const mockKundliData = {
     name: "Rahul Kumar",
     dateOfBirth: "1995-08-15",
     timeOfBirth: "14:30",
-    placeOfBirth: "Mumbai, Maharashtra"
+    placeOfBirth: "enter city, state, country"
   },
   basicDetails: {
     rashi: "Simha (Leo)",
@@ -133,7 +133,7 @@ export const mockUserProfiles = [
     name: "Rahul Kumar",
     dateOfBirth: "1995-08-15",
     timeOfBirth: "14:30",
-    placeOfBirth: "Mumbai, Maharashtra",
+    placeOfBirth: "enter city, state, country",
     relationship: "Self"
   }
 ];

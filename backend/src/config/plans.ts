@@ -8,6 +8,16 @@
  *   - Premium: ~₹28/mo cost → ₹971 profit (97% margin)
  */
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TEMP: PAYMENTS/SUBSCRIPTIONS DISABLED GLOBALLY
+// While false, every payment/subscription/usage gate is bypassed and all users
+// get unlimited access to all features. Flip to `true` to restore the real
+// paywall + usage-limit enforcement before launch. This one flag is referenced
+// by featureAccess.middleware, usageLimit.middleware, the compatibility report
+// controller, and the subscription status endpoint.
+// ─────────────────────────────────────────────────────────────────────────────
+export const PAYMENTS_ENABLED = false;
+
 export type PlanType = 'free' | 'standard' | 'premium';
 
 export interface PlanLimits {
@@ -132,4 +142,18 @@ export const isValidPurchase = (plan: string): boolean => {
  */
 export const getPlanLimits = (plan: PlanType): PlanLimits => {
   return PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+};
+
+/**
+ * Effectively-unlimited limits used everywhere while PAYMENTS_ENABLED is false.
+ * Question/word caps are astronomically high; context/token caps stay at premium
+ * levels so AI behaviour/cost is unchanged.
+ */
+export const UNLIMITED_LIMITS: PlanLimits = {
+  dailyQuestions: 1_000_000_000,
+  monthlyQuestions: 1_000_000_000,
+  maxWordsPerQuestion: 1_000_000,
+  maxContextMessages: PLAN_LIMITS.premium.maxContextMessages,
+  maxCompletionTokens: PLAN_LIMITS.premium.maxCompletionTokens,
+  chatHistoryRetentionDays: -1,
 };
