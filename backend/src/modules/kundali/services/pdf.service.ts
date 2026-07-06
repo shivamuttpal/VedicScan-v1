@@ -3,8 +3,10 @@ import path from "path";
 import fs from "fs";
 import { IKundali } from "../model/kundali.model";
 import {
-  Lang, T, labels, planetList, yogaName, doshaName, formatDate, phaseName, sadeSatiCounsel,
+  Lang, T, labels, planetList, formatDate, phaseName, sadeSatiCounsel,
 } from "./kundali.pdf.i18n";
+import { detectYogas } from "./yoga.service";
+import { detectDoshas } from "./dosha.service";
 
 const FONT_DIR = path.join(__dirname, "../../../../assets/fonts/");
 const FONT_OVERRIDES: Record<string, string> = {
@@ -543,6 +545,25 @@ export function generateKundaliPDF(rawKundali: IKundali, lang: Lang = "en"): Pro
     // Heavy interpretive prose is stored bilingually on the document.
     const interp = (lang === "hi" ? kundali.interpretationsHi : kundali.interpretations) || kundali.interpretations || {};
 
+    // Yogas/doshas are stored in English. For Hindi, re-derive them from the stored
+    // chart data (planets + houses + lagna) with lang='hi' so their names/descriptions/
+    // remedies render in Devanagari — works for existing kundalis without a DB migration.
+    let yogasSrc: any[] = kundali.yogas || [];
+    let doshasSrc: any[] = kundali.doshas || [];
+    if (lang === "hi") {
+      try {
+        const pfr: Record<string, any> = Object.fromEntries(
+          Object.entries(kundali.planets || {}).map(([k, v]: any) => [k, { rashi: v.rashi, houseNumber: v.houseNumber }])
+        );
+        const hArr = Array.isArray(kundali.houses) ? kundali.houses : Object.values(kundali.houses || {});
+        const lagnaSign = kundali.lagna?.sign || "Aries";
+        yogasSrc = detectYogas(pfr, lagnaSign, hArr as any, "hi");
+        doshasSrc = detectDoshas(pfr, lagnaSign, hArr as any, "hi");
+      } catch {
+        // fall back to stored English yogas/doshas if re-derivation fails
+      }
+    }
+
     const doc = new PDFDocument({
       size: "A4",
       margins: { top: 60, bottom: 50, left: 48, right: 48 },
@@ -917,7 +938,7 @@ export function generateKundaliPDF(rawKundali: IKundali, lang: Lang = "en"): Pro
 
     sectionHeader(doc, L, pageW, s("auspiciousYogas"), undefined, C.maroon, lang);
     doc.moveDown(0.4);
-    const yogas = (kundali.yogas || []).filter((y: any) => y.isPresent);
+    const yogas = yogasSrc.filter((y: any) => y.isPresent);
     if (!yogas.length) {
       doc
         .font(SERIF)
@@ -938,7 +959,7 @@ export function generateKundaliPDF(rawKundali: IKundali, lang: Lang = "en"): Pro
           .font(SERIF_B)
           .fontSize(11)
           .fillColor(C.maroon)
-          .text(yogaName(yg.name, lang), L + 14, top, { width: pageW - 100, lineBreak: false });
+          .text(yg.name, L + 14, top, { width: pageW - 100, lineBreak: false });
         doc
           .font(SANS_B)
           .fontSize(8)
@@ -967,7 +988,7 @@ export function generateKundaliPDF(rawKundali: IKundali, lang: Lang = "en"): Pro
     doc.moveDown(0.3);
     sectionHeader(doc, L, pageW, s("doshasKarmic"), undefined, "#7A2433", lang);
     doc.moveDown(0.4);
-    const doshas = (kundali.doshas || []).filter((d: any) => d.isPresent);
+    const doshas = doshasSrc.filter((d: any) => d.isPresent);
     if (!doshas.length) {
       doc
         .font(SERIF)
@@ -994,7 +1015,7 @@ export function generateKundaliPDF(rawKundali: IKundali, lang: Lang = "en"): Pro
           .font(SERIF_B)
           .fontSize(10)
           .fillColor(sev)
-          .text(doshaName(ds.name || "", lang), L + 14, top + 5, {
+          .text(ds.name || "", L + 14, top + 5, {
             width: pageW - 120,
             lineBreak: false,
           });

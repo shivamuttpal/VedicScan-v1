@@ -465,6 +465,19 @@ const PLANET_GEMSTONES_HI: Record<string, string> = {
   Rahu: 'गोमेद (Hessonite Garnet)', Ketu: 'लहसुनिया (Cat\'s Eye)',
 };
 
+// Devanagari beeja mantras per planet (so the Hindi report shows the mantra in script)
+const PLANET_MANTRA_HI: Record<string, string> = {
+  Sun: 'ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः',
+  Moon: 'ॐ श्रां श्रीं श्रौं सः चंद्राय नमः',
+  Mars: 'ॐ क्रां क्रीं क्रौं सः भौमाय नमः',
+  Mercury: 'ॐ ब्रां ब्रीं ब्रौं सः बुधाय नमः',
+  Jupiter: 'ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः',
+  Venus: 'ॐ द्रां द्रीं द्रौं सः शुक्राय नमः',
+  Saturn: 'ॐ प्रां प्रीं प्रौं सः शनैश्चराय नमः',
+  Rahu: 'ॐ भ्रां भ्रीं भ्रौं सः राहवे नमः',
+  Ketu: 'ॐ स्रां स्रीं स्रौं सः केतवे नमः',
+};
+
 const CHARITY_BY_PLANET_HI: Record<string, string> = {
   Sun: 'रविवार को गेहूं, गुड़ या तांबा दान करें',
   Moon: 'सोमवार को दूध, चावल या सफेद कपड़ा दान करें',
@@ -501,6 +514,7 @@ export function generateInterpretationsHi(
   const mdHi = PLANET_HI[currentMahadasha] || currentMahadasha;
   const adHi = PLANET_HI[currentAntardasha] || currentAntardasha;
   const lagnaRulerHi = PLANET_HI[lagnaRuler] || lagnaRuler;
+  const mantraHi = PLANET_MANTRA_HI[currentMahadasha] || 'ॐ नमः शिवाय';
   const presentYogas = yogas.filter(y => y.isPresent).map(y => y.name).join(', ') || 'कोई प्रमुख योग नहीं';
   const _presentDoshas = doshas.filter(d => d.isPresent).map(d => d.name).join(', ') || 'कोई नहीं';
 
@@ -538,7 +552,7 @@ export function generateInterpretationsHi(
     moonData.health,
     `${lagnaHi} लग्न के शरीर क्षेत्र से संबंधित समस्याओं पर ध्यान दें।`,
     doshas.find(d => d.name === 'Shani Dosha' && d.isPresent) ? 'शनि की स्थिति जोड़ों, हड्डियों और पुरानी बीमारियों पर ध्यान देने की सलाह देती है।' : '',
-    `"${DASHA_INFLUENCES[currentMahadasha]?.mantra || 'ॐ नमः शिवाय'}" मंत्र वर्तमान ${mdHi} दशा के दौरान समग्र स्वास्थ्य को सहारा देता है।`,
+    `"${mantraHi}" मंत्र वर्तमान ${mdHi} दशा के दौरान समग्र स्वास्थ्य को सहारा देता है।`,
   ].filter(Boolean).join(' ');
 
   const education = [
@@ -560,7 +574,7 @@ export function generateInterpretationsHi(
     `${mdHi} महादशा का विषय "${dashaData.theme}" आपकी वर्तमान आध्यात्मिक यात्रा को गहराई से प्रभावित करता है।`,
     doshas.find(d => d.name === 'Kaal Sarp Dosha' && d.isPresent) ? 'काल सर्प दोष, हालांकि चुनौतीपूर्ण, अक्सर असाधारण आध्यात्मिक गहराई और मनोदर्शी क्षमता पैदा करता है।' : '',
     yogas.find(y => y.name === 'Hamsa Yoga' && y.isPresent) ? 'हंस योग (केंद्र में बृहस्पति का उच्च) आपको आध्यात्मिक ज्ञान और धर्मनिष्ठता से आशीर्वाद देता है।' : '',
-    `"${DASHA_INFLUENCES[currentMahadasha]?.mantra || 'ॐ नमः शिवाय'}" का ${mdHi} दशा में मंत्र ध्यान आध्यात्मिक प्रगति लाता है।`,
+    `"${mantraHi}" का ${mdHi} दशा में मंत्र ध्यान आध्यात्मिक प्रगति लाता है।`,
   ].filter(Boolean).join(' ');
 
   return {
@@ -575,23 +589,15 @@ export function generateInterpretationsHi(
     strengths: moonData.strengths,
     challenges: moonData.challenges,
     mantras: [
-      DASHA_INFLUENCES[currentMahadasha]?.mantra || 'ॐ नमः शिवाय',
+      mantraHi,
       'ॐ नमो नारायणाय (सम्पूर्ण सुरक्षा के लिए)',
       'गायत्री मंत्र (ज्ञान और स्पष्टता के लिए)',
     ],
-    gemstones: (() => {
-      const lagnaGems = LAGNA_GEMS[lagnaSign];
-      if (lagnaGems) {
-        const gems = lagnaGems.recommend.map(g => `अनुशंसित: ${g}`);
-        if (lagnaGems.avoid.length > 0) gems.push(`सावधानी — ${lagnaGems.avoid[0]}`);
-        return gems;
-      }
-      return [
-        `प्राथमिक: ${PLANET_GEMSTONES_HI[lagnaRuler]} (लग्नेश ${lagnaRulerHi} के लिए)`,
-        `द्वितीयक: ${PLANET_GEMSTONES_HI['Moon']} (चंद्रमा के लिए)`,
-        `दशा रत्न: ${PLANET_GEMSTONES_HI[currentMahadasha] || 'पुखराज'} (${mdHi} महादशा के लिए)`,
-      ];
-    })(),
+    gemstones: [
+      `प्राथमिक: ${PLANET_GEMSTONES_HI[lagnaRuler] || 'पुखराज'} (लग्नेश ${lagnaRulerHi} के लिए)`,
+      `द्वितीयक: ${PLANET_GEMSTONES_HI['Moon']} (चंद्रमा के लिए)`,
+      `दशा रत्न: ${PLANET_GEMSTONES_HI[currentMahadasha] || 'पुखराज'} (${mdHi} महादशा के लिए)`,
+    ],
     fastingDays: [
       `${DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Sunday' ? 'रविवार' : DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Monday' ? 'सोमवार' : DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Tuesday' ? 'मंगलवार' : DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Wednesday' ? 'बुधवार' : DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Thursday' ? 'गुरुवार' : DASHA_INFLUENCES[currentMahadasha]?.fasting === 'Friday' ? 'शुक्रवार' : 'शनिवार'} — ${mdHi} महादशा के लाभ के लिए`,
       'सोमवार — चंद्रमा के लिए (मन और भावनात्मक संतुलन)',
