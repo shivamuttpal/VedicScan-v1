@@ -1,9 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
+// Legal documents are bundled as raw strings (see craco.config.js `.md` rule) so they
+// render on any host with no runtime fetch or static-file dependency.
+import privacyMd from '../legal/privacy.md';
+import termsMd from '../legal/terms.md';
+import refundMd from '../legal/refund.md';
+import dataDeletionMd from '../legal/data-deletion.md';
+import cookiesMd from '../legal/cookies.md';
+import disclaimerMd from '../legal/disclaimer.md';
+
+const DOCS = {
+  privacy: privacyMd,
+  terms: termsMd,
+  refund: refundMd,
+  'data-deletion': dataDeletionMd,
+  cookies: cookiesMd,
+  disclaimer: disclaimerMd,
+};
+
 /**
- * Renders a legal document from /public/legal/<slug>.md.
+ * Renders a bundled legal document by slug.
  *
  * A small, dependency-free Markdown renderer handles the subset of Markdown used
  * in our legal docs: headings, bold, links, unordered lists, GFM tables,
@@ -168,38 +186,20 @@ function renderMarkdown(md) {
 }
 
 const LegalPage = ({ slug, title }) => {
-  const [content, setContent] = useState(null);
-  const [error, setError] = useState(false);
+  const content = DOCS[slug];
 
   useEffect(() => {
-    let active = true;
     document.title = `${title} · VedicScan`;
-    fetch(`/legal/${slug}.md`)
-      .then((res) => {
-        if (!res.ok) throw new Error('not found');
-        return res.text();
-      })
-      .then((text) => { if (active) setContent(text); })
-      .catch(() => { if (active) setError(true); });
-    return () => { active = false; };
-  }, [slug, title]);
+  }, [title]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50/40 to-white flex flex-col">
       <Navbar />
       <main className="flex-1 max-w-3xl w-full mx-auto px-4 sm:px-6 py-10 sm:py-14">
-        {error ? (
+        {!content ? (
           <div className="text-center py-20 text-gray-500">
-            <p className="text-lg">This document could not be loaded.</p>
+            <p className="text-lg">This document could not be found.</p>
             <a href="/" className="text-gold underline mt-3 inline-block">Return home</a>
-          </div>
-        ) : content === null ? (
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-amber-100 rounded w-2/3" />
-            <div className="h-4 bg-amber-100 rounded w-1/3" />
-            <div className="h-4 bg-amber-100 rounded w-full mt-8" />
-            <div className="h-4 bg-amber-100 rounded w-11/12" />
-            <div className="h-4 bg-amber-100 rounded w-10/12" />
           </div>
         ) : (
           <article className="legal-prose">{renderMarkdown(content)}</article>

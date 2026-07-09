@@ -36,6 +36,16 @@ const webpackConfig = {
     },
     configure: (webpackConfig) => {
 
+      // Import *.md files as raw strings (used to bundle legal documents into the
+      // JS so they render without a runtime fetch / static-file serving dependency).
+      const mdRule = { test: /\.md$/, type: 'asset/source' };
+      const oneOfRule = webpackConfig.module.rules.find((r) => Array.isArray(r.oneOf));
+      if (oneOfRule) {
+        oneOfRule.oneOf.unshift(mdRule);
+      } else {
+        webpackConfig.module.rules.unshift(mdRule);
+      }
+
       // Disable hot reload completely if environment variable is set
       if (config.disableHotReload) {
         // Remove hot reload related plugins
