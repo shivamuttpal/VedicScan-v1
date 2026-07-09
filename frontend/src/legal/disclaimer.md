@@ -1,10 +1,10 @@
 # Disclaimer
 
-**Last updated: 8 June 2026**
+**Last updated: 9 July 2026**
 
 *May the celestial bodies guide us.* 🔱
 
-VedicScan, operated by **[LEGAL ENTITY NAME]**, provides insights derived from classical Vedic
+VedicScan, operated by **Vedicscan Inc.**, provides insights derived from classical Vedic
 astrology using a deterministic, rules-based system combined with AI-generated interpretation.
 Please read this Disclaimer carefully.
 
@@ -36,7 +36,7 @@ reliable.
 ## Your responsibility
 
 You are solely responsible for how you use the information from VedicScan and for any decisions
-you make. To the maximum extent permitted by law, **[LEGAL ENTITY NAME]** disclaims all liability
+you make. To the maximum extent permitted by law, **Vedicscan Inc.** disclaims all liability
 for actions taken based on the Service. See our [Terms of Service](/terms) for the full
 limitation of liability.
 

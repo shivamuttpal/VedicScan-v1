@@ -1,13 +1,10 @@
 # Refund & Cancellation Policy
 
-**Last updated: 8 June 2026**
-
-> **Before publishing:** replace items in [square brackets] with your real details and confirm
-> the refund windows below match your commercial policy. App-store purchases are ultimately
-> governed by Apple's and Google's refund rules.
+**Last updated: 9 July 2026**
 
 This Policy explains how cancellations and refunds work for VedicScan subscriptions and
-one-time purchases, operated by **[LEGAL ENTITY NAME]** ("VedicScan", "we", "us").
+one-time purchases, operated by **Vedicscan Inc.** ("VedicScan", "we", "us"). App-store
+purchases are ultimately governed by Apple's and Google's refund rules.
 
 ---
 
@@ -22,16 +19,16 @@ one-time purchases, operated by **[LEGAL ENTITY NAME]** ("VedicScan", "we", "us"
 - **iOS (Apple):** Settings → your name → Subscriptions → VedicScan → Cancel.
 - **Android (Google Play):** Play Store → Profile → Payments & subscriptions → Subscriptions →
   VedicScan → Cancel.
-- **Web (Stripe):** open your account settings in the app, or email **support@vedicscan.com**.
+- **Web (Stripe):** open your account settings in the app, or email **contact@vedicscan.com**.
 
 ## 2. Refunds
 
 ### 2.1 Web / Stripe purchases
-- If you are dissatisfied, you may request a refund within **[7] days** of a charge by emailing
-  **support@vedicscan.com** with your account email and transaction reference.
+- If you are dissatisfied, you may request a refund within **7 days** of a charge by emailing
+  **contact@vedicscan.com** with your account email and transaction reference.
 - Refunds are granted at our reasonable discretion, typically where the Service was not delivered
   or a technical fault prevented use. Refunds are issued to the original payment method within
-  **[5–10] business days** of approval.
+  **5 to 10 business days** of approval.
 - Amounts already consumed (e.g. a generated report or a used period) may be deducted or make a
   purchase non-refundable.
 
@@ -61,5 +58,5 @@ in the EU/UK, or under the Consumer Protection Act in India).
 
 ## 6. Contact
 
-For any billing question, email **support@vedicscan.com** with your account email and the
-transaction reference. We aim to respond within **[2–3] business days**.
+For any billing question, email **contact@vedicscan.com** with your account email and the
+transaction reference. We aim to respond within **2 to 3 business days**.

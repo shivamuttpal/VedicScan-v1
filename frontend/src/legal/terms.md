@@ -1,15 +1,12 @@
 # Terms of Service
 
-**Last updated: 8 June 2026**
+**Last updated: 9 July 2026**
 
-> **Before publishing:** replace every item in [square brackets] with your real details.
-> This is a template and not a substitute for review by a qualified lawyer.
-
-These Terms of Service ("Terms") are a binding agreement between you and
-**[LEGAL ENTITY NAME]** ("VedicScan", "we", "us", "our") governing your use of the VedicScan
-website, mobile applications, and services (the "Service"). By creating an account or using the
-Service, you agree to these Terms and to our [Privacy Policy](/privacy). If you do not agree,
-do not use the Service.
+These Terms of Service ("Terms") are a binding agreement between you and **Vedicscan Inc.**
+("VedicScan", "we", "us", "our") governing your use of the VedicScan website, mobile
+applications, and services (the "Service"). By creating an account or using the Service, you
+agree to these Terms and to our [Privacy Policy](/privacy). If you do not agree, do not use the
+Service.
 
 ---
 
@@ -24,7 +21,7 @@ requirement.
 - You must provide accurate information and keep it up to date.
 - You are responsible for maintaining the confidentiality of your credentials and for all
   activity under your account.
-- Notify us immediately at **support@vedicscan.com** of any unauthorised use.
+- Notify us immediately at **contact@vedicscan.com** of any unauthorised use.
 - You may not share, sell, or transfer your account.
 
 ## 3. The Service — nature of astrological content
@@ -65,11 +62,10 @@ We may suspend or terminate accounts that violate these Terms.
 
 ## 6. Intellectual property
 
-The Service, including its software, design, text, and branding, is owned by
-**[LEGAL ENTITY NAME]** and its licensors and is protected by intellectual-property laws. We
-grant you a limited, non-exclusive, non-transferable, revocable licence to use the Service for
-personal, non-commercial purposes. Reports and charts we generate for you are provided for your
-personal use.
+The Service, including its software, design, text, and branding, is owned by **Vedicscan Inc.**
+and its licensors and is protected by intellectual-property laws. We grant you a limited,
+non-exclusive, non-transferable, revocable licence to use the Service for personal,
+non-commercial purposes. Reports and charts we generate for you are provided for your personal use.
 
 ## 7. User content
 
@@ -93,16 +89,16 @@ BE ACCURATE OR RELIABLE.
 
 ## 10. Limitation of liability
 
-TO THE MAXIMUM EXTENT PERMITTED BY LAW, **[LEGAL ENTITY NAME]** AND ITS DIRECTORS, EMPLOYEES, AND
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, **Vedicscan Inc.** AND ITS DIRECTORS, EMPLOYEES, AND
 PARTNERS WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
 DAMAGES, OR ANY LOSS OF PROFITS, DATA, OR GOODWILL, ARISING FROM YOUR USE OF THE SERVICE. OUR
 TOTAL LIABILITY FOR ANY CLAIM WILL NOT EXCEED THE GREATER OF (A) THE AMOUNT YOU PAID US IN THE 12
-MONTHS BEFORE THE CLAIM, OR (B) [AMOUNT, e.g. INR 5,000 / USD 100]. Some jurisdictions do not
-allow certain limitations, so some of the above may not apply to you.
+MONTHS BEFORE THE CLAIM, OR (B) USD 100. Some jurisdictions do not allow certain limitations, so
+some of the above may not apply to you.
 
 ## 11. Indemnity
 
-You agree to indemnify and hold harmless **[LEGAL ENTITY NAME]** from any claims, damages, or
+You agree to indemnify and hold harmless **Vedicscan Inc.** from any claims, damages, or
 expenses arising from your misuse of the Service or violation of these Terms.
 
 ## 12. Termination
@@ -114,10 +110,10 @@ Sections 6, 9–11) will survive.
 
 ## 13. Governing law and dispute resolution
 
-These Terms are governed by the laws of **India**, without regard to conflict-of-laws principles.
-Subject to applicable law, the courts of **[CITY, STATE], India** will have exclusive
-jurisdiction, unless mandatory local consumer-protection law in your country of residence
-provides otherwise.
+These Terms are governed by the laws of the **State of Delaware, United States**, without regard
+to conflict-of-laws principles. Subject to applicable law, the state and federal courts located
+in the State of Delaware will have exclusive jurisdiction, unless mandatory local
+consumer-protection law in your country of residence provides otherwise.
 
 ## 14. Changes to these Terms
 
@@ -127,4 +123,5 @@ means you accept the revised Terms.
 
 ## 15. Contact
 
-**[LEGAL ENTITY NAME]** — **support@vedicscan.com** — [REGISTERED ADDRESS], India.
+**Vedicscan Inc.** — **contact@vedicscan.com** — 1221 College Park Dr, Suite 116, Dover, DE
+19904, USA.

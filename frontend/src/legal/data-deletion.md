@@ -1,11 +1,11 @@
 # Account & Data Deletion
 
-**Last updated: 8 June 2026**
+**Last updated: 9 July 2026**
 
 > This page satisfies the Google Play "Data deletion" and Apple "Account deletion"
-> requirements. Publish it at a public URL and link it in your store listings.
+> requirements. It is published at a public URL and linked in our store listings.
 
-VedicScan, operated by **[LEGAL ENTITY NAME]**, lets you delete your account and associated
+VedicScan, operated by **Vedicscan Inc.**, lets you delete your account and associated
 personal data at any time.
 
 ---
@@ -21,7 +21,7 @@ When you delete your account, we permanently delete or irreversibly anonymise:
 
 **What we may retain:** limited transaction and tax records required by law, and anonymised,
 non-identifying analytics. Backups are purged on our normal backup-rotation cycle (no later than
-**[30] days**).
+**30 days**).
 
 ---
 
@@ -33,7 +33,7 @@ non-identifying analytics. Backups are purged on our normal backup-rotation cycl
 3. Confirm. Your data is scheduled for deletion immediately.
 
 ### Option 2 — By email
-Send a request from your registered email address to **privacy@vedicscan.com** with the subject
+Send a request from your registered email address to **contact@vedicscan.com** with the subject
 **"Delete my account"**. We may ask you to verify your identity. We will complete the deletion
 within **30 days** and confirm by email.
 
@@ -52,8 +52,8 @@ deleting your whole account:
 
 - **Request received:** we begin processing immediately.
 - **Live data deleted:** within a few days.
-- **Backups purged:** within **[30] days**.
+- **Backups purged:** within **30 days**.
 
 ## Contact
 
-Questions about deletion? Email **privacy@vedicscan.com**.
+Questions about deletion? Email **contact@vedicscan.com**.

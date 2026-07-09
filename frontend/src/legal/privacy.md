@@ -1,13 +1,8 @@
 # Privacy Policy
 
-**Last updated: 8 June 2026**
+**Last updated: 9 July 2026**
 
-> **Before publishing:** replace every item in [square brackets] with your real details
-> (legal entity name, registered address, grievance officer, etc.). This document is a
-> template drafted to align with India's DPDP Act 2023, the EU/UK GDPR, and California's
-> CCPA/CPRA. It is **not** a substitute for review by a qualified lawyer.
-
-This Privacy Policy explains how **[LEGAL ENTITY NAME]** ("VedicScan", "we", "us", or "our")
+This Privacy Policy explains how **Vedicscan Inc.** ("VedicScan", "we", "us", or "our")
 collects, uses, shares, and protects your information when you use the VedicScan website
 (vedicscan.com), our mobile applications, and related services (collectively, the "Service").
 
@@ -18,9 +13,9 @@ use the Service.
 
 ## 1. Who we are (Data Controller / Data Fiduciary)
 
-**[LEGAL ENTITY NAME]**
-Registered address: [REGISTERED ADDRESS], India
-Contact: **privacy@vedicscan.com**
+**Vedicscan Inc.**
+Registered address: 1221 College Park Dr, Suite 116, Dover, DE 19904, USA
+Contact: **contact@vedicscan.com**
 
 For users in the EU/EEA/UK, we are the "controller" of your personal data. For users in
 India, we are the "Data Fiduciary" under the Digital Personal Data Protection Act, 2023.
@@ -110,9 +105,10 @@ may be transferred as part of that transaction, subject to this Policy.
 
 ## 6. International data transfers
 
-We operate globally and may process and store your data in India, the United States, the EU,
-and other countries. Where we transfer personal data across borders, we use appropriate
-safeguards (such as Standard Contractual Clauses) as required by applicable law.
+We are based in the United States and may process and store your data in the U.S. and in other
+countries where we or our service providers operate. Where we transfer personal data across
+borders (for example, from the EU/EEA/UK), we use appropriate safeguards such as Standard
+Contractual Clauses, as required by applicable law.
 
 ---
 
@@ -134,10 +130,10 @@ Depending on where you live, you have the right to:
 - **withdraw consent** and object to or restrict certain processing;
 - **data portability** — receive a copy of your data in a portable format;
 - **nominate** another person to exercise your rights (India DPDP);
-- **not be discriminated against** for exercising your rights (CCPA);
+- **not be discriminated against** for exercising your rights (CCPA/CPRA);
 - **opt out** of marketing at any time.
 
-To exercise any right, email **privacy@vedicscan.com** or use the in-app account controls. We
+To exercise any right, email **contact@vedicscan.com** or use the in-app account controls. We
 will respond within the timeframe required by applicable law. You may also lodge a complaint
 with your local data protection authority. **California residents:** we do not sell or "share"
 personal information for cross-context behavioural advertising as defined by the CPRA.
@@ -157,19 +153,15 @@ information and will notify you and the relevant authorities of a data breach as
 
 The Service is **not intended for children under 18** (or the age of majority in your
 jurisdiction). We do not knowingly collect data from children. If you believe a child has
-provided us data, contact **privacy@vedicscan.com** and we will delete it.
+provided us data, contact **contact@vedicscan.com** and we will delete it.
 
 ---
 
-## 11. Grievance / Data Protection Officer
+## 11. Privacy contact & grievances
 
-**India (DPDP grievance officer):**
-Name: [GRIEVANCE OFFICER NAME]
-Email: **grievance@vedicscan.com**
-
-**EU/UK (Data Protection matters):** **privacy@vedicscan.com**
-
-We will acknowledge grievances within the statutory timeframe.
+For any privacy question, to exercise your rights, or to raise a grievance — including under the
+EU/UK GDPR or the India DPDP Act, 2023 — contact us at **contact@vedicscan.com**. We will
+acknowledge and respond to grievances within the timeframe required by applicable law.
 
 ---
 
@@ -182,5 +174,5 @@ We may update this Policy from time to time. We will post the updated version he
 
 ## 13. Contact
 
-Questions about this Policy? Email **privacy@vedicscan.com** or write to us at
-[REGISTERED ADDRESS], India.
+Questions about this Policy? Email **contact@vedicscan.com** or write to us at
+Vedicscan Inc., 1221 College Park Dr, Suite 116, Dover, DE 19904, USA.

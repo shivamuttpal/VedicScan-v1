@@ -1,8 +1,8 @@
 # Cookie Policy
 
-**Last updated: 8 June 2026**
+**Last updated: 9 July 2026**
 
-This Cookie Policy explains how VedicScan, operated by **[LEGAL ENTITY NAME]**, uses cookies and
+This Cookie Policy explains how VedicScan, operated by **Vedicscan Inc.**, uses cookies and
 similar local-storage technologies on our website (vedicscan.com). It should be read together
 with our [Privacy Policy](/privacy).
 
@@ -42,4 +42,4 @@ We may update this Cookie Policy from time to time and will post the updated ver
 
 ## Contact
 
-Questions? Email **privacy@vedicscan.com**.
+Questions? Email **contact@vedicscan.com**.
