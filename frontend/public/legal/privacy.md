@@ -1,0 +1,186 @@
+# Privacy Policy
+
+**Last updated: 8 June 2026**
+
+> **Before publishing:** replace every item in [square brackets] with your real details
+> (legal entity name, registered address, grievance officer, etc.). This document is a
+> template drafted to align with India's DPDP Act 2023, the EU/UK GDPR, and California's
+> CCPA/CPRA. It is **not** a substitute for review by a qualified lawyer.
+
+This Privacy Policy explains how **[LEGAL ENTITY NAME]** ("VedicScan", "we", "us", or "our")
+collects, uses, shares, and protects your information when you use the VedicScan website
+(vedicscan.com), our mobile applications, and related services (collectively, the "Service").
+
+By using the Service, you agree to this Privacy Policy. If you do not agree, please do not
+use the Service.
+
+---
+
+## 1. Who we are (Data Controller / Data Fiduciary)
+
+**[LEGAL ENTITY NAME]**
+Registered address: [REGISTERED ADDRESS], India
+Contact: **privacy@vedicscan.com**
+
+For users in the EU/EEA/UK, we are the "controller" of your personal data. For users in
+India, we are the "Data Fiduciary" under the Digital Personal Data Protection Act, 2023.
+
+---
+
+## 2. Information we collect
+
+### 2.1 Information you provide
+- **Account data:** first and last name, email address, phone number, and password
+  (stored only as a salted hash — we never store your plain-text password).
+- **Astrology profile data (sensitive):** name, **date of birth, time of birth, and place of
+  birth** for you and any additional profiles you create (e.g. family members, partners).
+  This birth data is used to compute your astrological charts.
+- **Chat content:** the questions and messages you send to our AI astrologer ("Maharshi AI").
+- **Payment data:** when you subscribe, our payment processors collect your payment details.
+  We receive only limited billing metadata (plan, amount, currency, transaction status,
+  and a processor reference ID) — **we do not store your full card number.**
+
+### 2.2 Information collected automatically
+- **Device & usage data:** IP address, device type, operating system, app version, and
+  interaction logs.
+- **Approximate location:** we convert the "place of birth" text you enter into geographic
+  coordinates using a geocoding service to calculate your chart.
+- **Cookies & local storage:** see our [Cookie Policy](/cookies).
+
+### 2.3 Information from third parties
+- **Google Sign-In:** if you sign in with Google, we receive your name, email address, and
+  profile picture from Google, subject to your Google permissions.
+
+We do **not** knowingly collect data from children (see Section 10).
+
+---
+
+## 3. How we use your information
+
+We use your information to:
+- create and secure your account and authenticate you;
+- calculate astrological charts, compatibility, dashas, Sade Sati, and related insights from
+  your birth data;
+- generate AI responses to your questions;
+- process subscriptions, payments, renewals, and refunds;
+- send transactional messages (OTP verification, payment receipts, subscription reminders);
+- provide customer support and respond to your requests;
+- detect, prevent, and address fraud, abuse, and security incidents;
+- comply with legal obligations.
+
+### Legal bases (GDPR / DPDP)
+We process your data on the basis of: **your consent** (e.g. for sensitive birth data and
+marketing), **performance of a contract** (to provide the Service you signed up for),
+**legitimate interests** (security, fraud prevention, service improvement), and **legal
+obligation**. You may withdraw consent at any time (Section 8).
+
+---
+
+## 4. AI processing and your chat data
+
+Your questions and relevant chart context are sent to our third-party AI provider (**OpenAI**)
+to generate responses. We instruct our AI provider not to use your data to train their models
+where such controls are available. Please **do not** share information you would not want
+processed by a third-party AI (e.g. financial account numbers, passwords, government IDs).
+
+AI-generated astrological insights are provided for guidance and entertainment and are **not**
+professional advice — see our [Disclaimer](/disclaimer).
+
+---
+
+## 5. How we share your information
+
+We do **not** sell your personal data. We share it only with:
+
+| Recipient | Purpose |
+|-----------|---------|
+| **OpenAI** | Generating AI astrology responses |
+| **Stripe** | Card/web subscription payments |
+| **RevenueCat, Apple App Store, Google Play** | In-app purchase and subscription management |
+| **Amazon Web Services (SES/SNS)** | Sending transactional email and SMS |
+| **Geocoding provider (OpenStreetMap/Nominatim)** | Converting place names to coordinates |
+| **Google** | Sign-In and, on Android, app services (Firebase) |
+| **Cloud hosting & database providers** | Operating and storing the Service |
+
+We may also disclose data to comply with law, enforce our Terms, or protect the rights,
+safety, and property of our users or the public. If we undergo a merger or acquisition, data
+may be transferred as part of that transaction, subject to this Policy.
+
+---
+
+## 6. International data transfers
+
+We operate globally and may process and store your data in India, the United States, the EU,
+and other countries. Where we transfer personal data across borders, we use appropriate
+safeguards (such as Standard Contractual Clauses) as required by applicable law.
+
+---
+
+## 7. Data retention
+
+We keep your personal data for as long as your account is active and as needed to provide the
+Service. When you delete your account (Section 8, and our [Data Deletion Policy](/data-deletion)),
+we delete or anonymise your personal data within **30 days**, except where we must retain
+certain records (e.g. transaction records for tax/accounting) for the period required by law.
+
+---
+
+## 8. Your rights and choices
+
+Depending on where you live, you have the right to:
+- **access** the personal data we hold about you;
+- **correct** inaccurate data (you can edit your profiles in-app);
+- **delete** your data / erasure ("right to be forgotten");
+- **withdraw consent** and object to or restrict certain processing;
+- **data portability** — receive a copy of your data in a portable format;
+- **nominate** another person to exercise your rights (India DPDP);
+- **not be discriminated against** for exercising your rights (CCPA);
+- **opt out** of marketing at any time.
+
+To exercise any right, email **privacy@vedicscan.com** or use the in-app account controls. We
+will respond within the timeframe required by applicable law. You may also lodge a complaint
+with your local data protection authority. **California residents:** we do not sell or "share"
+personal information for cross-context behavioural advertising as defined by the CPRA.
+
+---
+
+## 9. Security
+
+We protect your data using industry-standard measures, including encryption in transit (HTTPS),
+hashed passwords (bcrypt), access controls, rate limiting, and signed authentication tokens. No
+method of transmission or storage is 100% secure, but we work continually to protect your
+information and will notify you and the relevant authorities of a data breach as required by law.
+
+---
+
+## 10. Children's privacy
+
+The Service is **not intended for children under 18** (or the age of majority in your
+jurisdiction). We do not knowingly collect data from children. If you believe a child has
+provided us data, contact **privacy@vedicscan.com** and we will delete it.
+
+---
+
+## 11. Grievance / Data Protection Officer
+
+**India (DPDP grievance officer):**
+Name: [GRIEVANCE OFFICER NAME]
+Email: **grievance@vedicscan.com**
+
+**EU/UK (Data Protection matters):** **privacy@vedicscan.com**
+
+We will acknowledge grievances within the statutory timeframe.
+
+---
+
+## 12. Changes to this Policy
+
+We may update this Policy from time to time. We will post the updated version here with a new
+"Last updated" date and, for material changes, notify you in-app or by email.
+
+---
+
+## 13. Contact
+
+Questions about this Policy? Email **privacy@vedicscan.com** or write to us at
+[REGISTERED ADDRESS], India.

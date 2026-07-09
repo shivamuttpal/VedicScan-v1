@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-  Alert, RefreshControl, Platform, Image
+  Alert, RefreshControl, Platform, Image, Linking
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
@@ -17,6 +17,15 @@ const BANNER = require('../../../assets/banner.png');
 
 const GENDERS = ['Male', 'Female', 'Other'];
 const RELATIONSHIPS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Friend', 'Other'];
+
+// Hosted legal documents (also linked from the web app footer)
+const LEGAL_BASE = 'https://vedicscan.com';
+const LEGAL_LINKS = [
+  { label: 'Privacy Policy', url: `${LEGAL_BASE}/privacy` },
+  { label: 'Terms of Service', url: `${LEGAL_BASE}/terms` },
+  { label: 'Refund & Cancellation', url: `${LEGAL_BASE}/refund` },
+  { label: 'Account & Data Deletion', url: `${LEGAL_BASE}/data-deletion` },
+];
 
 const ProfileScreen = ({ route, navigation }) => {
   const { user, hasProfile, refreshProfileStatus, logout } = useAuth();
@@ -189,6 +198,33 @@ const ProfileScreen = ({ route, navigation }) => {
         },
       },
     ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This permanently deletes your account, all birth profiles, kundalis, and chat history. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.delete('/api/users/account');
+              Alert.alert('Account Deleted', 'Your account and all associated data have been permanently deleted.');
+              logout();
+            } catch (err) {
+              Alert.alert('Error', err?.response?.data?.message || 'Failed to delete account. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const openLegal = (url) => {
+    Linking.openURL(url).catch(() => Alert.alert('Error', 'Could not open the link.'));
   };
 
   return (
@@ -445,6 +481,41 @@ const ProfileScreen = ({ route, navigation }) => {
             </TouchableOpacity>
           )}
 
+          {!showForm && (
+            <>
+              {/* Legal & Support */}
+              <View style={styles.legalSection}>
+                <Text style={styles.legalHeading}>Legal & Support</Text>
+                {LEGAL_LINKS.map((link) => (
+                  <TouchableOpacity
+                    key={link.url}
+                    style={styles.legalRow}
+                    onPress={() => openLegal(link.url)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.legalLabel}>{link.label}</Text>
+                    <Text style={styles.legalChevron}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Danger Zone — delete account */}
+              <View style={styles.dangerSection}>
+                <Text style={styles.dangerHeading}>Delete Account</Text>
+                <Text style={styles.dangerText}>
+                  Permanently delete your account and all associated data. This cannot be undone.
+                </Text>
+                <TouchableOpacity
+                  style={styles.dangerBtn}
+                  onPress={handleDeleteAccount}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.dangerBtnText}>🗑️  Delete my account</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+
           <View style={{ height: 40 }} />
         </View>
       </ScrollView>
@@ -454,6 +525,56 @@ const ProfileScreen = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
+
+  // Legal & Support
+  legalSection: {
+    marginTop: 24,
+    backgroundColor: C.white,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: '#EDE4D8',
+    overflow: 'hidden',
+  },
+  legalHeading: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+    color: C.textMuted,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F2EAE0',
+  },
+  legalLabel: { fontSize: fontSize.md, color: '#3D2010' },
+  legalChevron: { fontSize: 22, color: '#C0A98A', marginTop: -2 },
+
+  // Danger zone
+  dangerSection: {
+    marginTop: 20,
+    backgroundColor: '#FDEDED',
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: '#F5C6C6',
+    padding: 16,
+  },
+  dangerHeading: { fontSize: fontSize.md, fontWeight: '700', color: '#B42318', marginBottom: 4 },
+  dangerText: { fontSize: fontSize.sm, color: '#B4483E', lineHeight: 18, marginBottom: 12 },
+  dangerBtn: {
+    backgroundColor: '#D92D20',
+    borderRadius: radius.md,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  dangerBtnText: { color: C.white, fontSize: fontSize.md, fontWeight: '700' },
   header: {
     paddingTop: Platform.OS === 'ios' ? 55 : 45, paddingBottom: 16, paddingHorizontal: spacing.lg,
     borderBottomLeftRadius: 25, borderBottomRightRadius: 25,

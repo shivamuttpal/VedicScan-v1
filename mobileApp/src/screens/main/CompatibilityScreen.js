@@ -26,15 +26,68 @@ const escapeHtml = (value) => String(value ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#039;');
 
+// Keys must match the backend's `koota.toLowerCase()` output exactly
+// (e.g. "Maitri" → "maitri", "Bhakut" → "bhakut") — not the classical
+// long-form names — or the Hindi lookup silently misses and falls back to English.
 const KOOTA_NAMES_HI = {
   varna: 'वर्ण', vashya: 'वश्य', tara: 'तारा', yoni: 'योनि',
-  graha_maitri: 'ग्रह मैत्री', gana: 'गण', bhakoot: 'भकूट', nadi: 'नाड़ी',
+  maitri: 'ग्रह मैत्री', gana: 'गण', bhakut: 'भकूट', nadi: 'नाड़ी',
+};
+
+// Hindi translations of the short koota descriptions returned by the backend
+// (mirrors GM_HI[...].measures in compatibility.pdf.i18n.ts on the server).
+const KOOTA_DESC_HI = {
+  varna: 'अहंकार, आध्यात्मिक विकास एवं कर्म-नैतिकता का सामंजस्य',
+  vashya: 'पारस्परिक आकर्षण, चुम्बकीय खिंचाव एवं स्वाभाविक प्रभुत्व',
+  tara: 'भाग्य, सौभाग्य एवं जीवन-पथ का संरेखण',
+  yoni: 'शारीरिक अनुकूलता, आत्मीय सामंजस्य एवं जैविक अनुनाद',
+  maitri: 'बौद्धिक मैत्री, मानसिक तालमेल एवं मनोवैज्ञानिक सामंजस्य',
+  gana: 'मूल स्वभाव, व्यावहारिक प्रवृत्ति एवं दृष्टिकोण-सामंजस्य',
+  bhakut: 'जीवन-शक्ति, भावनात्मक स्वास्थ्य, समृद्धि एवं पारिवारिक कल्याण',
+  nadi: 'आनुवंशिक अनुकूलता, स्वास्थ्य-सामंजस्य एवं संतान-कल्याण',
+};
+
+// English rashi (as returned by the backend's rashi_english field) → Hindi
+const RASHI_HI = {
+  Aries: 'मेष', Taurus: 'वृषभ', Gemini: 'मिथुन', Cancer: 'कर्क',
+  Leo: 'सिंह', Virgo: 'कन्या', Libra: 'तुला', Scorpio: 'वृश्चिक',
+  Sagittarius: 'धनु', Capricorn: 'मकर', Aquarius: 'कुंभ', Pisces: 'मीन',
+};
+
+// Nakshatra name (as returned by the backend) → Hindi
+const NAKSHATRA_HI = {
+  'Ashwini': 'अश्विनी', 'Bharani': 'भरणी', 'Krittika': 'कृत्तिका', 'Rohini': 'रोहिणी',
+  'Mrigashira': 'मृगशिरा', 'Ardra': 'आर्द्रा', 'Punarvasu': 'पुनर्वसु', 'Pushya': 'पुष्य',
+  'Ashlesha': 'आश्लेषा', 'Magha': 'मघा', 'Purva Phalguni': 'पूर्वा फाल्गुनी',
+  'Uttara Phalguni': 'उत्तरा फाल्गुनी', 'Hasta': 'हस्त', 'Chitra': 'चित्रा', 'Swati': 'स्वाती',
+  'Vishakha': 'विशाखा', 'Anuradha': 'अनुराधा', 'Jyeshtha': 'ज्येष्ठा', 'Mula': 'मूल',
+  'Purva Ashadha': 'पूर्वाषाढ़ा', 'Uttara Ashadha': 'उत्तराषाढ़ा', 'Shravana': 'श्रवण',
+  'Dhanishta': 'धनिष्ठा', 'Shatabhisha': 'शतभिषा', 'Purva Bhadrapada': 'पूर्वा भाद्रपद',
+  'Uttara Bhadrapada': 'उत्तरा भाद्रपद', 'Revati': 'रेवती',
 };
 
 const formatKootaName = (key, language) => {
   const normalized = key.toLowerCase().trim().replace(/[\s-]+/g, '_');
   if (language === 'hi' && KOOTA_NAMES_HI[normalized]) return KOOTA_NAMES_HI[normalized];
   return normalized.split('_').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+};
+
+const formatKootaDesc = (key, description, language) => {
+  const normalized = key.toLowerCase().trim().replace(/[\s-]+/g, '_');
+  if (language === 'hi' && KOOTA_DESC_HI[normalized]) return KOOTA_DESC_HI[normalized];
+  return description || '';
+};
+
+const formatRashi = (rasi, language) => {
+  if (!rasi) return '';
+  if (language === 'hi' && RASHI_HI[rasi]) return RASHI_HI[rasi];
+  return rasi;
+};
+
+const formatNakshatra = (name, language) => {
+  if (!name) return '';
+  if (language === 'hi' && NAKSHATRA_HI[name]) return NAKSHATRA_HI[name];
+  return name;
 };
 
 const formatVerdict = (verdict, language) => {
@@ -266,7 +319,7 @@ const CompatibilityScreen = ({ navigation }) => {
       const kootaRows = Object.entries(result.koota_details || {}).map(([key, detail]) => `
         <tr>
           <td class="koota-name">${escapeHtml(formatKootaName(key, language))}</td>
-          <td>${escapeHtml(detail.description || '—')}</td>
+          <td>${escapeHtml(formatKootaDesc(key, detail.description, language) || '—')}</td>
           <td class="score-cell">${escapeHtml(String(detail.received))}/${escapeHtml(String(detail.max))}</td>
         </tr>
       `).join('');
@@ -603,14 +656,14 @@ const CompatibilityScreen = ({ navigation }) => {
             <View style={styles.dashboardItem}>
               <View style={styles.sideIndicatorBoy} />
               <Text style={styles.dashboardLabelSmall}>{t('compatGroom')}</Text>
-              <Text style={styles.dashboardValue} numberOfLines={1}>{result.boy_details?.nakshatra || boyData.name}</Text>
-              <Text style={styles.dashboardSubValue}>{result.boy_details?.rasi || ''}</Text>
+              <Text style={styles.dashboardValue} numberOfLines={1}>{formatNakshatra(result.boy_details?.nakshatra, language) || boyData.name}</Text>
+              <Text style={styles.dashboardSubValue}>{formatRashi(result.boy_details?.rasi, language)}</Text>
             </View>
             <View style={styles.dashboardItem}>
               <View style={styles.sideIndicatorGirl} />
               <Text style={styles.dashboardLabelSmall}>{t('compatBride')}</Text>
-              <Text style={styles.dashboardValue} numberOfLines={1}>{result.girl_details?.nakshatra || girlData.name}</Text>
-              <Text style={styles.dashboardSubValue}>{result.girl_details?.rasi || ''}</Text>
+              <Text style={styles.dashboardValue} numberOfLines={1}>{formatNakshatra(result.girl_details?.nakshatra, language) || girlData.name}</Text>
+              <Text style={styles.dashboardSubValue}>{formatRashi(result.girl_details?.rasi, language)}</Text>
             </View>
           </View>
 
@@ -622,7 +675,7 @@ const CompatibilityScreen = ({ navigation }) => {
                 <View key={key} style={styles.kootaRow}>
                   <View style={styles.kootaInfo}>
                     <Text style={styles.kootaName}>{formatKootaName(key, language)}</Text>
-                    <Text style={styles.kootaDesc}>{k.description || ''}</Text>
+                    <Text style={styles.kootaDesc}>{formatKootaDesc(key, k.description, language)}</Text>
                   </View>
                   <Text style={[styles.kootaScore, { color: k.received >= k.max / 2 ? C.green : C.red }]}>
                     {k.received}/{k.max}

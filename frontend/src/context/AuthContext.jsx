@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
@@ -120,7 +120,9 @@ export const AuthProvider = ({ children }) => {
     return false;
   }, [token]);
 
-  const value = {
+  // Memoize so consumers only re-render when actual auth state changes, not on every
+  // AuthProvider render. The callbacks are already stable via useCallback.
+  const value = useMemo(() => ({
     user,
     setUser,
     token,
@@ -133,7 +135,7 @@ export const AuthProvider = ({ children }) => {
     checkAuth,
     hasProfile,
     refreshProfileStatus
-  };
+  }), [user, token, loading, isAuthenticated, logout, saveSession, clearSession, getToken, checkAuth, hasProfile, refreshProfileStatus]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

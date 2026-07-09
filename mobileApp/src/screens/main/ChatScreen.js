@@ -3,7 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   FlatList, KeyboardAvoidingView, Platform, Animated, Alert,
-  Image, Keyboard, Modal, ScrollView, Dimensions,
+  Image, Keyboard, Modal, ScrollView, Dimensions, ActivityIndicator,
 } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -279,6 +279,10 @@ const ChatScreen = ({ navigation }) => {
   const [showSelector, setShowSelector]         = useState(false);
   const [showScrollBtn, setShowScrollBtn]       = useState(false);
   const [guideIndex, setGuideIndex]             = useState(0);
+  const [loadedPortraits, setLoadedPortraits]   = useState({});
+
+  const markPortraitLoaded = (id) =>
+    setLoadedPortraits((prev) => (prev[id] ? prev : { ...prev, [id]: true }));
 
   const flatRef      = useRef(null);
   const carouselRef  = useRef(null);
@@ -616,6 +620,9 @@ const ChatScreen = ({ navigation }) => {
             snapToInterval={CARD_SNAP}
             decelerationRate="fast"
             disableIntervalMomentum
+            initialNumToRender={ASTROLOGERS.length}
+            windowSize={ASTROLOGERS.length}
+            maxToRenderPerBatch={ASTROLOGERS.length}
             contentContainerStyle={{ paddingHorizontal: SIDE_PAD, paddingVertical: 8}}
             onMomentumScrollEnd={onGuideScroll}
             renderItem={({ item: a }) => (
@@ -625,6 +632,7 @@ const ChatScreen = ({ navigation }) => {
                   source={a.charImage}
                   style={GS.portrait}
                   resizeMode="contain"
+                  onLoadEnd={() => markPortraitLoaded(a.id)}
                 />
                 <LinearGradient
                   colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(20,10,5,0.65)', 'rgba(20,10,5,0.97)']}
@@ -647,6 +655,11 @@ const ChatScreen = ({ navigation }) => {
                     <Text style={GS.ctaTxt}>{t('chatBeginReading')}</Text>
                   </TouchableOpacity>
                 </View>
+                {!loadedPortraits[a.id] && (
+                  <View style={GS.loaderOverlay} pointerEvents="none">
+                    <ActivityIndicator size="large" color="#C9A45A" />
+                  </View>
+                )}
               </View>
             )}
           />
@@ -942,6 +955,12 @@ const GS = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
   },
   ratingTxt: { color: '#FFD700', fontSize: 13, fontWeight: '700' },
+  loaderOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#241712',
+  },
   footer: {
     position: 'absolute', left: 0, right: 0, bottom: 0,
     padding: 20,

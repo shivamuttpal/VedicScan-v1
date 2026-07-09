@@ -49,29 +49,34 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Resources */}
+          {/* Legal */}
           <div>
-            <h3 className="font-semibold mb-4 text-lg text-gold">Resources</h3>
+            <h3 className="font-semibold mb-4 text-lg text-gold">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <a href="#" className="text-maroon-soft/70 hover:text-gold transition-colors text-sm">
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-maroon-soft/70 hover:text-gold transition-colors text-sm">
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-maroon-soft/70 hover:text-gold transition-colors text-sm">
-                  FAQs
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-maroon-soft/70 hover:text-gold transition-colors text-sm">
+                <Link to="/privacy" className="text-maroon-soft/70 hover:text-gold transition-colors text-sm">
                   Privacy Policy
-                </a>
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-maroon-soft/70 hover:text-gold transition-colors text-sm">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/refund" className="text-maroon-soft/70 hover:text-gold transition-colors text-sm">
+                  Refund & Cancellation
+                </Link>
+              </li>
+              <li>
+                <Link to="/data-deletion" className="text-maroon-soft/70 hover:text-gold transition-colors text-sm">
+                  Account & Data Deletion
+                </Link>
+              </li>
+              <li>
+                <Link to="/cookies" className="text-maroon-soft/70 hover:text-gold transition-colors text-sm">
+                  Cookie Policy
+                </Link>
               </li>
             </ul>
           </div>

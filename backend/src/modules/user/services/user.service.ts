@@ -3,6 +3,10 @@ import { IUser } from '../model';
 import { hashPassword, comparePassword, generateToken } from '../../../utils';
 import { ApiError } from '../../../middlewares';
 import { OAuth2Client } from 'google-auth-library';
+import { Profile } from '../../profile/model/profile.model';
+import { Kundali } from '../../kundali/model/kundali.model';
+import { ChatSession } from '../../chat/model/chat.model';
+import { UserUsage } from '../../subscription/model/subscription.model';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -12,7 +16,7 @@ export interface RegisterInput {
   password: string;
   firstName: string;
   lastName?: string;
-  role?: 'admin' | 'instructor' | 'student' | 'user';
+  // NOTE: `role` is deliberately omitted — it must never be settable by the client.
 }
 
 export interface LoginInput {
@@ -32,7 +36,13 @@ export interface AuthResponse {
 }
 
 export class UserService {
-  async register(input: RegisterInput): Promise<{ emailOtp?: string; phoneOtp?: string; message: string }> {
+  async register(rawInput: RegisterInput): Promise<{ emailOtp?: string; phoneOtp?: string; message: string }> {
+    // SECURITY: strip any privileged/unsafe fields a client may have injected into
+    // the request body (e.g. role, isActive, isSubscriber). Only whitelisted fields
+    // are accepted; role is always forced to 'user' below.
+    const { email, phone, password, firstName, lastName } = rawInput as any;
+    const input: RegisterInput = { email, phone, password, firstName, lastName };
+
     // 1. Check for existing user by email OR phone
     let existingUser = null;
     if (input.email) {
@@ -76,8 +86,8 @@ export class UserService {
       ...input,
       password: hashedPassword,
       authProvider: 'local',
-      role: input.role || 'user',
-      isActive: false, 
+      role: 'user', // SECURITY: role is never taken from client input
+      isActive: false,
       emailOTP: emailOtp,
       emailOTPExpires: otpExpires,
       isEmailVerified: false,
@@ -226,18 +236,45 @@ export class UserService {
     };
   }
 
-  async googleLogin(accessToken: string): Promise<AuthResponse> {
+  async googleLogin(clientToken: string): Promise<AuthResponse> {
     try {
-      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      const payload: any = await response.json();
-      
-      if (!response.ok || !payload || !payload.email) {
+      let email: string | undefined;
+      let given_name: string | undefined;
+      let family_name: string | undefined;
+      let name: string | undefined;
+      let picture: string | undefined;
+      let sub: string | undefined;
+
+      // 1. Preferred: verify as a Google ID token — cryptographically verified and
+      //    audience-checked against our client ID, so it can't be replayed from another app.
+      try {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: clientToken,
+          audience: process.env.GOOGLE_CLIENT_ID,
+        });
+        const p = ticket.getPayload();
+        if (p?.email) {
+          ({ email, given_name, family_name, name, picture, sub } = p as any);
+        }
+      } catch {
+        // Not a valid ID token for our audience — fall back to access-token flow below.
+      }
+
+      // 2. Fallback: treat the value as an OAuth access token and call the userinfo endpoint.
+      if (!email) {
+        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${clientToken}` }
+        });
+        const payload: any = await response.json();
+        if (response.ok && payload?.email) {
+          ({ email, given_name, family_name, name, picture, sub } = payload);
+        }
+      }
+
+      if (!email) {
         throw new ApiError(400, 'Invalid Google Token');
       }
 
-      const { email, given_name, family_name, name, picture, sub } = payload;
       let user = await userRepository.findByEmail(email);
 
       if (!user) {
@@ -313,6 +350,30 @@ export class UserService {
     return userRepository.delete(id);
   }
 
+  /**
+   * Permanently delete the authenticated user's account and all associated personal
+   * data (profiles, kundalis, chat history, usage). Backs the /data-deletion policy
+   * and satisfies the App Store / Google Play account-deletion requirement.
+   *
+   * Transaction/billing records are intentionally retained for legal & tax purposes,
+   * but they no longer link to any profile or chart data.
+   */
+  async deleteAccount(userId: string): Promise<void> {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new ApiError(404, 'User not found');
+    }
+
+    await Promise.all([
+      Profile.deleteMany({ userId }),
+      Kundali.deleteMany({ userId }),
+      ChatSession.deleteMany({ userId }),
+      UserUsage.deleteMany({ userId }),
+    ]);
+
+    await userRepository.delete(userId);
+  }
+
   async changePassword(
     userId: string,
     currentPassword: string,
@@ -337,14 +398,13 @@ export class UserService {
     return true;
   }
 
-  async forgotPassword(email: string): Promise<string> {
+  // Returns the OTP only when it should actually be emailed. Returns null when the
+  // account does not exist or is a Google account — the controller responds with a
+  // generic message either way, so an attacker cannot enumerate registered emails.
+  async forgotPassword(email: string): Promise<string | null> {
     const user = await userRepository.findByEmail(email);
-    if (!user) {
-      throw new ApiError(404, 'User with this email does not exist');
-    }
-
-    if (user.authProvider === 'google') {
-      throw new ApiError(400, 'This account is linked with Google. Please login with Google.');
+    if (!user || user.authProvider === 'google') {
+      return null;
     }
 
     // Generate 6 digit OTP

@@ -15,7 +15,8 @@ import LocationInput from '../components/LocationInput';
 const Profile = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, checkAuth, refreshProfileStatus } = useAuth();
+  const { user, checkAuth, refreshProfileStatus, logout } = useAuth();
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [profiles, setProfiles] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -188,6 +189,26 @@ const Profile = () => {
     } catch (error) {
       console.error('Error deleting profile:', error);
       toast.error('Failed to delete profile');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      'Delete your account?\n\nThis permanently deletes your account, ALL birth profiles, ' +
+      'kundalis, and chat history. This cannot be undone.'
+    );
+    if (!confirmed) return;
+    try {
+      setDeletingAccount(true);
+      await api.delete('/api/users/account');
+      toast.success('Your account and data have been permanently deleted.');
+      logout();
+      navigate('/signup');
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error(error?.response?.data?.message || 'Failed to delete account. Please try again.');
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -456,6 +477,30 @@ const Profile = () => {
                   </div>
                 </GoldCard>
               ))}
+            </div>
+          )}
+
+          {/* Danger Zone — account deletion */}
+          {!showForm && (
+            <div className="mt-12 max-w-2xl mx-auto">
+              <div className="rounded-xl border border-red-200 bg-red-50/60 p-6">
+                <h3 className="text-lg font-semibold text-red-700 mb-1">Delete Account</h3>
+                <p className="text-sm text-red-600/80 mb-4">
+                  Permanently delete your account and all associated data — birth profiles, kundalis,
+                  and chat history. This action cannot be undone.
+                </p>
+                <Button
+                  onClick={handleDeleteAccount}
+                  disabled={deletingAccount}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {deletingAccount ? 'Deleting…' : 'Delete my account'}
+                </Button>
+                <p className="text-xs text-gray-500 mt-3">
+                  See our <a href="/data-deletion" className="underline hover:text-gold">Data Deletion Policy</a>.
+                </p>
+              </div>
             </div>
           )}
         </div>

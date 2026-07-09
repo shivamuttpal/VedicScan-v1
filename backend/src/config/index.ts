@@ -45,6 +45,17 @@ interface Config {
   };
 }
 
+// SECURITY: never allow the app to boot in production with a missing or weak JWT
+// secret — a known/guessable secret lets anyone forge admin tokens. Fail fast.
+const IS_PRODUCTION = (process.env.NODE_ENV || 'development') === 'production';
+const RAW_JWT_SECRET = process.env.JWT_SECRET || '';
+if (IS_PRODUCTION && (RAW_JWT_SECRET.length < 32 || RAW_JWT_SECRET === 'default-secret-change-me')) {
+  throw new Error(
+    '[config] JWT_SECRET is missing or too weak for production. ' +
+    'Set a strong, random JWT_SECRET of at least 32 characters.'
+  );
+}
+
 const config: Config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '8001', 10),

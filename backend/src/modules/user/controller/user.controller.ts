@@ -80,7 +80,10 @@ export class UserController {
         if (result.phone && result.phoneOtp) {
           await sendPhoneOTP(result.phone, result.phoneOtp);
         }
-        successResponse(res, result, 'Account not verified. Verification code sent.');
+        // SECURITY: never return OTPs to the client. They must only be delivered
+        // out-of-band (email/SMS) so possession proves ownership of the account.
+        const { emailOtp, phoneOtp, ...safeResult } = result;
+        successResponse(res, safeResult, 'Account not verified. Verification code sent.');
         return;
       }
 
@@ -168,6 +171,16 @@ export class UserController {
     }
   }
 
+  // ── Delete the authenticated user's own account and all their data ──
+  async deleteAccount(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      await userService.deleteAccount(req.user!.userId);
+      successResponse(res, { deleted: true }, 'Your account and all associated data have been permanently deleted.');
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async changePassword(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const { currentPassword, newPassword } = req.body;
@@ -183,14 +196,14 @@ export class UserController {
     try {
       const { email } = req.body;
       const otp = await userService.forgotPassword(email);
-      const emailSent = await sendOTPEmail(email, otp);
 
-      if (!emailSent) {
-        errorResponse(res, 'Failed to send OTP email', 500);
-        return;
+      // Only send when a resettable local account exists. Respond with the SAME
+      // generic message regardless, so registered emails can't be enumerated.
+      if (otp) {
+        await sendOTPEmail(email, otp);
       }
 
-      successResponse(res, null, 'OTP sent to your email');
+      successResponse(res, null, 'If an account exists for this email, a reset code has been sent.');
     } catch (error) {
       next(error);
     }

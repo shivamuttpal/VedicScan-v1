@@ -43,4 +43,7 @@ const chatSessionSchema = new Schema<IChatSession>({
 //   db.chatsessions.dropIndex('conversationId_1')
 chatSessionSchema.index({ conversationId: 1, userId: 1 }, { unique: true });
 
+// History listing queries find({ userId }).sort({ updatedAt: -1 }); this index serves it.
+chatSessionSchema.index({ userId: 1, updatedAt: -1 });
+
 export const ChatSession = mongoose.model<IChatSession>('ChatSession', chatSessionSchema);

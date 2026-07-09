@@ -36,7 +36,7 @@ api.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.log('Error reading token:', error);
+      if (__DEV__) console.log('Error reading token:', error);
     }
     return config;
   },
@@ -47,15 +47,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.log('API Error:', {
-      message: error.message,
-      code: error.code,
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
-    
+    if (__DEV__) {
+      console.log('API Error:', {
+        message: error.message,
+        code: error.code,
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+    }
+
     if (error.response?.status === 401) {
       // Token expired — clear session
       await AsyncStorage.multiRemove([TOKEN_KEY, 'vedicscan_user']);

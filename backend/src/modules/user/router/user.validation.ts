@@ -3,11 +3,12 @@ import { z } from 'zod';
 export const registerSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email format').optional(),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
     firstName: z.string().min(1, 'First name is required'),
     lastName: z.string().optional(),
     phone: z.string().optional(),
-    role: z.enum(['admin', 'instructor', 'student', 'user']).optional(),
+    // SECURITY: `role` is intentionally NOT accepted from the client. Allowing it
+    // let anyone self-register as `admin`. Roles are assigned server-side only.
   }).refine((data) => data.email || data.phone, {
     message: "Either email or phone number is required for registration",
     path: ["email"],

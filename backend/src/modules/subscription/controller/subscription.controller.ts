@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { AuthRequest } from '../../../middlewares/auth.middleware';
 import { UserUsage, getISTMidnight, getISTMonthStart } from '../model/subscription.model';
@@ -126,7 +127,10 @@ export const subscriptionController = {
         usage.lastMonthlyReset = monthStart;
       }
 
-      await usage.save();
+      // Status is polled frequently — only persist when a reset actually changed something.
+      if (usage.isModified()) {
+        await usage.save();
+      }
 
       // Calculate next reset times
       const nextDailyReset = new Date(todayMidnight.getTime() + 24 * 60 * 60 * 1000);
@@ -558,20 +562,59 @@ export const subscriptionController = {
   async syncRevenueCat(req: AuthRequest, res: Response) {
     try {
       const userId = req.user!.userId;
-      const {
-        productId = '',
-        entitlementIds = [] as string[],
-        expirationAtMs,
-        isActive,
-      } = req.body;
 
-      if (!isActive) {
-        res.json({ success: true, synced: false, message: 'No active RC subscription to sync' });
+      // SECURITY: entitlement state is NEVER trusted from the client. We verify it
+      // against the RevenueCat REST API (the source of truth) using the secret key.
+      // The request body (isActive/productId/expirationAtMs) is treated only as a
+      // hint that "something changed, please re-fetch".
+      const secret = config.revenueCat.secretKey;
+      if (!secret) {
+        console.error('[RC Sync] REVENUECAT_SECRET_KEY not configured — cannot verify entitlements.');
+        res.status(503).json({ success: false, message: 'Subscription verification is temporarily unavailable.' });
         return;
       }
 
-      const plan = getPlanFromRC(entitlementIds, productId);
-      const billingCycle = getBillingCycleFromProductId(productId);
+      let rcResp: any;
+      try {
+        const rcRes = await fetch(
+          `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(userId)}`,
+          { headers: { Authorization: `Bearer ${secret}` } }
+        );
+        if (!rcRes.ok) {
+          res.json({ success: true, synced: false, message: 'No active subscription found for this account.' });
+          return;
+        }
+        rcResp = await rcRes.json();
+      } catch (fetchErr: any) {
+        console.error('[RC Sync] RevenueCat API call failed:', fetchErr?.message || fetchErr);
+        res.status(502).json({ success: false, message: 'Could not reach the subscription provider. Try again shortly.' });
+        return;
+      }
+
+      // Find an active entitlement (expires_date null => lifetime; otherwise must be in the future).
+      const entitlements: Record<string, any> = rcResp?.subscriber?.entitlements || {};
+      const nowMs = Date.now();
+      let activeEntId = '';
+      let activeProductId = '';
+      let activeExpiresMs: number | null = null;
+      for (const [entId, ent] of Object.entries(entitlements)) {
+        const expMs = ent?.expires_date ? Date.parse(ent.expires_date) : null;
+        const active = expMs === null || expMs > nowMs;
+        if (active) {
+          activeEntId = entId;
+          activeProductId = ent?.product_identifier || '';
+          activeExpiresMs = expMs;
+          break;
+        }
+      }
+
+      if (!activeEntId) {
+        res.json({ success: true, synced: false, message: 'No active subscription to sync.' });
+        return;
+      }
+
+      const plan = getPlanFromRC([activeEntId], activeProductId);
+      const billingCycle = getBillingCycleFromProductId(activeProductId);
 
       let usage = await UserUsage.findOne({ userId });
       if (!usage) usage = new UserUsage({ userId });
@@ -584,22 +627,17 @@ export const subscriptionController = {
       usage.expiryWarningNotified = false;
       usage.expiryNotified = false;
 
-      const isLifetime = productId === 'lifetime';
-      if (isLifetime) {
+      if (activeExpiresMs === null) {
+        // Lifetime / non-expiring entitlement — set far-future date.
         usage.planEndDate = new Date('2125-01-01T00:00:00.000Z');
-      } else if (expirationAtMs) {
-        usage.planEndDate = new Date(Number(expirationAtMs));
       } else {
-        const baseDate = (usage.planEndDate && usage.planEndDate > now) ? usage.planEndDate : now;
-        usage.planEndDate = new Date(
-          baseDate.getTime() + (billingCycle === 'annual' ? 365 : 30) * 24 * 60 * 60 * 1000
-        );
+        usage.planEndDate = new Date(activeExpiresMs);
       }
 
       await usage.save();
       await User.updateOne({ _id: userId }, { $set: { isSubscriber: true } });
 
-      console.log(`[RC Sync] Synced ${plan}/${billingCycle} for user ${userId} — expires ${usage.planEndDate}`);
+      console.log(`[RC Sync] Verified ${plan}/${billingCycle} for user ${userId} — expires ${usage.planEndDate}`);
       res.json({ success: true, synced: true, plan, billingCycle, planEndDate: usage.planEndDate });
     } catch (error: any) {
       console.error('[RC Sync] Error:', error);
@@ -613,10 +651,21 @@ export const subscriptionController = {
    * Authorization: Bearer <REVENUECAT_WEBHOOK_AUTH_TOKEN>
    */
   async handleRevenueCatWebhook(req: Request, res: Response) {
-    // Verify authorization header
-    const authHeader = req.headers['authorization'] || '';
+    // Verify authorization header.
+    // SECURITY: fail CLOSED. If no token is configured we must reject every call —
+    // otherwise anyone could POST an arbitrary app_user_id and grant premium.
+    const authHeader = String(req.headers['authorization'] || '');
     const expectedToken = config.revenueCat.webhookAuthToken;
-    if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
+    if (!expectedToken) {
+      console.error('[RevenueCat Webhook] REVENUECAT_WEBHOOK_AUTH_TOKEN not configured — rejecting.');
+      res.status(503).json({ error: 'Webhook not configured' });
+      return;
+    }
+    const expectedHeader = `Bearer ${expectedToken}`;
+    const a = Buffer.from(authHeader);
+    const b = Buffer.from(expectedHeader);
+    // Constant-time comparison to avoid timing attacks (lengths must match first).
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }

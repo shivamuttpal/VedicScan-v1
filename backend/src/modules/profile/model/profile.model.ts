@@ -90,4 +90,9 @@ const profileSchema = new Schema<IProfile>(
   }
 );
 
+// Profiles are looked up by userId on nearly every chat message and profile screen.
+// Without this index those queries do a full collection scan as the app grows.
+profileSchema.index({ userId: 1 });
+profileSchema.index({ userId: 1, isDefault: 1 });
+
 export const Profile = mongoose.model<IProfile>('Profile', profileSchema);

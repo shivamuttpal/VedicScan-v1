@@ -136,8 +136,11 @@ export const usageLimitMiddleware = async (
     (req as any).userUsage = usage;
     (req as any).planLimits = limits;
 
-    // Save any resets that happened
-    await usage.save();
+    // Only write if a counter reset or plan change actually happened this request —
+    // avoids a redundant DB write on every single API call.
+    if (usage.isModified()) {
+      await usage.save();
+    }
 
     next();
   } catch (error) {

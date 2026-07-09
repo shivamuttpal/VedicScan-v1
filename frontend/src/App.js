@@ -1,30 +1,34 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import Home from "./pages/Home";
-import Profile from "./pages/Profile";
-import Compatibility from "./pages/Compatibility";
-import Chat from "./pages/Chat";
-import Insights from "./pages/Insights";
-import Pricing from "./pages/Pricing";
-import BabyNaming from "./pages/BabyNaming";
-import ForgotPassword from "./pages/ForgotPassword";
-import VerifyOTP from "./pages/VerifyOTP";
-import ResetPassword from "./pages/ResetPassword";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import Subscription from "./pages/Subscription";
 import { FeedbackButton } from "./components/FeedbackButton";
 import { Toaster } from "./components/ui/sonner";
-import { useEffect } from "react";
+import VedicLoader from "./components/VedicLoader";
+import { lazy, Suspense } from "react";
 
-// Note: GlobalErrorHandler for Supabase removed
+// Route-level code splitting: each page is loaded on demand, so the initial JS
+// bundle stays small and first paint is fast even on mobile networks.
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Home = lazy(() => import("./pages/Home"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Compatibility = lazy(() => import("./pages/Compatibility"));
+const Chat = lazy(() => import("./pages/Chat"));
+const Insights = lazy(() => import("./pages/Insights"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const BabyNaming = lazy(() => import("./pages/BabyNaming"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const Subscription = lazy(() => import("./pages/Subscription"));
+const LegalPage = lazy(() => import("./pages/LegalPage"));
 
 function AppRouter() {
   return (
+    <Suspense fallback={<VedicLoader />}>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
@@ -81,6 +85,14 @@ function AppRouter() {
         } 
       />
       <Route path="/pricing" element={<Pricing />} />
+
+      {/* Public legal / compliance pages */}
+      <Route path="/privacy" element={<LegalPage slug="privacy" title="Privacy Policy" />} />
+      <Route path="/terms" element={<LegalPage slug="terms" title="Terms of Service" />} />
+      <Route path="/refund" element={<LegalPage slug="refund" title="Refund & Cancellation Policy" />} />
+      <Route path="/data-deletion" element={<LegalPage slug="data-deletion" title="Account & Data Deletion" />} />
+      <Route path="/cookies" element={<LegalPage slug="cookies" title="Cookie Policy" />} />
+      <Route path="/disclaimer" element={<LegalPage slug="disclaimer" title="Disclaimer" />} />
       <Route 
         path="/subscription" 
         element={
@@ -98,6 +110,7 @@ function AppRouter() {
         } 
       />
     </Routes>
+    </Suspense>
   );
 }
 

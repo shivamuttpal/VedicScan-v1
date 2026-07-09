@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 
@@ -19,9 +20,23 @@ app.set('trust proxy', 1);
 // Security middleware
 app.use(helmet());
 
+// Gzip-compress responses (JSON, PDFs) to cut bandwidth and speed up mobile/web loads.
+app.use(compression());
+
 // CORS configuration
+// SECURITY: use an explicit allowlist from FRONTEND_URL (comma-separated) instead of a
+// wildcard. Requests with no Origin header (mobile apps, curl, server-to-server) are allowed.
+// If FRONTEND_URL is unset we reflect the request origin (dev convenience) — set it in production.
+const allowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // non-browser clients
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -41,15 +56,17 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Body parsing middleware
-app.use(express.json({ 
-  limit: '10mb',
+// SECURITY: a 1 MB limit is ample for JSON API payloads (chat, profiles, charts) and
+// reduces the large-payload DoS surface. Raise per-route only if a specific endpoint needs it.
+app.use(express.json({
+  limit: '1mb',
   verify: (req: any, _res, buf) => {
     if (req.originalUrl && req.originalUrl.startsWith('/api/subscription/webhook')) {
       req.rawBody = buf;
     }
   }
 }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Logging middleware
 if (config.env !== 'test') {

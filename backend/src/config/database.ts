@@ -14,8 +14,15 @@ const connectDatabase = async (): Promise<void> => {
       ? `${config.mongo.url}${config.mongo.dbName}`
       : `${config.mongo.url}/${config.mongo.dbName}`;
 
-    await mongoose.connect(mongoUri);
-    
+    await mongoose.connect(mongoUri, {
+      // Connection pool sized for a small/growing app. ~20 concurrent sockets comfortably
+      // serves the first several thousand users on a single API instance.
+      maxPoolSize: 20,
+      minPoolSize: 2,
+      serverSelectionTimeoutMS: 8000, // fail fast if the DB is unreachable
+      socketTimeoutMS: 45000,
+    });
+
     console.log(`✅ MongoDB connected successfully to ${config.mongo.dbName}`);
 
     // Drop problematic Razorpay index if it exists (legacy)
