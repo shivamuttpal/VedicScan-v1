@@ -66,7 +66,8 @@ const Signup = () => {
     try {
       const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
       // Prepend '+' so the backend receives a proper E.164 number like +919876543210
-      const formattedPhone = phone ? `+${phone}` : undefined;
+      const cleanPhone = phone ? phone.replace(/\s+/g, '') : undefined;
+      const formattedPhone = cleanPhone ? `+${cleanPhone}` : undefined;
 
       const res = await axios.post(`${BACKEND_URL}/api/users/register`, {
         email,
@@ -129,7 +130,9 @@ const Signup = () => {
 
     try {
       const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-      const res = await axios.post(`${BACKEND_URL}/api/users/verify-phone`, { email, otp: phoneOtp });
+      const cleanPhone = phone ? phone.replace(/\s+/g, '') : undefined;
+      const formattedPhone = cleanPhone ? `+${cleanPhone}` : undefined;
+      const res = await axios.post(`${BACKEND_URL}/api/users/verify-phone`, { phone: formattedPhone, otp: phoneOtp });
 
       if (res.data?.success) {
         setPhoneVerified(true);
@@ -154,7 +157,9 @@ const Signup = () => {
 
     try {
       const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-      const res = await axios.post(`${BACKEND_URL}/api/users/resend-otp`, { email, phone });
+      const cleanPhone = phone ? phone.replace(/\s+/g, '') : undefined;
+      const formattedPhone = cleanPhone ? `+${cleanPhone}` : undefined;
+      const res = await axios.post(`${BACKEND_URL}/api/users/resend-otp`, { email, phone: formattedPhone });
 
       if (res.data?.success) {
         toast.success('New verification code sent!');
@@ -359,15 +364,15 @@ const Signup = () => {
                         <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-vtext-dim" />
                         <input
                           type="password"
-                          placeholder="Min. 6 characters"
+                          placeholder="Min. 8 characters"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           className="vedic-input pl-10"
-                          minLength={6}
+                          minLength={8}
                           required
                         />
                       </div>
-                      <p className="text-xs text-vtext-dim">Minimum 6 characters</p>
+                      <p className="text-xs text-vtext-dim">Minimum 8 characters</p>
                     </div>
 
                     <Button

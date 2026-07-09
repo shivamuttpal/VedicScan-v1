@@ -54,8 +54,8 @@ const SignupScreen = ({ navigation }) => {
       Alert.alert('Error', 'Email or phone number is required');
       return;
     }
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+    if (password.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters');
       return;
     }
 
@@ -67,7 +67,11 @@ const SignupScreen = ({ navigation }) => {
         password,
       };
       if (email.trim()) payload.email = email.trim();
-      if (formattedPhone.trim()) payload.phone = formattedPhone.trim();
+      if (formattedPhone.trim()) {
+        // Remove spaces from phone and ensure it starts with +
+        const cleanPhone = formattedPhone.trim().replace(/\s+/g, '');
+        payload.phone = cleanPhone.startsWith('+') ? cleanPhone : `+${cleanPhone}`;
+      }
 
       const res = await api.post('/api/users/register', payload);
       if (res.data?.success) {

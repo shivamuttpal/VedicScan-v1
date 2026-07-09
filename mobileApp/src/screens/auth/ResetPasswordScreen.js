@@ -14,8 +14,8 @@ const ResetPasswordScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
 
   const handleReset = async () => {
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+    if (password.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters');
       return;
     }
     if (password !== confirm) {
@@ -54,7 +54,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
             style={styles.input}
             value={password}
             onChangeText={setPassword}
-            placeholder="Min 6 characters"
+            placeholder="Min 8 characters"
             placeholderTextColor={C.textDim}
             secureTextEntry
           />
