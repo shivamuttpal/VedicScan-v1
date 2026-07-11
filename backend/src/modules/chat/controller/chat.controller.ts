@@ -57,7 +57,11 @@ export const chatController = {
               userId,
               title: message.substring(0, 50),
               messages: [],
-              metadata: { recentTopics: [], emotionalConcerns: [], tonePreference: null, messageCount: 0 }
+              metadata: { recentTopics: [], emotionalConcerns: [], tonePreference: null, messageCount: 0 },
+              lastAccessDate: new Date()
+            },
+            $set: {
+              lastAccessDate: new Date() // Update access date on each message
             }
           },
           { upsert: true, new: true }

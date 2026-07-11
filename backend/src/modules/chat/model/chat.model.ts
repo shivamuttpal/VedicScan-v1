@@ -16,6 +16,7 @@ export interface IChatSession extends Document {
     tonePreference?: string | null;
     messageCount?: number;
   };
+  lastAccessDate: Date; // Track when conversation was last accessed (for daily reset)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,7 +36,8 @@ const chatSessionSchema = new Schema<IChatSession>({
     emotionalConcerns: { type: [String], default: [] },
     tonePreference: { type: String, default: null },
     messageCount: { type: Number, default: 0 }
-  }
+  },
+  lastAccessDate: { type: Date, default: () => new Date() }
 }, { timestamps: true });
 
 // Compound unique index: the same conversationId is fine for different users.
