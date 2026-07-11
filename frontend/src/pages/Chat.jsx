@@ -134,11 +134,35 @@ const Chat = () => {
   const typingIndicatorRef = useRef(null);
   const lastUserMessageRef = useRef(null);
   const [shouldScrollToUserMessage, setShouldScrollToUserMessage] = useState(false);
+  const [limitShownToday, setLimitShownToday] = useState(false);
+
+  // Check if upgrade limit message was already shown today
+  const wasLimitShownToday = () => {
+    try {
+      const stored = localStorage.getItem('vedicScanLimitDate');
+      if (!stored) return false;
+      const storedDate = new Date(stored).toDateString();
+      const today = new Date().toDateString();
+      return storedDate === today;
+    } catch {
+      return false;
+    }
+  };
+
+  // Mark that we've shown the limit message today
+  const markLimitShownToday = () => {
+    try {
+      localStorage.setItem('vedicScanLimitDate', new Date().toISOString());
+      setLimitShownToday(true);
+    } catch {}
+  };
 
   useEffect(() => {
     fetchProfiles();
     loadChatHistoryFromDB();
     fetchUsageStats();
+    // Initialize limit check
+    setLimitShownToday(wasLimitShownToday());
   }, []);
 
   // Pre-calculate chart whenever the selected profile changes so sendMessage is instant
@@ -500,7 +524,7 @@ TODAY: ${meta?.current_date || 'N/A'} (${meta?.current_weekday || 'N/A'})
       });
 
       // Update conversation ID if new
-      if (!conversationId && response.data.conversationId) {
+      if (response.data.conversationId) {
         setConversationId(response.data.conversationId);
         localStorage.setItem('vedicScanConversationId', response.data.conversationId);
       }
@@ -531,14 +555,24 @@ TODAY: ${meta?.current_date || 'N/A'} (${meta?.current_weekday || 'N/A'})
         toast.error(errorDetail.message || 'Daily question limit reached');
         setUsage(errorDetail.usage);
 
-        const errorMessage = {
-          role: 'assistant',
-          content: `You've reached today's 3-question limit. Upgrade to Premium for more questions!\n\n<div class="mt-4 p-3 bg-saffron-pale border border-saffron-soft rounded-lg"><p class="text-sm text-saffron-600">Have feedback? Help us improve → <a href="${FEEDBACK_URL}" target="_blank" rel="noopener noreferrer" class="font-medium text-saffron hover:text-maroon underline inline-flex items-center">Send Feedback<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a></p></div>`,
-          isHtml: true
-        };
-        const updatedMessages = [...messagesWithUser, errorMessage];
-        setMessages(updatedMessages);
-        saveConversationHistory(updatedMessages);
+        // Only show the upgrade prompt if we haven't shown it today
+        const alreadyShownToday = wasLimitShownToday();
+        if (!alreadyShownToday) {
+          markLimitShownToday();
+          const errorMessage = {
+            role: 'assistant',
+            content: `You've reached today's 3-question limit. Upgrade to Premium for more questions!\n\n<div class="mt-4 p-3 bg-saffron-pale border border-saffron-soft rounded-lg"><p class="text-sm text-saffron-600">Have feedback? Help us improve → <a href="${FEEDBACK_URL}" target="_blank" rel="noopener noreferrer" class="font-medium text-saffron hover:text-maroon underline inline-flex items-center">Send Feedback<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a></p></div>`,
+            isHtml: true
+          };
+          const updatedMessages = [...messagesWithUser, errorMessage];
+          setMessages(updatedMessages);
+          saveConversationHistory(updatedMessages);
+        } else {
+          // Don't show the upgrade prompt, just show a simple message
+          const updatedMessages = [...messagesWithUser];
+          setMessages(updatedMessages);
+          saveConversationHistory(updatedMessages);
+        }
         setShouldScrollToUserMessage(true);
       } else {
         const errorMessage = {
@@ -668,12 +702,32 @@ TODAY: ${meta?.current_date || 'N/A'} (${meta?.current_weekday || 'N/A'})
                 const isLastUserMessage = message.role === 'user' &&
                   index === messages.map((m, i) => m.role === 'user' ? i : -1).filter(i => i >= 0).pop();
 
+                // Get date label for date separator
+                const getDateLabel = (id) => {
+                  const d = new Date(id);
+                  const today = new Date().toDateString();
+                  const yesterday = new Date(Date.now() - 86400000).toDateString();
+                  if (d.toDateString() === today) return 'Today';
+                  if (d.toDateString() === yesterday) return 'Yesterday';
+                  return d.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' });
+                };
+
+                // Show date separator if date changed from previous message
+                const showDateSeparator = index === 0 || getDateLabel(messages[index - 1].id || Date.now()) !== getDateLabel(message.id || Date.now());
+
                 return (
-                  <div
-                    key={index}
-                    ref={isLastUserMessage ? lastUserMessageRef : null}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
+                  <div key={index}>
+                    {showDateSeparator && (
+                      <div className="flex justify-center my-6 mb-8">
+                        <div className="bg-vborder px-4 py-2 rounded-full">
+                          <p className="text-xs font-semibold text-vtext-muted uppercase tracking-wide">{getDateLabel(message.id || Date.now())}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div
+                      ref={isLastUserMessage ? lastUserMessageRef : null}
+                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
                     <div className={`flex items-start space-x-3 max-w-3xl ${message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden ${message.role === 'user'
                           ? 'bg-maroon'
@@ -703,6 +757,7 @@ TODAY: ${meta?.current_date || 'N/A'} (${meta?.current_weekday || 'N/A'})
                           }}
                         />
                       </div>
+                    </div>
                     </div>
                   </div>
                 );

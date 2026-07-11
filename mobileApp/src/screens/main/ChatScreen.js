@@ -280,6 +280,7 @@ const ChatScreen = ({ navigation }) => {
   const [showScrollBtn, setShowScrollBtn]       = useState(false);
   const [guideIndex, setGuideIndex]             = useState(0);
   const [loadedPortraits, setLoadedPortraits]   = useState({});
+  const [limitShownToday, setLimitShownToday]   = useState(false);
 
   const markPortraitLoaded = (id) =>
     setLoadedPortraits((prev) => (prev[id] ? prev : { ...prev, [id]: true }));
@@ -292,6 +293,28 @@ const ChatScreen = ({ navigation }) => {
   // Cache keys scoped to user ID — prevents cross-account data leakage
   const histKey  = (aid) => `vedicScanChat_${userId}_${aid || 'default'}`;
   const convKey  = (aid) => `vedicScanConv_${userId}_${aid || 'default'}`;
+  const limitKey = () => `vedicScanLimitDate_${userId}`;
+
+  // Check if upgrade limit message was already shown today
+  const wasLimitShownToday = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(limitKey());
+      if (!stored) return false;
+      const storedDate = new Date(stored).toDateString();
+      const today = new Date().toDateString();
+      return storedDate === today;
+    } catch {
+      return false;
+    }
+  };
+
+  // Mark that we've shown the limit message today
+  const markLimitShownToday = async () => {
+    try {
+      await AsyncStorage.setItem(limitKey(), new Date().toISOString());
+      setLimitShownToday(true);
+    } catch {}
+  };
 
   // ── Init ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -479,17 +502,35 @@ const ChatScreen = ({ navigation }) => {
       const errMsg  = err?.response?.data?.message || '';
       const isQuota = status === 429 || status === 403 ||
                       /limit|quota|plan|subscri|upgrade/i.test(errMsg);
-      const errBubble = isQuota
-        ? {
+
+      let errBubble = null;
+
+      if (isQuota) {
+        // Only show upgrade prompt if we haven't shown it today
+        const alreadyShownToday = await wasLimitShownToday();
+        if (!alreadyShownToday) {
+          errBubble = {
             role: 'assistant', type: 'upgrade',
             content: t('chatErrLimit'),
             id: Date.now() + 1, isLastInGroup: true,
-          }
-        : {
+          };
+          await markLimitShownToday();
+        } else {
+          // Don't show upgrade bubble, just show generic error
+          errBubble = {
             role: 'assistant',
             content: t('chatErrGeneric'),
             id: Date.now() + 1, isLastInGroup: true,
           };
+        }
+      } else {
+        errBubble = {
+          role: 'assistant',
+          content: t('chatErrGeneric'),
+          id: Date.now() + 1, isLastInGroup: true,
+        };
+      }
+
       const withErr = [...newMsgs, errBubble];
       setMessages(withErr);
       saveHistory(withErr, conversationId);
@@ -516,8 +557,39 @@ const ChatScreen = ({ navigation }) => {
     ]);
   };
 
-  // ── Render message ────────────────────────────────────────────────────────
-  const renderMessage = ({ item }) => {
+  // ── Get date label for messages ────────────────────────────────────────────────
+  const getDateLabel = (id) => {
+    const d = new Date(id);
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+
+    if (d.toDateString() === today) return 'Today';
+    if (d.toDateString() === yesterday) return 'Yesterday';
+    return d.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  // ── Render message with date separator ────────────────────────────────────────────
+  const renderMessage = ({ item, index }) => {
+    const showDateSeparator = index === 0 || getDateLabel(messages[index - 1].id) !== getDateLabel(item.id);
+
+    return (
+      <View>
+        {showDateSeparator && (
+          <View style={{ alignItems: 'center', marginVertical: 16, marginTop: index === 0 ? 8 : 16 }}>
+            <View style={{ backgroundColor: '#E8DFD2', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: '#5A4A42', letterSpacing: 0.3 }}>
+                {getDateLabel(item.id)}
+              </Text>
+            </View>
+          </View>
+        )}
+        {renderMessageBubble(item)}
+      </View>
+    );
+  };
+
+  // ── Render individual message bubble ────────────────────────────────────────────
+  const renderMessageBubble = (item) => {
     const cur = astrologer || ASTROLOGERS[0];
 
     if (item.role === 'user') {
