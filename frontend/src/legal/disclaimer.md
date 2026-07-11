@@ -1,10 +1,10 @@
 # Disclaimer
 
-**Last updated: 9 July 2026**
+Last updated: 9 July 2026
 
 *May the celestial bodies guide us.* 🔱
 
-VedicScan, operated by **Vedicscan Inc.**, provides insights derived from classical Vedic
+VedicScan, operated by Vedicscan Inc., provides insights derived from classical Vedic
 astrology using a deterministic, rules-based system combined with AI-generated interpretation.
 Please read this Disclaimer carefully.
 
@@ -14,29 +14,29 @@ Please read this Disclaimer carefully.
 
 All content on VedicScan — including charts, kundalis, dashas, Sade Sati analysis, compatibility
 scores, baby-name suggestions, daily insights, and AI ("Maharshi AI") responses — is provided
-for **informational and entertainment purposes only.**
+for informational and entertainment purposes only.
 
 ## Not professional advice
 
-VedicScan **does not provide medical, psychological, legal, financial, career, or relationship
-advice**, and nothing on the Service should be treated as such. Astrology is not a science, and
-our insights are **not predictions or guarantees** of any outcome.
+VedicScan does not provide medical, psychological, legal, financial, career, or relationship
+advice, and nothing on the Service should be treated as such. Astrology is not a science, and
+our insights are not predictions or guarantees of any outcome.
 
-**Always consult a qualified professional** (doctor, lawyer, financial adviser, counsellor, etc.)
+Always consult a qualified professional (doctor, lawyer, financial adviser, counsellor, etc.)
 before making any important decision. In an emergency, contact your local emergency services.
 
 ## Accuracy
 
 We compute planetary positions using the Swiss Ephemeris with the Lahiri ayanamsa and apply
 traditional interpretive rules. While we strive for accuracy, results depend on the birth details
-you provide (especially **time and place of birth**) and on the inherent limitations of
+you provide (especially time and place of birth) and on the inherent limitations of
 astrological interpretation. We do not warrant that any insight is accurate, complete, or
 reliable.
 
 ## Your responsibility
 
 You are solely responsible for how you use the information from VedicScan and for any decisions
-you make. To the maximum extent permitted by law, **Vedicscan Inc.** disclaims all liability
+you make. To the maximum extent permitted by law, Vedicscan Inc. disclaims all liability
 for actions taken based on the Service. See our [Terms of Service](/terms) for the full
 limitation of liability.
 

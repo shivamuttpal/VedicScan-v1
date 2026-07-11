@@ -482,24 +482,24 @@ const Profile = () => {
 
           {/* Danger Zone — account deletion */}
           {!showForm && (
-            <div className="mt-12 max-w-2xl mx-auto">
-              <div className="rounded-xl border border-red-200 bg-red-50/60 p-6">
-                <h3 className="text-lg font-semibold text-red-700 mb-1">Delete Account</h3>
-                <p className="text-sm text-red-600/80 mb-4">
-                  Permanently delete your account and all associated data — birth profiles, kundalis,
-                  and chat history. This action cannot be undone.
-                </p>
-                <Button
-                  onClick={handleDeleteAccount}
-                  disabled={deletingAccount}
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  {deletingAccount ? 'Deleting…' : 'Delete my account'}
-                </Button>
-                <p className="text-xs text-gray-500 mt-3">
-                  See our <a href="/data-deletion" className="underline hover:text-gold">Data Deletion Policy</a>.
-                </p>
+            <div className="mt-8 max-w-2xl mx-auto">
+              <div className="rounded-lg border border-red-200 bg-red-50/40 px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-sm font-semibold text-red-700">Delete Account</h3>
+                    <p className="text-xs text-red-600/70 mt-0.5">
+                      Permanently delete your account and data. <a href="/data-deletion" className="underline hover:text-red-700">Learn more</a>
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleDeleteAccount}
+                    disabled={deletingAccount}
+                    className="bg-red-600 hover:bg-red-700 text-white text-xs py-1.5 px-3 h-auto ml-3 flex-shrink-0"
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    {deletingAccount ? 'Deleting…' : 'Delete'}
+                  </Button>
+                </div>
               </div>
             </div>
           )}

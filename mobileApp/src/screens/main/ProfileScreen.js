@@ -501,17 +501,19 @@ const ProfileScreen = ({ route, navigation }) => {
 
               {/* Danger Zone — delete account */}
               <View style={styles.dangerSection}>
-                <Text style={styles.dangerHeading}>Delete Account</Text>
-                <Text style={styles.dangerText}>
-                  Permanently delete your account and all associated data. This cannot be undone.
-                </Text>
-                <TouchableOpacity
-                  style={styles.dangerBtn}
-                  onPress={handleDeleteAccount}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.dangerBtnText}>🗑️  Delete my account</Text>
-                </TouchableOpacity>
+                <View style={styles.dangerContent}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.dangerHeading}>Delete Account</Text>
+                    <Text style={styles.dangerText}>Remove all data permanently</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.dangerBtn}
+                    onPress={handleDeleteAccount}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.dangerBtnText}>🗑️</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </>
           )}
@@ -559,22 +561,27 @@ const styles = StyleSheet.create({
 
   // Danger zone
   dangerSection: {
-    marginTop: 20,
+    marginTop: 16,
     backgroundColor: '#FDEDED',
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: '#F5C6C6',
-    padding: 16,
+    padding: 12,
   },
-  dangerHeading: { fontSize: fontSize.md, fontWeight: '700', color: '#B42318', marginBottom: 4 },
-  dangerText: { fontSize: fontSize.sm, color: '#B4483E', lineHeight: 18, marginBottom: 12 },
+  dangerContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  dangerHeading: { fontSize: fontSize.sm, fontWeight: '700', color: '#B42318', marginBottom: 2 },
+  dangerText: { fontSize: fontSize.xs, color: '#B4483E', lineHeight: 14 },
   dangerBtn: {
     backgroundColor: '#D92D20',
-    borderRadius: radius.md,
-    paddingVertical: 12,
+    borderRadius: radius.sm,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
     alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 44,
+    minHeight: 44,
   },
-  dangerBtnText: { color: C.white, fontSize: fontSize.md, fontWeight: '700' },
+  dangerBtnText: { color: C.white, fontSize: fontSize.lg, fontWeight: '700' },
   header: {
     paddingTop: Platform.OS === 'ios' ? 55 : 45, paddingBottom: 16, paddingHorizontal: spacing.lg,
     borderBottomLeftRadius: 25, borderBottomRightRadius: 25,
