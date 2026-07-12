@@ -256,6 +256,7 @@ const ProfileScreen = ({ route, navigation }) => {
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 160 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.saffron} />}
       >
         <View style={styles.body}>
@@ -518,7 +519,7 @@ const ProfileScreen = ({ route, navigation }) => {
             </>
           )}
 
-          <View style={{ height: 40 }} />
+          <View style={{ height: 100 }} />
         </View>
       </ScrollView>
     </View>

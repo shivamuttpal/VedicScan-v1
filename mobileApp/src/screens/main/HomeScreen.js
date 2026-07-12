@@ -453,7 +453,7 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
 
       {/* ── SIDE DRAWER ── */}
@@ -540,7 +540,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F4EE',
   },
   scrollContent: {
-    paddingBottom: 0,
+    paddingBottom: 160,
   },
 
   // ── HERO ──

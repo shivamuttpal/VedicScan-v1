@@ -197,6 +197,24 @@ const DR: Record<string, { mantras: Array<{ text: string; instruction: string }>
     fasting: "Purnima (Full Moon) fast observed by both partners together — with joint Satyanarayan Katha or Vishnu Puja on each full moon. This shared ritual creates powerful marital harmony and mitigates Bhakut effects.",
     charity: "Donate white clothing, silver items, or white sesame seeds (shwet til) to a Brahmin or temple on Mondays and on every Purnima. Feeding white cows and offering white sweets in temples on full moon days is highly auspicious.",
   },
+  "Mangal Dosha": {
+    mantras: [
+      { text: "Om Kram Krim Kraum Sah Bhaumaya Namah", instruction: "Mangal (Mars) Beeja Mantra — chant 108 times on Tuesdays, ideally facing the rising sun" },
+      { text: "Om Han Hanumate Rudratmakaya Hum Phat", instruction: "Hanuman Mantra — recite the Hanuman Chalisa daily and this mantra 108 times on Tuesdays" },
+    ],
+    puja: "Kuja (Mangal) Dosha Nivarana Puja / Mangal Shanti should be performed by a learned priest — ideally at a Hanuman or Subrahmanya temple, or at Mangalnath (Ujjain). It involves Mars-specific havan with red offerings (red lentils, red flowers, jaggery) and recitation of the Mangal Stotra. Where only one partner is Manglik, a Kumbh Vivah or symbolic remedial rite may be advised before the wedding.",
+    cancellation: [
+      "If both partners are Manglik, the dosha is mutually cancelled",
+      "If Mars is in its own sign (Aries/Scorpio) or exalted (Capricorn)",
+      "If Mars is aspected by or conjunct Jupiter or a strong benefic",
+      "If the Manglik house falls in signs owned by benefics for that Lagna",
+      "As the native ages (the intensity of Mangal Dosha is held to reduce after 28)",
+      "When the Kuja Dosha Shanti Puja is duly performed before the wedding",
+    ],
+    gemstone: "Red Coral (Moonga) — 6 to 9 carats, set in gold or copper, worn on the ring finger of the right hand on a Tuesday. Energize in raw milk and Ganges water at sunrise and wear after reciting the Mangal mantra 108 times. Consult an astrologer before wearing.",
+    fasting: "Tuesday (Mangalvar) Vrat — fast on Tuesdays, offer red flowers and sindoor to Lord Hanuman, and donate red lentils (masoor dal) and jaggery. Observe for a series of consecutive Tuesdays before the wedding.",
+    charity: "Donate red items — red cloth, red lentils, copper, jaggery — to a temple or the needy on Tuesdays. Feeding monkeys and serving at a Hanuman temple are traditionally prescribed for pacifying Mars.",
+  },
 };
 
 const LOGO_PATH = path.join(__dirname, '../../../../assets/logo.png');
@@ -720,7 +738,7 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
       const sevBg = dosha.severity === "High" ? C.redBg : dosha.severity === "Medium" ? C.amberBg : C.greenBg;
       const rem = getDR(dosha.dosha_name, lang, DR[dosha.dosha_name]);
       const txt = doshaText(dosha.dosha_name, lang, { description: dosha.description, classical_reference: dosha.classical_reference });
-      const doshaName = lang === "hi" ? ({ "Nadi Dosha": "नाड़ी दोष", "Bhakut Dosha": "भकूट दोष" } as Record<string, string>)[dosha.dosha_name] || dosha.dosha_name : dosha.dosha_name;
+      const doshaName = lang === "hi" ? ({ "Nadi Dosha": "नाड़ी दोष", "Bhakut Dosha": "भकूट दोष", "Mangal Dosha": "मंगल दोष" } as Record<string, string>)[dosha.dosha_name] || dosha.dosha_name : dosha.dosha_name;
 
       // Header
       doc.save().roundedRect(ML, y, W, 26, 6).fill(sevBg).restore();
@@ -823,7 +841,7 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
     d.doshas.forEach(dosha => {
       const rem = getDR(dosha.dosha_name, lang, DR[dosha.dosha_name]);
       if (!rem) return;
-      const doshaName = lang === "hi" ? ({ "Nadi Dosha": "नाड़ी दोष", "Bhakut Dosha": "भकूट दोष" } as Record<string, string>)[dosha.dosha_name] || dosha.dosha_name : dosha.dosha_name;
+      const doshaName = lang === "hi" ? ({ "Nadi Dosha": "नाड़ी दोष", "Bhakut Dosha": "भकूट दोष", "Mangal Dosha": "मंगल दोष" } as Record<string, string>)[dosha.dosha_name] || dosha.dosha_name : dosha.dosha_name;
 
       doc.save().font(SANS_B).fontSize(9).fillColor(C.red)
         .text(doshaName + S.prescribedRemedies, ML, y, { lineBreak: false }).restore();

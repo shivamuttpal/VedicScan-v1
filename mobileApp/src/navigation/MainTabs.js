@@ -61,7 +61,7 @@ const MainTabs = () => {
       tabBarShowLabel: false,
       tabBarHideOnKeyboard: true,
       tabBarItemStyle: {
-        height: 64,
+        height: 76,
         justifyContent: 'center',
         alignItems: 'center',
       },
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   left: 28,
   right: 28,
   bottom: Platform.OS === 'ios' ? 26 : 14,
-  height: 72,
+  height: 88,
   borderRadius: 28,
   backgroundColor: '#FFFFFF',
   borderTopWidth: 0,
@@ -146,8 +146,8 @@ const styles = StyleSheet.create({
 
 
   paddingHorizontal: 4,
-  paddingTop: 16,
-  paddingBottom: 8,
+  paddingTop: 12,
+  paddingBottom: 12,
 
   shadowColor: '#1A0A00',
   shadowOffset: { width: 0, height: 8 },

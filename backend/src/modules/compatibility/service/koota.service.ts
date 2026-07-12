@@ -31,7 +31,7 @@ export interface NakshatraData {
 export const NAKSHATRA_TABLE: Record<string, NakshatraData> = {
     "Ashwini":           { name: "Ashwini",           rashi: "Mesha",      rashi_english: "Aries",       varna: "Kshatriya", vashya: "Chatushpad", yoni: "Ashwa",   gana: "Deva",      nadi: "Aadi",   lord: "Ketu"    },
     "Bharani":           { name: "Bharani",            rashi: "Mesha",      rashi_english: "Aries",       varna: "Kshatriya", vashya: "Chatushpad", yoni: "Gaja",    gana: "Manushya",  nadi: "Madhya", lord: "Venus"   },
-    "Krittika":          { name: "Krittika",           rashi: "Vrishabha",  rashi_english: "Taurus",      varna: "Vaishya",   vashya: "Chatushpad", yoni: "Aja",     gana: "Rakshasa",  nadi: "Antya",  lord: "Sun"     },
+    "Krittika":          { name: "Krittika",           rashi: "Vrishabha",  rashi_english: "Taurus",      varna: "Vaishya",   vashya: "Chatushpad", yoni: "Mesha",   gana: "Rakshasa",  nadi: "Antya",  lord: "Sun"     },
     "Rohini":            { name: "Rohini",             rashi: "Vrishabha",  rashi_english: "Taurus",      varna: "Vaishya",   vashya: "Chatushpad", yoni: "Sarpa",   gana: "Manushya",  nadi: "Antya",  lord: "Moon"    },
     "Mrigashira":        { name: "Mrigashira",         rashi: "Mithuna",    rashi_english: "Gemini",      varna: "Shudra",    vashya: "Manav",      yoni: "Sarpa",   gana: "Deva",      nadi: "Madhya", lord: "Mars"    },
     "Ardra":             { name: "Ardra",              rashi: "Mithuna",    rashi_english: "Gemini",      varna: "Shudra",    vashya: "Manav",      yoni: "Shwan",   gana: "Manushya",  nadi: "Aadi",   lord: "Rahu"    },
@@ -72,17 +72,53 @@ const PLANETARY_FRIENDSHIP: Record<string, Record<string, number>> = {
     "Ketu":    { "Sun": 0, "Moon": 0.5, "Mars": 1,   "Mercury": 0,   "Jupiter": 0.5, "Venus": 1,   "Saturn": 0.5, "Rahu": 0,   "Ketu": 1   },
 };
 
-// ─── Yoni: 7 classical enemy pairs (both directions) ─────────────────────────
-// Classical sources: Ashwa-Mahish, Gaja-Simha, Aja-Vanar, Sarpa-Nakul,
-// Shwan-Mruiga, Marjar-Mushak, Gau-Vyaghra
-const YONI_ENEMIES: Record<string, string> = {
-    "Ashwa": "Mahish", "Mahish": "Ashwa",
-    "Gaja":  "Simha",  "Simha":  "Gaja",
-    "Aja":   "Vanar",  "Vanar":  "Aja",
-    "Sarpa": "Nakul",  "Nakul":  "Sarpa",
-    "Shwan": "Mruiga", "Mruiga": "Shwan",
-    "Marjar":"Mushak", "Mushak": "Marjar",
-    "Gau":   "Vyaghra","Vyaghra":"Gau",
+// ─── Yoni Kuta: full classical 14×14 compatibility matrix (0–4 points) ────────
+// Values follow the standard Brihat Parashara Hora Shastra Yoni Koota table
+// as reproduced in mainstream Vedic software:
+//   4 = same yoni · 3 = friendly · 2 = neutral · 1 = enemy · 0 = mortal (sworn) enemy
+// The 14 yonis (animal symbols) and the seven mortal-enemy pairs (score 0) are:
+//   Ashwa–Mahish, Gaja–Simha, Mesha–Vanar, Sarpa–Nakul,
+//   Shwan–Mruiga, Marjar–Mushak, Gau–Vyaghra
+// The matrix is symmetric; each row/column is indexed by YONI_ORDER below.
+const YONI_ORDER = [
+    "Ashwa", "Gaja", "Mesha", "Sarpa", "Shwan", "Marjar", "Mushak",
+    "Gau", "Mahish", "Vyaghra", "Mruiga", "Vanar", "Nakul", "Simha",
+] as const;
+
+const YONI_MATRIX: number[][] = [
+    /* Ashwa   */ [4, 2, 2, 3, 2, 2, 2, 1, 0, 1, 3, 3, 2, 2],
+    /* Gaja    */ [2, 4, 3, 3, 2, 2, 2, 2, 3, 1, 2, 3, 2, 0],
+    /* Mesha   */ [2, 3, 4, 2, 2, 1, 2, 3, 3, 2, 3, 0, 3, 2],
+    /* Sarpa   */ [3, 3, 2, 4, 2, 1, 1, 2, 2, 2, 2, 2, 0, 2],
+    /* Shwan   */ [2, 2, 2, 2, 4, 2, 1, 2, 2, 1, 0, 2, 1, 1],
+    /* Marjar  */ [2, 2, 1, 1, 2, 4, 0, 2, 2, 1, 2, 2, 3, 2],
+    /* Mushak  */ [2, 2, 2, 1, 1, 0, 4, 2, 2, 2, 2, 2, 2, 1],
+    /* Gau     */ [1, 2, 3, 2, 2, 2, 2, 4, 3, 0, 3, 2, 2, 2],
+    /* Mahish  */ [0, 3, 3, 2, 2, 2, 2, 3, 4, 2, 2, 2, 2, 2],
+    /* Vyaghra */ [1, 1, 2, 2, 1, 1, 2, 0, 2, 4, 2, 2, 2, 1],
+    /* Mruiga  */ [3, 2, 3, 2, 0, 2, 2, 3, 2, 2, 4, 3, 2, 2],
+    /* Vanar   */ [3, 3, 0, 2, 2, 2, 2, 2, 2, 2, 3, 4, 3, 2],
+    /* Nakul   */ [2, 2, 3, 0, 1, 3, 2, 2, 2, 2, 2, 3, 4, 2],
+    /* Simha   */ [2, 0, 2, 2, 1, 2, 1, 2, 2, 1, 2, 2, 2, 4],
+];
+
+// ─── Moon-sign (Rashi) lords — used by Graha Maitri ──────────────────────────
+// Graha Maitri compares the friendship between the lords of the two Moon RASHIS
+// (signs), not the Nakshatra (Vimshottari) lords. Keyed by both Sanskrit and
+// English rashi names for safety.
+const SIGN_LORD: Record<string, string> = {
+    "Mesha": "Mars",      "Aries": "Mars",
+    "Vrishabha": "Venus", "Taurus": "Venus",
+    "Mithuna": "Mercury", "Gemini": "Mercury",
+    "Karka": "Moon",      "Cancer": "Moon",
+    "Simha": "Sun",       "Leo": "Sun",
+    "Kanya": "Mercury",   "Virgo": "Mercury",
+    "Tula": "Venus",      "Libra": "Venus",
+    "Vrishchika": "Mars", "Scorpio": "Mars",
+    "Dhanu": "Jupiter",   "Sagittarius": "Jupiter",
+    "Makara": "Saturn",   "Capricorn": "Saturn",
+    "Kumbha": "Saturn",   "Aquarius": "Saturn",
+    "Meena": "Jupiter",   "Pisces": "Jupiter",
 };
 
 export class KootaService {
@@ -109,8 +145,8 @@ export class KootaService {
         scores.push({ koota: "Yoni", score: yoniScore, max_score: 4,
             description: "Physical and temperamental compatibility", passed: yoniScore >= 2 });
 
-        // 5. Maitri / Graha Maitri (max 5)
-        const maitriScore = this.calcMaitri(boyN.lord, girlN.lord);
+        // 5. Maitri / Graha Maitri (max 5) — uses Moon-sign (Rashi) lords
+        const maitriScore = this.calcMaitri(this.signLordOf(boyN.rashi), this.signLordOf(girlN.rashi));
         scores.push({ koota: "Maitri", score: maitriScore, max_score: 5,
             description: "Planetary friendship and psychological bond", passed: maitriScore >= 3 });
 
@@ -183,11 +219,17 @@ export class KootaService {
     }
 
     // ── 4. Yoni ───────────────────────────────────────────────────────────────
-    // Same yoni = 4, classical enemy pair = 0, all other combinations = 2.
+    // Full classical 14×14 Yoni Kuta matrix (same=4 … mortal enemy=0).
     private static calcYoni(boy: string, girl: string): number {
-        if (boy === girl) return 4;
-        if (YONI_ENEMIES[boy] === girl) return 0;
-        return 2; // neutral
+        const b = YONI_ORDER.indexOf(boy as any);
+        const g = YONI_ORDER.indexOf(girl as any);
+        if (b === -1 || g === -1) return boy === girl ? 4 : 2; // safety fallback
+        return YONI_MATRIX[b][g];
+    }
+
+    // Resolve a Moon-sign lord from a rashi name (Sanskrit or English).
+    private static signLordOf(rashi: string): string {
+        return SIGN_LORD[rashi] ?? '';
     }
 
     // ── 5. Maitri (Graha Maitri) ──────────────────────────────────────────────

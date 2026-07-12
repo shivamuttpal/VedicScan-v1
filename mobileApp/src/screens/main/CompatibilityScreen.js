@@ -550,7 +550,7 @@ const CompatibilityScreen = ({ navigation }) => {
       </View>
 
       <TouchableOpacity style={styles.mainCheckBtn} onPress={checkCompatibility} disabled={loading} activeOpacity={0.8}>
-        <LinearGradient colors={['#9C6275', '#B77B82']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.mainCheckBtnGrad}>
+        <LinearGradient colors={['#6A1039', '#8B1F48']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.mainCheckBtnGrad}>
           {loading ? <ActivityIndicator color={C.white} /> : <Text style={styles.mainCheckBtnText}>{t('compatCheck')}</Text>}
         </LinearGradient>
       </TouchableOpacity>
@@ -744,10 +744,10 @@ const CompatibilityScreen = ({ navigation }) => {
               <View style={styles.languageDivider} />
               <Text style={[styles.languageOption, language === 'hi' && styles.languageOptionActive]}>हिं</Text>
             </TouchableOpacity>
-            <View style={styles.headerPill}>
+            {/* <View style={styles.headerPill}>
               <Ionicons name="sparkles-outline" size={13} color="#A87861" />
               <Text style={styles.headerPillText}>{t('compatAshtaKoota')}</Text>
-            </View>
+            </View> */}
           </View>
         </View>
         <View style={styles.headerIcon}>

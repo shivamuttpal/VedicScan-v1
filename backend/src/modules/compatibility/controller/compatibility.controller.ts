@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { KootaService, NAKSHATRA_TABLE } from '../service/koota.service';
 import { calculateNakshatra } from '../service/astronomical';
 import { generateCompatibilityPDF } from '../services/compatibility.pdf.service';
+import { getMarsContext, MarsContext } from '../../chart/services/chartEngine.service';
 import { AuthRequest } from '../../../middlewares/auth.middleware';
 import { User } from '../../user/model/user.model';
 import { UserUsage } from '../../subscription/model/subscription.model';
@@ -54,6 +55,65 @@ const detectDoshas = (boyN: any, girlN: any, gunaMilan: any) => {
     return doshas;
 };
 
+// Houses (from Lagna) that place Mars in a Manglik/Kuja Dosha position.
+const MANGAL_DOSHA_HOUSES = [1, 2, 4, 7, 8, 12];
+// Mars in own/exalted sign softens the dosha.
+const MARS_STRONG_SIGNS = ['Aries', 'Scorpio', 'Capricorn'];
+
+const isManglik = (mars: MarsContext | null) =>
+    !!mars && MANGAL_DOSHA_HOUSES.includes(mars.house);
+
+/**
+ * Detect Mangal (Kuja) Dosha for the couple using each person's actual Mars
+ * house position (computed via the sidereal chart engine). Best-effort: if a
+ * chart cannot be computed the person is treated as "unknown" and no false
+ * dosha is reported. Applies the classical mutual-cancellation rule (when BOTH
+ * partners are Manglik the dosha is neutralised).
+ */
+const detectManglikDoshas = async (boy: any, girl: any) => {
+    const [boyMars, girlMars] = await Promise.all([
+        getMarsContext(boy),
+        getMarsContext(girl),
+    ]);
+
+    const boyManglik = isManglik(boyMars);
+    const girlManglik = isManglik(girlMars);
+    if (!boyManglik && !girlManglik) return [];
+
+    const bothManglik = boyManglik && girlManglik;
+    const strong = (m: MarsContext | null) => !!m && MARS_STRONG_SIGNS.includes(m.rashi);
+
+    // Severity: mutual cancellation → Low; Mars in 7th/8th → High; else Medium.
+    // Own/exalted Mars softens by one level.
+    let severity: 'High' | 'Medium' | 'Low';
+    if (bothManglik) {
+        severity = 'Low';
+    } else {
+        const m = boyManglik ? boyMars! : girlMars!;
+        const heavy = m.house === 7 || m.house === 8;
+        severity = heavy ? (strong(m) ? 'Medium' : 'High') : 'Medium';
+    }
+
+    const who = bothManglik ? 'Both partners' : (boyManglik ? (boy.name || 'The groom') : (girl.name || 'The bride'));
+    const houseOf = (m: MarsContext | null) => (m ? `${m.house}th house` : '');
+
+    let description: string;
+    if (bothManglik) {
+        description = `${boy.name || 'The groom'} has Mars in the ${houseOf(boyMars)} and ${girl.name || 'the bride'} has Mars in the ${houseOf(girlMars)} — both partners are Manglik. Classically, when both individuals carry Mangal Dosha the affliction is mutually neutralised (Manglik–Manglik cancellation), and the union is considered safe from the dosha's adverse effects.`;
+    } else {
+        const m = boyManglik ? boyMars! : girlMars!;
+        description = `${who} is Manglik — Mars is placed in the ${houseOf(m)} from the Lagna, one of the positions (1, 2, 4, 7, 8, 12) that create Mangal Dosha. As only one partner is Manglik, classical texts advise remedial measures before marriage to balance the Mars energy.${strong(m) ? ' Partial cancellation applies as Mars is in its own or exalted sign.' : ''}`;
+    }
+
+    return [{
+        dosha_name: 'Mangal Dosha',
+        severity,
+        description,
+        classical_reference: 'Mangal (Kuja) Dosha is assessed from the placement of Mars relative to the Lagna (and, in stricter analysis, the Moon and Venus). Mars in the 1st, 2nd, 4th, 7th, 8th or 12th house is held to stress marital harmony. Brihat Parashara Hora Shastra and Muhurta texts note mutual cancellation when both partners are Manglik, and softening when Mars occupies its own or exalted sign.',
+        cancellable: true,
+    }];
+};
+
 export const compatibilityController = {
     async analyze(req: Request, res: Response) {
         try {
@@ -69,6 +129,11 @@ export const compatibilityController = {
 
             const gunaMilan = KootaService.analyze(boyN, girlN);
             const doshas = detectDoshas(boyN, girlN, gunaMilan);
+            // Manglik (Kuja Dosha) — requires each person's Mars house from the
+            // full chart engine. Best-effort so a chart failure never breaks the
+            // koota result (which is what the old code always returned).
+            const manglikDoshas = await detectManglikDoshas(boy, girl);
+            doshas.push(...manglikDoshas);
             const remedy_triggers = doshas.map(d => ({ dosha: d.dosha_name, severity: d.severity }));
 
             res.json({
@@ -150,6 +215,8 @@ export const compatibilityController = {
             const girlN = getNakshatraForPerson(girl);
             const gunaMilan = KootaService.analyze(boyN, girlN);
             const doshas = detectDoshas(boyN, girlN, gunaMilan);
+            const manglikDoshas = await detectManglikDoshas(boy, girl);
+            doshas.push(...manglikDoshas);
 
             const pdfBuffer = await generateCompatibilityPDF({
                 boy,
