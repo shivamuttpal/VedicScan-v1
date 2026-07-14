@@ -32,6 +32,7 @@ export interface CompatibilityPDFInput {
     dosha_name: string;
     severity: string;
     description: string;
+    description_hi?: string; // dynamic Hindi description (keeps HI report in sync with EN)
     classical_reference: string;
     cancellable: boolean;
   }>;
@@ -273,6 +274,21 @@ function pageHeader(doc: InstanceType<typeof PDFDocument>, lang: Lang = "en") {
   hRule(doc, ML, 34, W, C.rule, 0.4);
 }
 
+// Vertical limit for flowing content on a standard (cream) content page — leaves
+// room for the footer rule/text at PH - 30.
+const CONTENT_BOTTOM = PH - 44;
+
+// Start a fresh cream content page (background + watermark + running header) for
+// variable-length sections that overflow (Dosha / Remedies). Footers are stamped
+// later in a single buffered pass, so none is drawn here. Returns the top y.
+function newContentPage(doc: InstanceType<typeof PDFDocument>, lang: Lang = "en"): number {
+  doc.addPage();
+  doc.rect(0, 0, PW, PH).fill(C.cream);
+  drawWatermark(doc);
+  pageHeader(doc, lang);
+  return 48;
+}
+
 // ─── Watermark ───────────────────────────────────────────────────────────────
 function drawWatermark(doc: InstanceType<typeof PDFDocument>, isDark = false) {
   try {
@@ -467,7 +483,6 @@ function drawSummaryPage(doc: InstanceType<typeof PDFDocument>, d: Compatibility
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
   pageHeader(doc, lang);
-  pageFooter(doc, 2, 11, lang);
 
   let y = 48;
 
@@ -607,7 +622,6 @@ function drawGunaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPDF
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
   pageHeader(doc, lang);
-  pageFooter(doc, pageNum, 11, lang);
 
   const kootas = d.gunaMilan.koota_breakdown.slice(from, to);
   let y = 48;
@@ -698,9 +712,9 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
   pageHeader(doc, lang);
-  pageFooter(doc, 7, 11, lang);
 
   let y = 48;
+  const ensureSpace = (needed: number) => { if (y + needed > CONTENT_BOTTOM) y = newContentPage(doc, lang); };
 
   doc.save().font(SERIF_B).fontSize(17).fillColor(C.maroon)
     .text(S.doshaTitle, ML, y, { width: W, lineBreak: false }).restore();
@@ -737,8 +751,17 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
       const sevColor = dosha.severity === "High" ? C.red : dosha.severity === "Medium" ? C.amber : C.green;
       const sevBg = dosha.severity === "High" ? C.redBg : dosha.severity === "Medium" ? C.amberBg : C.greenBg;
       const rem = getDR(dosha.dosha_name, lang, DR[dosha.dosha_name]);
-      const txt = doshaText(dosha.dosha_name, lang, { description: dosha.description, classical_reference: dosha.classical_reference });
+      const txt = doshaText(dosha.dosha_name, lang, { description: dosha.description, classical_reference: dosha.classical_reference, description_hi: dosha.description_hi });
       const doshaName = lang === "hi" ? ({ "Nadi Dosha": "नाड़ी दोष", "Bhakut Dosha": "भकूट दोष", "Mangal Dosha": "मंगल दोष" } as Record<string, string>)[dosha.dosha_name] || dosha.dosha_name : dosha.dosha_name;
+
+      // Keep each dosha's header + description + classical block together; break
+      // to a new page first if the upper block would not fit.
+      const cancelH = rem ? 16 + rem.cancellation.reduce((s, c) => s + doc.heightOfString(c, { width: W - 16 }) + 5, 0) : 0;
+      const blockH = 32
+        + 14 + doc.heightOfString(txt.description, { width: W }) + 8
+        + 14 + doc.heightOfString(txt.classical_reference, { width: W }) + 14
+        + cancelH + 36;
+      ensureSpace(Math.min(blockH, CONTENT_BOTTOM - 48));
 
       // Header
       doc.save().roundedRect(ML, y, W, 26, 6).fill(sevBg).restore();
@@ -772,9 +795,11 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
           .text(S.cancellationConditions, ML, y, { width: W, lineBreak: false }).restore();
         y += 16;
         rem.cancellation.forEach(cond => {
+          const condH = doc.heightOfString(cond, { width: W - 16 });
+          ensureSpace(condH + 5);
           doc.save().font(SERIF).fontSize(7.5).fillColor(C.muted).text("-", ML, y, { lineBreak: false }).restore();
           doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft).text(cond, ML + 16, y, { width: W - 16 }).restore();
-          y += doc.heightOfString(cond, { width: W - 16 }) + 5;
+          y += condH + 5;
         });
       }
       y += 20;
@@ -784,6 +809,7 @@ function drawDoshaPage(doc: InstanceType<typeof PDFDocument>, d: CompatibilityPD
   }
 
   // Note
+  ensureSpace(72);
   doc.save().roundedRect(ML, y, W, 60, 6).fill(C.creamAlt).restore();
   doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon)
     .text(S.importantNoteDosha, ML + 14, y + 10, { lineBreak: false }).restore();
@@ -798,9 +824,9 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
   pageHeader(doc, lang);
-  pageFooter(doc, 8, 11, lang);
 
   let y = 48;
+  const ensureSpace = (needed: number) => { if (y + needed > CONTENT_BOTTOM) y = newContentPage(doc, lang); };
 
   doc.save().font(SERIF_B).fontSize(17).fillColor(C.maroon)
     .text(S.remediesTitle, ML, y, { width: W, lineBreak: false }).restore();
@@ -813,11 +839,13 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
 
   // General remedies always shown
   generalRemedies(lang).forEach(section => {
+    ensureSpace(16 + 44);
     doc.save().font(SANS_B).fontSize(8.5).fillColor(C.maroon)
       .text(lang === "hi" ? section.section : section.section.toUpperCase(), ML, y, { characterSpacing: lang === "hi" ? 0 : 0.5, lineBreak: false }).restore();
     y += 16;
 
     section.items.forEach(item => {
+      ensureSpace(44);
       doc.save().roundedRect(ML, y, W, 38, 5).fill(C.white).restore();
       doc.save().strokeColor(C.rule).lineWidth(0.4).roundedRect(ML, y, W, 38, 5).stroke().restore();
       doc.save().roundedRect(ML, y, 4, 38, 2).fill(C.gold).restore();
@@ -832,8 +860,16 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
 
   // Dosha-specific remedies
   if (d.doshas.length > 0) {
-    hRule(doc, ML, y, W, C.rule, 0.4);
-    y += 12;
+    // The general remedies above already fill most of the page, and each dosha's
+    // remedy block is long. Start this section on a fresh page (unless we are
+    // still near the top) so the header stays with its content and a short tail
+    // no longer spills onto a near-empty page.
+    if (y > 120) {
+      y = newContentPage(doc, lang);
+    } else {
+      hRule(doc, ML, y, W, C.rule, 0.4);
+      y += 12;
+    }
     doc.save().font(SERIF_B).fontSize(13).fillColor(C.maroon)
       .text(S.doshaSpecificRemedies, ML, y, { lineBreak: false }).restore();
     y += 18;
@@ -843,37 +879,66 @@ function drawRemediesPage(doc: InstanceType<typeof PDFDocument>, d: Compatibilit
       if (!rem) return;
       const doshaName = lang === "hi" ? ({ "Nadi Dosha": "नाड़ी दोष", "Bhakut Dosha": "भकूट दोष", "Mangal Dosha": "मंगल दोष" } as Record<string, string>)[dosha.dosha_name] || dosha.dosha_name : dosha.dosha_name;
 
+      // Estimate the whole block (title + mantras + puja + gemstone + fasting +
+      // charity) and break to a fresh page up-front if it will not fit — this
+      // keeps each dosha's remedies together and avoids splitting off a tiny,
+      // near-blank tail page. Capped at a page so an oversized block still flows.
+      let blockH = 16;
+      rem.mantras.forEach(m => {
+        doc.font(SERIF_B).fontSize(11);
+        const tH = doc.heightOfString(m.text, { width: W - 24 });
+        doc.font(SANS).fontSize(8);
+        const iH = doc.heightOfString(m.instruction, { width: W - 24 });
+        blockH += Math.max(46, 6 + tH + 4 + iH + 8) + 6;
+      });
+      doc.font(SERIF).fontSize(9);
+      blockH += 8
+        + 13 + doc.heightOfString(rem.puja, { width: W }) + 10
+        + 13 + doc.heightOfString(rem.gemstone, { width: W }) + 10
+        + 13 + doc.heightOfString(rem.fasting, { width: W }) + 10
+        + doc.heightOfString(rem.charity, { width: W }) + 16;
+      ensureSpace(Math.min(blockH, CONTENT_BOTTOM - 48));
       doc.save().font(SANS_B).fontSize(9).fillColor(C.red)
         .text(doshaName + S.prescribedRemedies, ML, y, { lineBreak: false }).restore();
       y += 16;
 
       rem.mantras.forEach(m => {
-        doc.save().roundedRect(ML, y, W, 46, 5).fill(C.creamAlt).restore();
+        const textH = doc.heightOfString(m.text, { width: W - 24 });
+        const instrH = doc.heightOfString(m.instruction, { width: W - 24 });
+        const boxH = Math.max(46, 6 + textH + 4 + instrH + 8);
+        ensureSpace(boxH + 6);
+        doc.save().roundedRect(ML, y, W, boxH, 5).fill(C.creamAlt).restore();
         doc.save().font(SERIF_B).fontSize(11).fillColor(C.maroon)
           .text(m.text, ML + 12, y + 6, { width: W - 24 }).restore();
-        const textH = doc.heightOfString(m.text, { width: W - 24 });
         doc.save().font(SANS).fontSize(8).fillColor(C.muted)
-          .text(m.instruction, ML + 12, y + 8 + textH, { width: W - 24, lineBreak: false }).restore();
-        y += Math.max(46, textH + 24);
+          .text(m.instruction, ML + 12, y + 10 + textH, { width: W - 24 }).restore();
+        y += boxH + 6;
       });
       y += 8;
 
+      const pujaH = doc.heightOfString(rem.puja, { width: W });
+      ensureSpace(13 + pujaH + 10);
       doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon).text(S.puja, ML, y, { lineBreak: false }).restore();
       y += 13;
       doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft).text(rem.puja, ML, y, { width: W }).restore();
-      y += doc.heightOfString(rem.puja, { width: W }) + 10;
+      y += pujaH + 10;
 
+      const gemH = doc.heightOfString(rem.gemstone, { width: W });
+      ensureSpace(13 + gemH + 10);
       doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon).text(S.gemstone, ML, y, { lineBreak: false }).restore();
       y += 13;
       doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft).text(rem.gemstone, ML, y, { width: W }).restore();
-      y += doc.heightOfString(rem.gemstone, { width: W }) + 10;
+      y += gemH + 10;
 
+      const fastH = doc.heightOfString(rem.fasting, { width: W });
+      const charH = doc.heightOfString(rem.charity, { width: W });
+      ensureSpace(13 + fastH + 10 + charH + 16);
       doc.save().font(SANS_B).fontSize(8).fillColor(C.maroon).text(S.fastingCharity, ML, y, { lineBreak: false }).restore();
       y += 13;
       doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft).text(rem.fasting, ML, y, { width: W }).restore();
-      y += doc.heightOfString(rem.fasting, { width: W }) + 10;
+      y += fastH + 10;
       doc.save().font(SERIF).fontSize(9).fillColor(C.inkSoft).text(rem.charity, ML, y, { width: W }).restore();
-      y += doc.heightOfString(rem.charity, { width: W }) + 16;
+      y += charH + 16;
     });
   }
 }
@@ -885,7 +950,6 @@ function drawLifeAreasPage(doc: InstanceType<typeof PDFDocument>, d: Compatibili
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
   pageHeader(doc, lang);
-  pageFooter(doc, 9, 11, lang);
 
   let y = 48;
   const kootas = d.gunaMilan.koota_breakdown;
@@ -950,7 +1014,6 @@ function drawNakshatraProfilesPage(doc: InstanceType<typeof PDFDocument>, d: Com
   doc.rect(0, 0, PW, PH).fill(C.cream);
   drawWatermark(doc);
   pageHeader(doc, lang);
-  pageFooter(doc, 10, 11, lang);
 
   let y = 48;
 
@@ -1182,6 +1245,8 @@ export function generateCompatibilityPDF(input: CompatibilityPDFInput): Promise<
           Keywords: "Vedic, Compatibility, Kundali, Ashta Koota, Guna Milan",
         },
         autoFirstPage: false,
+        bufferPages: true, // enables a final pass to stamp "Page X of N" once the
+                           // real page count is known (Dosha/Remedies may add pages)
       });
 
       // Hindi mode: override PDFKit's built-in Times/Helvetica names with bundled
@@ -1248,6 +1313,16 @@ export function generateCompatibilityPDF(input: CompatibilityPDFInput): Promise<
       // Page 9: Conclusion
       doc.addPage();
       drawConclusionPage(doc, input);
+
+      // Final pass: now that the true page count is known (the Dosha/Remedies
+      // sections may have added pages), stamp footers on every content page.
+      // The cover (first) and conclusion (last) intentionally carry no footer.
+      const range = doc.bufferedPageRange();
+      const total = range.count;
+      for (let i = 1; i < total - 1; i++) {
+        doc.switchToPage(range.start + i);
+        pageFooter(doc, i + 1, total, input.lang === "hi" ? "hi" : "en");
+      }
 
       doc.end();
     } catch (err) {

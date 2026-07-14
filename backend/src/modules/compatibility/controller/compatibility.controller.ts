@@ -97,18 +97,30 @@ const detectManglikDoshas = async (boy: any, girl: any) => {
     const who = bothManglik ? 'Both partners' : (boyManglik ? (boy.name || 'The groom') : (girl.name || 'The bride'));
     const houseOf = (m: MarsContext | null) => (m ? `${m.house}th house` : '');
 
+    // Hindi equivalents — the report names the actual afflicted partner respectfully
+    // as वर/वधू (+ their name where given) rather than a generic "किसी साथी", keeping
+    // the Hindi PDF in sync with the dynamic English description.
+    const HOUSE_HI: Record<number, string> = { 1: 'प्रथम', 2: 'द्वितीय', 4: 'चतुर्थ', 7: 'सप्तम', 8: 'अष्टम', 12: 'द्वादश' };
+    const houseOfHi = (m: MarsContext | null) => (m ? `${HOUSE_HI[m.house] || `${m.house}वें`} भाव` : '');
+    const roleNameHi = (role: string, name?: string) => (name && name.trim() ? `${role} ${name.trim()}` : role);
+
     let description: string;
+    let description_hi: string;
     if (bothManglik) {
         description = `${boy.name || 'The groom'} has Mars in the ${houseOf(boyMars)} and ${girl.name || 'the bride'} has Mars in the ${houseOf(girlMars)} — both partners are Manglik. Classically, when both individuals carry Mangal Dosha the affliction is mutually neutralised (Manglik–Manglik cancellation), and the union is considered safe from the dosha's adverse effects.`;
+        description_hi = `${roleNameHi('वर', boy.name)} की कुंडली में मंगल ${houseOfHi(boyMars)} में एवं ${roleNameHi('वधू', girl.name)} की कुंडली में ${houseOfHi(girlMars)} में स्थित है — दोनों साथी मांगलिक हैं। शास्त्रानुसार, जब दोनों व्यक्ति मंगल दोष धारण करते हैं तो यह दोष परस्पर निरस्त हो जाता है (मांगलिक–मांगलिक निरसन), एवं यह मिलन दोष के प्रतिकूल प्रभावों से सुरक्षित माना जाता है।`;
     } else {
         const m = boyManglik ? boyMars! : girlMars!;
+        const whoHi = boyManglik ? roleNameHi('वर', boy.name) : roleNameHi('वधू', girl.name);
         description = `${who} is Manglik — Mars is placed in the ${houseOf(m)} from the Lagna, one of the positions (1, 2, 4, 7, 8, 12) that create Mangal Dosha. As only one partner is Manglik, classical texts advise remedial measures before marriage to balance the Mars energy.${strong(m) ? ' Partial cancellation applies as Mars is in its own or exalted sign.' : ''}`;
+        description_hi = `${whoHi} की कुंडली में मंगल लग्न से ${houseOfHi(m)} में स्थित है, जो मंगल (कुज) दोष रचने वाले भावों (1, 2, 4, 7, 8, 12) में से एक है। चूँकि केवल एक साथी मांगलिक है, शास्त्रीय ग्रंथ मंगल की ऊर्जा को संतुलित करने हेतु विवाह से पूर्व उपचार की सलाह देते हैं।${strong(m) ? ' मंगल के स्वराशि/उच्च का होने से आंशिक निरसन लागू होता है।' : ''}`;
     }
 
     return [{
         dosha_name: 'Mangal Dosha',
         severity,
         description,
+        description_hi,
         classical_reference: 'Mangal (Kuja) Dosha is assessed from the placement of Mars relative to the Lagna (and, in stricter analysis, the Moon and Venus). Mars in the 1st, 2nd, 4th, 7th, 8th or 12th house is held to stress marital harmony. Brihat Parashara Hora Shastra and Muhurta texts note mutual cancellation when both partners are Manglik, and softening when Mars occupies its own or exalted sign.',
         cancellable: true,
     }];

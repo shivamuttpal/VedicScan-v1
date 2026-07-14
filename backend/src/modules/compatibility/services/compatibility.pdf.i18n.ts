@@ -393,8 +393,23 @@ const DOSHA_TEXT_HI: Record<string, { description: string; classical_reference: 
   },
 };
 
-export function doshaText(doshaName: string, lang: Lang, fallback: { description: string; classical_reference: string }) {
-  if (lang === "hi" && DOSHA_TEXT_HI[doshaName]) return DOSHA_TEXT_HI[doshaName];
+export function doshaText(
+  doshaName: string,
+  lang: Lang,
+  fallback: { description: string; classical_reference: string; description_hi?: string },
+) {
+  if (lang === "hi") {
+    const staticHi = DOSHA_TEXT_HI[doshaName];
+    // Prefer a dynamically-built Hindi description (e.g. Mangal Dosha, which names
+    // the actual afflicted partner and house) over the generic static translation.
+    if (fallback.description_hi) {
+      return {
+        description: fallback.description_hi,
+        classical_reference: staticHi?.classical_reference || fallback.classical_reference,
+      };
+    }
+    if (staticHi) return staticHi;
+  }
   return fallback;
 }
 export const severityWord = (sev: string, lang: Lang) =>
