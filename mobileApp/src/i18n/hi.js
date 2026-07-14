@@ -48,6 +48,10 @@ export default {
   drawerUnlockPremium: 'प्रीमियम अनलॉक करें',
   drawerMySubscription: 'मेरी सदस्यता',
   drawerProfileSettings: 'प्रोफ़ाइल और सेटिंग्स',
+  drawerLogout: 'लॉगआउट',
+  drawerLogoutTitle: 'क्या आप लॉगआउट करना चाहते हैं?',
+  drawerLogoutMessage: 'अपनी ब्रह्मांडीय यात्रा जारी रखने के लिए आप कभी भी दोबारा साइन इन कर सकते हैं।',
+  drawerCancel: 'रद्द करें',
 
   // ProfileWizard — header
   cosmicProfileSetup: 'अपनी ब्रह्मांडीय प्रोफ़ाइल बनाएं',

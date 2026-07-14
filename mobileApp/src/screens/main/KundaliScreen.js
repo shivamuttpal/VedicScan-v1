@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator,
   Alert, RefreshControl, Platform, Dimensions, TextInput, KeyboardAvoidingView,
   BackHandler, ImageBackground, Keyboard,
+  Modal,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,13 +17,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import api from '../../config/api';
 
-const { width: SCREEN_W } = Dimensions.get('window');
-const BG_IMAGE = require('../../../assets/kundalihome.jpg');
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+const BG_IMAGE = require('../../../assets/kundali/kundali-hero-celestial.png');
 
 // ── Kundali translation strings ──────────────────────────────────────
 const KS = {
   en: {
     screenTitle: 'Kundali',
+    screenSubtitle: 'Decode your destiny through AI-powered Vedic astrology.',
     tabs: ['Overview', 'Chart', 'Planets', 'Dashas', 'Insights'],
     downloadPdf: 'Download PDF Report',
     deleteKundali: 'Delete Kundali',
@@ -58,9 +60,12 @@ const KS = {
     d1Chart: 'D1 — Rashi Chart (Birth Chart)', d9Chart: 'D9 — Navamsa Chart',
     viewInsights: 'View the full Kundali to see all yogas and doshas.',
     langToggleLabel: 'हिंदी',
+    yourKundalis: 'Your Kundalis', seeAllKundalis: 'See all', selectKundali: 'Switch Kundali',
+    generatedKundalis: (n) => `${n} generated Kundalis`, activeKundali: 'Currently selected', close: 'Close',
   },
   hi: {
     screenTitle: 'कुंडली',
+    screenSubtitle: 'AI-संचालित वैदिक ज्योतिष से अपने भाग्य को समझें।',
     tabs: ['अवलोकन', 'चार्ट', 'ग्रह', 'दशा', 'अंतर्दृष्टि'],
     downloadPdf: 'PDF रिपोर्ट डाउनलोड करें',
     deleteKundali: 'कुंडली हटाएं',
@@ -96,6 +101,8 @@ const KS = {
     d1Chart: 'D1 — राशि चार्ट (जन्म कुंडली)', d9Chart: 'D9 — नवांश चार्ट',
     viewInsights: 'सभी योग और दोष देखने के लिए पूरी कुंडली देखें।',
     langToggleLabel: 'English',
+    yourKundalis: 'आपकी कुंडलियां', seeAllKundalis: 'सभी देखें', selectKundali: 'कुंडली बदलें',
+    generatedKundalis: (n) => `${n} बनाई गई कुंडलियां`, activeKundali: 'वर्तमान चयन', close: 'बंद करें',
   },
 };
 
@@ -256,7 +263,68 @@ const PlanetRow = ({ name, data, alt, tSign, tNak }) => (
 );
 
 // ── Tab bar keys (resolved to labels via KS[lang].tabs) ──────────────
+const RASHI_SYMBOLS = {
+  Aries: '♈', Taurus: '♉', Gemini: '♊', Cancer: '♋', Leo: '♌', Virgo: '♍',
+  Libra: '♎', Scorpio: '♏', Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓',
+};
+
+const VisualIcon = ({ symbol, color = '#9A315B', size = 46 }) => (
+  <LinearGradient colors={['#FFFDF9', '#F8ECEA']} style={[styles.visualIcon, { width: size, height: size, borderRadius: size / 2 }]}>
+    <View style={[styles.visualOrbit, { borderColor: `${color}24` }]} />
+    <Text style={[styles.visualSymbol, { color, fontSize: size * 0.48 }]}>{symbol}</Text>
+  </LinearGradient>
+);
+
+const LotusMark = () => (
+  <View style={styles.lotusMark}>
+    {[-48, -24, 0, 24, 48].map((rotation, index) => (
+      <View key={rotation} style={[styles.lotusPetal, { transform: [{ rotate: `${rotation}deg` }], left: 19 + (index - 2) * 3 }]} />
+    ))}
+    <View style={styles.lotusBase} />
+  </View>
+);
+
+const InsightStudyCard = ({ title, text, symbol, accent, expanded, onPress, isHindi }) => (
+  <TouchableOpacity accessibilityRole="button" accessibilityState={{ expanded }} activeOpacity={0.86} onPress={onPress} style={[styles.insightStudyCard, expanded && styles.insightStudyCardExpanded]}>
+    <View style={styles.insightStudyHeader}>
+      <VisualIcon symbol={symbol} color={accent} size={44} />
+      <View style={styles.insightStudyHeading}>
+        <Text style={styles.insightStudyEyebrow}>{isHindi ? 'जीवन अंतर्दृष्टि' : 'LIFE INSIGHT'}</Text>
+        <Text style={styles.insightStudyTitle}>{title}</Text>
+      </View>
+      <View style={[styles.insightExpand, expanded && styles.insightExpandActive]}>
+        <Text style={styles.insightExpandText}>{expanded ? '−' : '+'}</Text>
+      </View>
+    </View>
+    <Text style={styles.insightStudyText} numberOfLines={expanded ? undefined : 3}>{text}</Text>
+    {!expanded && <Text style={styles.insightReadMore}>{isHindi ? 'और पढ़ें' : 'Tap to study'}  →</Text>}
+  </TouchableOpacity>
+);
+
+const InsightListCard = ({ title, items, symbol, tone = 'gold' }) => {
+  if (!items?.length) return null;
+  const accent = tone === 'green' ? '#4F7B5D' : tone === 'rose' ? '#A64B68' : '#A77A16';
+  return <View style={styles.insightListCard}>
+    <View style={styles.insightListHeader}><VisualIcon symbol={symbol} color={accent} size={38} /><Text style={[styles.insightListTitle, { color: accent }]}>{title}</Text></View>
+    {items.map((item, index) => <View key={`${title}-${index}`} style={styles.insightBulletRow}><View style={[styles.insightBullet, { backgroundColor: accent }]} /><Text style={styles.insightBulletText}>{item}</Text></View>)}
+  </View>;
+};
+
+const RemedyTile = ({ title, items, symbol, color }) => {
+  if (!items?.length) return null;
+  return <View style={styles.remedyTile}>
+    <VisualIcon symbol={symbol} color={color} size={40} />
+    <Text style={styles.remedyTileTitle}>{title}</Text>
+    <Text style={styles.remedyTileValue} numberOfLines={3}>{items.join(' • ')}</Text>
+  </View>;
+};
+
 const TAB_KEYS = ['Overview', 'Chart', 'Planets', 'Dashas', 'Insights'];
+
+const normalizeKundaliList = (responseData) => {
+  const list = responseData?.data ?? responseData;
+  return Array.isArray(list) ? list : [];
+};
 
 // ── Main Screen ──────────────────────────────────────────────────────
 export default function KundaliScreen({ navigation }) {
@@ -270,6 +338,8 @@ export default function KundaliScreen({ navigation }) {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showKundaliPicker, setShowKundaliPicker] = useState(false);
+  const [expandedInsight, setExpandedInsight] = useState(null);
   const [form, setForm] = useState({ name: '', dateOfBirth: '', timeOfBirth: '', placeOfBirth: '' });
 
   // Language is now the global app language
@@ -322,7 +392,7 @@ export default function KundaliScreen({ navigation }) {
     try {
       setLoading(true);
       const res = await api.get('/api/kundali/list');
-      const list = res.data?.data || [];
+      const list = normalizeKundaliList(res.data);
       setKundalis(list);
       if (list.length > 0 && !selected) {
         // Set a lightweight placeholder immediately so the card is highlighted,
@@ -451,8 +521,16 @@ export default function KundaliScreen({ navigation }) {
               await api.delete(`/api/kundali/${selected.id}`);
               // Refresh the kundali list
               const res = await api.get('/api/kundali/list');
-              setKundalis(res.data || []);
-              setSelected(null);
+              const list = normalizeKundaliList(res.data);
+              setKundalis(list);
+              setShowKundaliPicker(false);
+              if (list.length > 0) {
+                setSelected(list[0]);
+                setActiveTab('Overview');
+                fetchFullKundali(list[0].id);
+              } else {
+                setSelected(null);
+              }
               Alert.alert('Deleted', `${selected.name}'s Kundali has been deleted.`);
             } catch (e) {
               const msg = e.response?.data?.message || e.message;
@@ -464,12 +542,21 @@ export default function KundaliScreen({ navigation }) {
     );
   };
 
-  const renderKundaliCard = (k) => (
+  const selectKundali = (kundali, closePicker = false) => {
+    setActiveTab('Overview');
+    setSelected(kundali);
+    fetchFullKundali(kundali.id);
+    if (closePicker) setShowKundaliPicker(false);
+  };
+
+  const renderKundaliCard = (k, compact = false) => (
     <TouchableOpacity
       key={k.id}
-      style={[styles.kundaliCard, selected?.id === k.id && styles.kundaliCardActive]}
-      onPress={() => { setActiveTab('Overview'); fetchFullKundali(k.id); }}
+      style={[styles.kundaliCard, compact && styles.kundaliCardCompact, selected?.id === k.id && styles.kundaliCardActive]}
+      onPress={() => selectKundali(k, compact)}
+      activeOpacity={0.86}
     >
+      <LinearGradient colors={['#FFF8EC', '#F5E8D4']} style={styles.kundaliLotus}><LotusMark /></LinearGradient>
       <View style={styles.kundaliCardLeft}>
         <Text style={styles.kundaliCardName}>{k.name}</Text>
         <Text style={styles.kundaliCardSub}>{k.dateOfBirth}  •  {k.placeOfBirth}</Text>
@@ -477,7 +564,9 @@ export default function KundaliScreen({ navigation }) {
           {tSign(k.lagna?.sign)} {isHindi ? 'लग्न' : 'Lagna'}  •  {tSign(k.moonSign)} {isHindi ? 'चंद्र' : 'Moon'}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#C9A45A" />
+      {compact && selected?.id === k.id
+        ? <View style={styles.activeKundaliBadge}><Text style={styles.activeKundaliBadgeText}>✓</Text></View>
+        : <Text style={styles.kundaliChevron}>›</Text>}
     </TouchableOpacity>
   );
 
@@ -662,13 +751,13 @@ export default function KundaliScreen({ navigation }) {
           <View>
             <View style={styles.summaryGrid}>
               {[
-                { label: L.summaryLagna,     value: tSign(k.lagna?.sign),    sub: `${k.lagna?.degree?.toFixed(1)}°`, icon: '↑' },
-                { label: L.summaryMoon,      value: tSign(k.moonSign),        sub: tNak(k.moonNakshatra),             icon: '☽' },
-                { label: L.summarySun,       value: tSign(k.sunSign),         sub: L.suryaRashi,                     icon: '☀' },
-                { label: L.summaryNakshatra, value: tNak(k.moonNakshatra),    sub: `${isHindi ? 'पाद' : 'Pada'} ${k.moonPada || 1}`, icon: '✦' },
-              ].map(({ label, value, sub, icon }) => (
+                { label: L.summaryLagna, value: tSign(k.lagna?.sign), sub: `${k.lagna?.degree?.toFixed(1)}°`, icon: RASHI_SYMBOLS[k.lagna?.sign] || '◇', color: '#9A315B' },
+                { label: L.summaryMoon, value: tSign(k.moonSign), sub: tNak(k.moonNakshatra), icon: '☾', color: '#76549A' },
+                { label: L.summarySun, value: tSign(k.sunSign), sub: L.suryaRashi, icon: '☼', color: '#C99208' },
+                { label: L.summaryNakshatra, value: tNak(k.moonNakshatra), sub: `${isHindi ? 'पाद' : 'Pada'} ${k.moonPada || 1}`, icon: '✦', color: '#A77A16' },
+              ].map(({ label, value, sub, icon, color }) => (
                 <View key={label} style={styles.summaryCard}>
-                  <Text style={styles.summaryIcon}>{icon}</Text>
+                  <VisualIcon symbol={icon} color={color} size={52} />
                   <Text style={styles.summaryValue}>{value || '—'}</Text>
                   <Text style={styles.summaryLabel}>{label}</Text>
                   <Text style={styles.summarySub}>{sub || ''}</Text>
@@ -697,6 +786,14 @@ export default function KundaliScreen({ navigation }) {
                 )}
               </View>
             </Section>
+
+            <LinearGradient colors={['#FFF9EC', '#F8ECDD']} style={styles.wisdomCard}>
+              <VisualIcon symbol="✦" color="#A77A16" size={42} />
+              <View style={styles.wisdomCopy}>
+                <Text style={styles.wisdomTitle}>{isHindi ? 'हर ग्रह चक्र आपकी यात्रा को आकार देता है।' : 'Every planetary cycle shapes your journey.'}</Text>
+                <Text style={styles.wisdomText}>{isHindi ? 'AI-संचालित वैदिक विश्लेषण से इसका गहरा अर्थ जानें।' : 'Explore its deeper meaning through AI-powered Vedic analysis.'}</Text>
+              </View>
+            </LinearGradient>
 
             {presentYogas.length > 0 && (
               <Section title={L.yogasPresent(presentYogas.length)} icon="star-four-points">
@@ -829,63 +926,40 @@ export default function KundaliScreen({ navigation }) {
         return (
           <View>
             {[
-              { key: 'personality', title: L.personality, icon: 'account-star' },
-              { key: 'career', title: L.career, icon: 'briefcase' },
-              { key: 'finance', title: L.finance, icon: 'currency-inr' },
-              { key: 'marriage', title: L.marriage, icon: 'heart' },
-              { key: 'health', title: L.health, icon: 'heart-pulse' },
-              { key: 'spirituality', title: L.spirituality, icon: 'meditation' },
-            ].map(({ key, title, icon }) => interp[key] ? (
-              <Section key={key} title={title} icon={icon}>
-                <Text style={styles.interpText}>{interp[key]}</Text>
-              </Section>
+              { key: 'personality', title: L.personality, symbol: '✦', accent: '#9A315B' },
+              { key: 'career', title: L.career, symbol: '◇', accent: '#87619E' },
+              { key: 'finance', title: L.finance, symbol: '₹', accent: '#A77A16' },
+              { key: 'marriage', title: L.marriage, symbol: '♡', accent: '#A64B68' },
+              { key: 'health', title: L.health, symbol: '+', accent: '#4F7B5D' },
+              { key: 'spirituality', title: L.spirituality, symbol: '☼', accent: '#C28B08' },
+            ].map(({ key, title, symbol, accent }) => interp[key] ? (
+              <InsightStudyCard
+                key={key}
+                title={title}
+                text={interp[key]}
+                symbol={symbol}
+                accent={accent}
+                isHindi={isHindi}
+                expanded={expandedInsight === key}
+                onPress={() => setExpandedInsight(current => current === key ? null : key)}
+              />
             ) : null)}
 
             {(interp.strengths?.length > 0 || interp.challenges?.length > 0) && (
-              <Section title={L.strengthsChallenges} icon="yin-yang">
-                <View style={styles.scRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.scHeader, { color: '#4CAF50' }]}>{L.strengths}</Text>
-                    {(interp.strengths || []).map((s, i) => (
-                      <Text key={`str-${i}`} style={styles.scItem}>✓  {s}</Text>
-                    ))}
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.scHeader, { color: '#E57373' }]}>{L.challenges}</Text>
-                    {(interp.challenges || []).map((c, i) => (
-                      <Text key={`chl-${i}`} style={styles.scItem}>→  {c}</Text>
-                    ))}
-                  </View>
-                </View>
-              </Section>
+              <View style={styles.insightDualGrid}>
+                <InsightListCard title={L.strengths} items={interp.strengths} symbol="↑" tone="green" />
+                <InsightListCard title={L.challenges} items={interp.challenges} symbol="↗" tone="rose" />
+              </View>
             )}
 
             {(interp.mantras?.length > 0 || interp.gemstones?.length > 0) && (
               <Section title={L.vedicRec} icon="hand-pointing-up">
-                {interp.mantras?.length > 0 && (
-                  <View style={{ marginBottom: 12 }}>
-                    <Text style={styles.remedyHeader}>{L.mantras}</Text>
-                    {interp.mantras.map((m, i) => <Text key={`man-${i}`} style={styles.remedyItem}>•  {m}</Text>)}
-                  </View>
-                )}
-                {interp.gemstones?.length > 0 && (
-                  <View style={{ marginBottom: 12 }}>
-                    <Text style={styles.remedyHeader}>{L.gemstones}</Text>
-                    {interp.gemstones.map((g, i) => <Text key={`gem-${i}`} style={styles.remedyItem}>•  {g}</Text>)}
-                  </View>
-                )}
-                {interp.fastingDays?.length > 0 && (
-                  <View style={{ marginBottom: 12 }}>
-                    <Text style={styles.remedyHeader}>{L.fasting}</Text>
-                    {interp.fastingDays.map((f, i) => <Text key={`fast-${i}`} style={styles.remedyItem}>•  {f}</Text>)}
-                  </View>
-                )}
-                {interp.charities?.length > 0 && (
-                  <View>
-                    <Text style={styles.remedyHeader}>{L.charity}</Text>
-                    {interp.charities.map((c, i) => <Text key={`char-${i}`} style={styles.remedyItem}>•  {c}</Text>)}
-                  </View>
-                )}
+                <View style={styles.remedyGrid}>
+                  <RemedyTile title={L.mantras} items={interp.mantras} symbol="ॐ" color="#9A315B" />
+                  <RemedyTile title={L.gemstones} items={interp.gemstones} symbol="◇" color="#76549A" />
+                  <RemedyTile title={L.fasting} items={interp.fastingDays} symbol="☾" color="#A77A16" />
+                  <RemedyTile title={L.charity} items={interp.charities} symbol="♡" color="#4F7B5D" />
+                </View>
               </Section>
             )}
           </View>
@@ -898,9 +972,14 @@ export default function KundaliScreen({ navigation }) {
 
   return (
     <ImageBackground source={BG_IMAGE} style={styles.flex1} resizeMode="cover">
+      <View pointerEvents="none" style={styles.backgroundVeil} />
       {/* Header */}
       <View style={styles.headerRow}>
-        <Text style={styles.screenTitle}>{L.screenTitle}</Text>
+        <View style={styles.headerTitleWrap}>
+          <Text style={styles.screenTitle}>{L.screenTitle}</Text>
+          <View style={styles.titleOrnament}><View style={styles.titleDot} /><View style={styles.titleLine} /></View>
+          <Text style={styles.screenSubtitle}>{L.screenSubtitle}</Text>
+        </View>
         <View style={styles.headerRight}>
           <TouchableOpacity onPress={() => toggleLanguage()} style={styles.langToggleBtn}>
             <Text style={styles.langToggleTxt}>{L.langToggleLabel}</Text>
@@ -921,9 +1000,21 @@ export default function KundaliScreen({ navigation }) {
       >
         {/* Kundali selector */}
         {kundalis.length > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.kundaliList} contentContainerStyle={{ paddingHorizontal: 16 }}>
-            {kundalis.map(k => renderKundaliCard(k))}
-          </ScrollView>
+          <View style={styles.kundaliSelector}>
+            <View style={styles.kundaliSelectorHeader}>
+              <View>
+                <Text style={styles.kundaliSelectorTitle}>{L.yourKundalis}</Text>
+                <Text style={styles.kundaliSelectorCount}>{L.generatedKundalis(kundalis.length)}</Text>
+              </View>
+              {kundalis.length > 1 && (
+                <TouchableOpacity accessibilityRole="button" onPress={() => setShowKundaliPicker(true)} style={styles.seeAllBtn} activeOpacity={0.8}>
+                  <Text style={styles.seeAllBtnText}>{L.seeAllKundalis}</Text>
+                  <Text style={styles.seeAllArrow}>›</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {renderKundaliCard(selected || kundalis[0])}
+          </View>
         )}
 
         {k && (
@@ -931,7 +1022,8 @@ export default function KundaliScreen({ navigation }) {
             {/* Action buttons row */}
             <View style={styles.buttonRow}>
               {/* PDF Download */}
-              <TouchableOpacity style={[styles.pdfBtn, { flex: 1 }]} onPress={handleDownloadPDF} disabled={pdfLoading}>
+              <TouchableOpacity style={styles.pdfBtnPressable} onPress={handleDownloadPDF} disabled={pdfLoading} activeOpacity={0.88}>
+                <LinearGradient colors={['#A23B64', '#762044']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.pdfBtn}>
                 {pdfLoading
                   ? <ActivityIndicator color="#FFFDF8" size="small" />
                   : <>
@@ -939,6 +1031,7 @@ export default function KundaliScreen({ navigation }) {
                       <Text style={styles.pdfBtnText}>{L.downloadPdf}</Text>
                     </>
                 }
+                </LinearGradient>
               </TouchableOpacity>
 
               {/* Delete Kundali */}
@@ -968,6 +1061,43 @@ export default function KundaliScreen({ navigation }) {
           </View>
         )}
       </ScrollView>
+
+      <Modal visible={showKundaliPicker} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowKundaliPicker(false)}>
+        <View style={styles.kundaliModalRoot}>
+          <TouchableOpacity accessibilityLabel={L.close} activeOpacity={1} style={styles.kundaliModalBackdrop} onPress={() => setShowKundaliPicker(false)} />
+          <LinearGradient colors={['#FFFDF9', '#FAF7F2']} style={styles.kundaliModalSheet}>
+            <View style={styles.modalHandle} />
+            <View style={styles.kundaliModalHeader}>
+              <View style={styles.modalTitleIcon}><LotusMark /></View>
+              <View style={styles.kundaliModalHeading}>
+                <Text style={styles.kundaliModalTitle}>{L.selectKundali}</Text>
+                <Text style={styles.kundaliModalSubtitle}>{L.generatedKundalis(kundalis.length)}</Text>
+              </View>
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel={L.close} onPress={() => setShowKundaliPicker(false)} style={styles.kundaliModalClose}>
+                <Text style={styles.kundaliModalCloseText}>×</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              style={styles.kundaliModalScroll}
+              showsVerticalScrollIndicator={kundalis.length > 3}
+              persistentScrollbar={kundalis.length > 3}
+              nestedScrollEnabled
+              fadingEdgeLength={24}
+              contentContainerStyle={styles.kundaliModalList}
+            >
+              {kundalis.map(item => (
+                <View key={item.id}>
+                  {renderKundaliCard(item, true)}
+                  {selected?.id === item.id && <Text style={styles.activeKundaliCaption}>{L.activeKundali}</Text>}
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity style={styles.modalDoneBtn} onPress={() => setShowKundaliPicker(false)} activeOpacity={0.85}>
+              <Text style={styles.modalDoneText}>{L.close}</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      </Modal>
     </ImageBackground>
   );
 }
@@ -991,87 +1121,130 @@ function buildNavamsaHouses(navamsa) {
 
 // ── Styles ────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  flex1: { flex: 1 },
+  flex1: { flex: 1, backgroundColor: '#FAF7F2' },
+  backgroundVeil: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(250,247,242,0.38)' },
 
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 54 : 70,
-    paddingBottom: 14,
+    paddingBottom: 24,
   },
-  screenTitle: { fontSize: 24, fontWeight: '800', color: '#6A1039', letterSpacing: -0.5 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  langToggleBtn: { backgroundColor: 'rgba(201,164,90,0.08)', paddingHorizontal: 12, paddingVertical: 7, borderRadius: 16, borderWidth: 1, borderColor: '#C9A45A' },
-  langToggleTxt: { color: '#C9A45A', fontSize: 12, fontWeight: '800' },
-  newBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFDF8', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: '#C9A45A' },
+  headerTitleWrap: { flex: 1, paddingRight: 12 },
+  screenTitle: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 39, lineHeight: 45, fontWeight: '600', color: '#35281D', letterSpacing: -0.9 },
+  screenSubtitle: { marginTop: 8, maxWidth: 250, fontSize: 12.5, lineHeight: 18, color: '#75695C', fontWeight: '400' },
+  titleOrnament: { width: 74, height: 4, flexDirection: 'row', alignItems: 'center', marginTop: 7 },
+  titleDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#D4AF37', marginRight: 5 },
+  titleLine: { flex: 1, height: 1, backgroundColor: 'rgba(212,175,55,0.55)' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 5 },
+  langToggleBtn: { backgroundColor: 'rgba(255,253,249,0.82)', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(212,175,55,0.5)', shadowColor: '#765D3A', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 2 },
+  langToggleTxt: { color: '#8D6C18', fontSize: 12, fontWeight: '700' },
+  newBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,253,249,0.92)', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 19, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', shadowColor: '#765D3A', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 3 },
   newBtnText: { color: '#6A1039', fontSize: 13, fontWeight: '700', marginLeft: 4 },
 
-  // Kundali selector list
-  kundaliList: { maxHeight: 110 },
+  // Kundali selector
+  kundaliSelector: { paddingHorizontal: 16, marginBottom: 2 },
+  kundaliSelectorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 11, paddingHorizontal: 3 },
+  kundaliSelectorTitle: { color: '#5C4534', fontSize: 13.5, fontWeight: '800', letterSpacing: 0.2 },
+  kundaliSelectorCount: { color: '#9A8878', fontSize: 10.5, marginTop: 2 },
+  seeAllBtn: { minHeight: 38, flexDirection: 'row', alignItems: 'center', paddingLeft: 14, paddingRight: 10, borderRadius: 19, backgroundColor: 'rgba(255,253,249,0.9)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.3)' },
+  seeAllBtnText: { color: '#8E244F', fontSize: 11.5, fontWeight: '800' },
+  seeAllArrow: { color: '#C89B1D', fontSize: 23, lineHeight: 24, marginLeft: 6 },
   kundaliCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFDF8',
-    borderRadius: 18, marginRight: 12, padding: 14, minWidth: 220,
-    borderWidth: 1.5, borderColor: '#DFC895',
-    elevation: 2, shadowColor: '#6A1039', shadowOpacity: 0.1, shadowRadius: 6,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,253,249,0.94)',
+    borderRadius: 28, marginRight: 12, padding: 16, width: SCREEN_W - 32, minHeight: 134,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.9)',
+    elevation: 5, shadowColor: '#72543D', shadowOffset: { width: 0, height: 9 }, shadowOpacity: 0.11, shadowRadius: 20,
   },
-  kundaliCardActive: { borderColor: '#C9A45A', backgroundColor: '#F7F1E5' },
+  kundaliCardActive: { borderColor: 'rgba(212,175,55,0.36)', backgroundColor: 'rgba(255,253,249,0.98)' },
+  kundaliCardCompact: { width: '100%', minHeight: 112, marginRight: 0, marginBottom: 8, padding: 13, borderRadius: 22, elevation: 2, shadowOpacity: 0.06, shadowRadius: 10 },
+  activeKundaliBadge: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3E5B9', borderWidth: 1, borderColor: '#D8B34B' },
+  activeKundaliBadgeText: { color: '#8C6810', fontSize: 14, fontWeight: '900' },
+  kundaliLotus: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginRight: 15, borderWidth: 1, borderColor: '#EDD7B7' },
+  lotusMark: { width: 58, height: 48, alignItems: 'center', justifyContent: 'flex-end' },
+  lotusPetal: { position: 'absolute', bottom: 10, width: 16, height: 31, borderRadius: 10, borderWidth: 1.6, borderColor: '#C98D68', backgroundColor: 'rgba(255,255,255,0.2)' },
+  lotusBase: { width: 40, height: 14, borderBottomWidth: 1.7, borderColor: '#C98D68', borderRadius: 20, marginBottom: 3 },
   kundaliCardLeft: { flex: 1 },
-  kundaliCardName: { color: '#6A1039', fontSize: 15, fontWeight: '700' },
-  kundaliCardSub: { color: '#75695C', fontSize: 11, marginTop: 2 },
-  kundaliCardSigns: { color: '#6A1039', fontSize: 11, marginTop: 4, fontWeight: '600' },
+  kundaliCardName: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', color: '#35281D', fontSize: 20, fontWeight: '600' },
+  kundaliCardSub: { color: '#75695C', fontSize: 11, marginTop: 5, lineHeight: 16 },
+  kundaliCardSigns: { color: '#8C3156', fontSize: 11.5, marginTop: 8, fontWeight: '600' },
+  kundaliChevron: { color: '#D0A522', fontSize: 32, fontWeight: '200', marginLeft: 8 },
+  kundaliModalRoot: { flex: 1, justifyContent: 'flex-end' },
+  kundaliModalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(53,40,29,0.46)' },
+  kundaliModalSheet: { maxHeight: '82%', minHeight: '48%', paddingTop: 9, paddingHorizontal: 18, paddingBottom: Platform.OS === 'ios' ? 30 : 20, borderTopLeftRadius: 32, borderTopRightRadius: 32, borderWidth: 1, borderColor: 'rgba(212,175,55,0.18)', shadowColor: '#35281D', shadowOffset: { width: 0, height: -8 }, shadowOpacity: 0.18, shadowRadius: 24, elevation: 28 },
+  modalHandle: { width: 42, height: 4, borderRadius: 2, backgroundColor: '#DED0BF', alignSelf: 'center', marginBottom: 17 },
+  kundaliModalHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  modalTitleIcon: { width: 54, height: 54, borderRadius: 27, transform: [{ scale: 0.72 }], alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF4E2', borderWidth: 1, borderColor: '#EBD0A7' },
+  kundaliModalHeading: { flex: 1, marginLeft: 6 },
+  kundaliModalTitle: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', color: '#35281D', fontSize: 23, fontWeight: '600' },
+  kundaliModalSubtitle: { color: '#928174', fontSize: 11.5, marginTop: 3 },
+  kundaliModalClose: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#E8DDD0' },
+  kundaliModalCloseText: { color: '#9A315B', fontSize: 27, lineHeight: 29, fontWeight: '300' },
+  kundaliModalScroll: { flexShrink: 1, maxHeight: Math.min(SCREEN_H * 0.56, 520) },
+  kundaliModalList: { paddingBottom: 8 },
+  activeKundaliCaption: { color: '#A77A16', fontSize: 9.5, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8, marginLeft: 14, marginTop: -3, marginBottom: 10 },
+  modalDoneBtn: { height: 52, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginTop: 7, backgroundColor: '#F8ECEA', borderWidth: 1, borderColor: '#E5C7D0' },
+  modalDoneText: { color: '#8E244F', fontSize: 14, fontWeight: '800' },
 
   detailContainer: { paddingHorizontal: 0, marginTop: 12 },
 
   // Action buttons
-  buttonRow: { flexDirection: 'row', gap: 12, marginBottom: 18, marginHorizontal: 16 },
+  buttonRow: { flexDirection: 'row', gap: 10, marginBottom: 20, marginHorizontal: 16 },
+  pdfBtnPressable: { flex: 1, borderRadius: 20, overflow: 'hidden', shadowColor: '#762044', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.2, shadowRadius: 14, elevation: 5 },
   pdfBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#6A1039', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 16,
-    gap: 8, elevation: 3, shadowColor: '#6A1039', shadowOpacity: 0.25, shadowRadius: 8,
+    minHeight: 58, borderRadius: 20, paddingVertical: 14, paddingHorizontal: 13, gap: 8,
   },
   pdfBtnText: { color: '#FFFDF8', fontSize: 14, fontWeight: '700' },
   deleteBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#FFFDF8', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 16,
-    borderWidth: 1.5, borderColor: '#E1D7C5', gap: 6,
+    minHeight: 58, backgroundColor: 'rgba(255,253,249,0.94)', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 13,
+    borderWidth: 1, borderColor: '#E8D8C4', gap: 6,
   },
   deleteBtnText: { color: '#6A1039', fontSize: 12, fontWeight: '700' },
 
   // Tabs
-  tabBar: { marginBottom: 12, paddingHorizontal: 16 },
+  tabBar: { marginBottom: 18, paddingHorizontal: 16 },
   tab: {
-    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 18, marginRight: 8,
-    backgroundColor: '#FFFDF8', borderWidth: 1, borderColor: '#DFC895',
+    minWidth: 94, alignItems: 'center', paddingHorizontal: 17, paddingVertical: 11, borderRadius: 22, marginRight: 9,
+    backgroundColor: 'rgba(255,253,249,0.88)', borderWidth: 1, borderColor: 'rgba(232,221,207,0.9)',
+    shadowColor: '#72543D', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 9, elevation: 2,
   },
-  tabActive: { backgroundColor: '#6A1039', borderColor: '#C9A45A' },
+  tabActive: { backgroundColor: '#F8ECEA', borderColor: 'rgba(154,49,91,0.25)' },
   tabText: { color: '#75695C', fontSize: 13, fontWeight: '600' },
-  tabTextActive: { color: '#FFFDF8', fontWeight: '700' },
+  tabTextActive: { color: '#8E244F', fontWeight: '700' },
 
   tabContent: {},
 
   // Summary grid
   summaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16, paddingHorizontal: 16 },
   summaryCard: {
-    width: (SCREEN_W - 52) / 2, borderRadius: 18, padding: 14, alignItems: 'center',
-    borderWidth: 1.5, borderColor: '#DFC895', backgroundColor: '#FFFDF8',
-    elevation: 2, shadowColor: '#6A1039', shadowOpacity: 0.1, shadowRadius: 6,
+    width: (SCREEN_W - 52) / 2, minHeight: 176, borderRadius: 28, padding: 16, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.92)', backgroundColor: 'rgba(255,253,249,0.91)',
+    elevation: 4, shadowColor: '#72543D', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.09, shadowRadius: 16,
   },
-  summaryIcon: { fontSize: 24, marginBottom: 6, color: '#C9A45A' },
-  summaryValue: { color: '#6A1039', fontSize: 16, fontWeight: '800' },
-  summaryLabel: { color: '#75695C', fontSize: 10, fontWeight: '600', marginTop: 2, textTransform: 'uppercase', letterSpacing: 0.6 },
-  summarySub: { color: '#C9A45A', fontSize: 11, marginTop: 2, fontWeight: '600' },
+  visualIcon: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(212,175,55,0.15)', overflow: 'hidden' },
+  visualOrbit: { position: 'absolute', width: '72%', height: '42%', borderWidth: 1, borderRadius: 999, transform: [{ rotate: '-18deg' }] },
+  visualSymbol: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: '500' },
+  summaryValue: { marginTop: 10, color: '#35281D', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 20, fontWeight: '600', textAlign: 'center' },
+  summaryLabel: { color: '#75695C', fontSize: 10, fontWeight: '700', marginTop: 5, textTransform: 'uppercase', letterSpacing: 1 },
+  summarySub: { color: '#9A6F18', fontSize: 11, marginTop: 5, fontWeight: '500', textAlign: 'center' },
 
   // Section
   section: {
-    marginBottom: 16, marginHorizontal: 16, borderRadius: 18, overflow: 'hidden',
-    borderWidth: 1.5, borderColor: '#DFC895', backgroundColor: '#FFFDF8',
-    elevation: 2, shadowColor: '#6A1039', shadowOpacity: 0.1, shadowRadius: 6,
+    marginBottom: 16, marginHorizontal: 16, borderRadius: 26, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(232,218,201,0.88)', backgroundColor: 'rgba(255,253,249,0.94)',
+    elevation: 4, shadowColor: '#72543D', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.08, shadowRadius: 16,
   },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#E8DCC2', backgroundColor: 'rgba(106, 16, 57, 0.04)' },
-  sectionTitle: { color: '#6A1039', fontSize: 13, fontWeight: '800', flex: 1, letterSpacing: 0.3 },
-  sectionBody: { backgroundColor: '#FFFDF8', padding: 14 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#EEE4D7', backgroundColor: 'rgba(249,246,240,0.72)' },
+  sectionTitle: { color: '#8E244F', fontSize: 12.5, fontWeight: '800', flex: 1, letterSpacing: 0.55, textTransform: 'uppercase' },
+  sectionBody: { backgroundColor: 'transparent', padding: 16 },
+  wisdomCard: { marginHorizontal: 16, marginBottom: 17, minHeight: 82, padding: 15, borderRadius: 24, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(212,175,55,0.22)' },
+  wisdomCopy: { flex: 1, marginLeft: 12 },
+  wisdomTitle: { color: '#5D4630', fontSize: 13.5, fontWeight: '700', lineHeight: 19 },
+  wisdomText: { color: '#8D7B68', fontSize: 11.5, lineHeight: 17, marginTop: 3 },
 
   // ── Diamond chart ─────────────────────────────────────────────────
   chartWrapper: { alignItems: 'center', marginBottom: 20, paddingHorizontal: 4 },
@@ -1147,6 +1320,28 @@ const styles = StyleSheet.create({
   scItem: { color: '#75695C', fontSize: 12, marginBottom: 6 },
   remedyHeader: { color: '#6A1039', fontSize: 13, fontWeight: '800', marginBottom: 10 },
   remedyItem: { color: '#75695C', fontSize: 12, marginBottom: 8, lineHeight: 18 },
+  insightStudyCard: { marginHorizontal: 16, marginBottom: 13, padding: 17, borderRadius: 25, backgroundColor: 'rgba(255,253,249,0.94)', borderWidth: 1, borderColor: 'rgba(233,220,205,0.9)', shadowColor: '#72543D', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.07, shadowRadius: 14, elevation: 3 },
+  insightStudyCardExpanded: { borderColor: 'rgba(212,175,55,0.42)', backgroundColor: '#FFFDF9' },
+  insightStudyHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  insightStudyHeading: { flex: 1, marginLeft: 12 },
+  insightStudyEyebrow: { color: '#B18A31', fontSize: 8.5, fontWeight: '800', letterSpacing: 1.15, marginBottom: 3 },
+  insightStudyTitle: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', color: '#35281D', fontSize: 18, fontWeight: '600' },
+  insightExpand: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7EFE6', borderWidth: 1, borderColor: '#EADBC9' },
+  insightExpandActive: { backgroundColor: '#F8ECEA', borderColor: '#E2BEC9' },
+  insightExpandText: { color: '#9A315B', fontSize: 20, lineHeight: 22, fontWeight: '400' },
+  insightStudyText: { color: '#61564C', fontSize: 13.5, lineHeight: 21 },
+  insightReadMore: { marginTop: 10, color: '#9A315B', fontSize: 11.5, fontWeight: '700' },
+  insightDualGrid: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, marginBottom: 16, alignItems: 'flex-start' },
+  insightListCard: { flex: 1, padding: 14, borderRadius: 22, backgroundColor: 'rgba(255,253,249,0.93)', borderWidth: 1, borderColor: '#E9DDD0' },
+  insightListHeader: { alignItems: 'center', marginBottom: 12 },
+  insightListTitle: { fontSize: 12.5, fontWeight: '800', marginTop: 7, textAlign: 'center' },
+  insightBulletRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
+  insightBullet: { width: 5, height: 5, borderRadius: 3, marginTop: 6, marginRight: 7 },
+  insightBulletText: { flex: 1, color: '#675C52', fontSize: 11.5, lineHeight: 17 },
+  remedyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  remedyTile: { width: '48%', minHeight: 132, alignItems: 'center', padding: 13, borderRadius: 21, backgroundColor: '#FAF7F2', borderWidth: 1, borderColor: '#EBDFD2' },
+  remedyTileTitle: { color: '#6F2949', fontSize: 11.5, fontWeight: '800', textAlign: 'center', marginTop: 8 },
+  remedyTileValue: { color: '#74675B', fontSize: 10.5, lineHeight: 15, textAlign: 'center', marginTop: 6 },
 
   // Form
   formHeader: {

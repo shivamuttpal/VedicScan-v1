@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   Alert, ActivityIndicator, TextInput, Platform, KeyboardAvoidingView,
-  Image, Modal,
+  Image, Modal, Animated, Easing,
 } from 'react-native';
 import LocationInput from '../../components/LocationInput';
 import CalendarDatePicker from '../../components/CalendarDatePicker';
@@ -17,7 +17,7 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import api from '../../config/api';
 
-const MATCHING_ART = require('../../../assets/home/matching.jpg');
+const MATCHING_ART = require('../../../assets/Generated image 1.png');
 
 const escapeHtml = (value) => String(value ?? '')
   .replace(/&/g, '&amp;')
@@ -205,6 +205,118 @@ const PremiumReportModal = ({ visible, onClose, onUpgrade, onPurchase, language,
   </Modal>
 );
 
+// ─── Partner input card ───────────────────────────────────────────────────────
+// Defined at module scope (not inside the screen) so its TextInputs keep a stable
+// native identity across the screen's frequent re-renders. Re-creating these inline
+// on every render caused focus to jump from the name field to the birth-place field.
+const InputCard = React.memo(({
+  type, data, setData, entrance, ornamentFloat, t,
+  focusedField, setFocusedField, fieldRef, scrollToLocationField,
+  showDatePicker, setShowDatePicker, showTimePicker, setShowTimePicker,
+}) => {
+  const isBoy = type === 'Boy';
+  const fieldPrefix = isBoy ? 'boy' : 'girl';
+  return (
+    <Animated.View style={[
+      styles.inputCard,
+      { zIndex: isBoy ? 10 : 1, opacity: entrance },
+    ]}>
+      <View style={styles.cardHeader}>
+        <View style={styles.cardHeaderLeft}>
+          <View style={[styles.genderIcon, { backgroundColor: isBoy ? '#F8EEE7' : '#F8EAEE' }]}>
+            <MaterialCommunityIcons name={isBoy ? "gender-male" : "gender-female"} size={19} color={isBoy ? "#A66D4F" : "#9B6476"} />
+          </View>
+          <View>
+            <Text style={styles.cardEyebrow}>{isBoy ? t('compatPartnerOne') : t('compatPartnerTwo')}</Text>
+            <Text style={styles.cardTitle}>{isBoy ? t('compatGroomDetails') : t('compatBrideDetails')}</Text>
+          </View>
+        </View>
+        <Animated.View style={{ transform: [{ translateY: ornamentFloat.interpolate({ inputRange: [0, 1], outputRange: [2, -3] }) }] }}>
+          <View style={[styles.featherOrnament, isBoy ? styles.featherOrnamentGold : styles.featherOrnamentRose]}>
+            <MaterialCommunityIcons name="feather" size={24} color={isBoy ? '#C79B35' : '#C98C9D'} />
+            <Ionicons name="sparkles" size={10} color="#D4AF37" style={styles.featherSparkle} />
+          </View>
+        </Animated.View>
+      </View>
+
+      <View style={styles.cardBody}>
+        <View style={styles.fieldGroup}>
+          <Text style={styles.fieldLabel}>{t('compatFullName')}</Text>
+          <View style={[styles.compactInput, styles.inputWithIcon, focusedField === `${fieldPrefix}-name` && styles.inputFocused]}>
+            <Ionicons name="person-outline" size={16} color="#9D8B7C" />
+            <TextInput
+              style={styles.textInput}
+              placeholder={t('compatEnterName')}
+              value={data.name}
+              onChangeText={(val) => setData({ ...data, name: val })}
+              onFocus={() => setFocusedField(`${fieldPrefix}-name`)}
+              onBlur={() => setFocusedField('')}
+              placeholderTextColor="#B7ABA2"
+            />
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <View style={[styles.fieldGroup, { flex: 1, marginRight: 8 }]}>
+            <Text style={styles.fieldLabel}>{t('compatBirthDate')}</Text>
+            <TouchableOpacity style={[styles.compactInput, styles.inputWithIcon]} onPress={() => setShowDatePicker(true)}>
+              <Ionicons name="calendar-outline" size={16} color="#9D8B7C" />
+              <Text style={[styles.fieldValue, { color: data.dateOfBirth ? C.text : "#B7ABA2" }]}>
+                {data.dateOfBirth || 'YYYY-MM-DD'}
+              </Text>
+              <Ionicons name="chevron-down" size={13} color="#C39A38" />
+            </TouchableOpacity>
+          </View>
+          <View style={[styles.fieldGroup, { flex: 1 }]}>
+            <Text style={styles.fieldLabel}>{t('compatBirthTime')}</Text>
+            <TouchableOpacity style={[styles.compactInput, styles.inputWithIcon]} onPress={() => setShowTimePicker(true)}>
+              <Ionicons name="time-outline" size={16} color="#9D8B7C" />
+              <Text style={[styles.fieldValue, { color: data.timeOfBirth ? C.text : "#B7ABA2" }]}>
+                {data.timeOfBirth || 'HH:MM'}
+              </Text>
+              <Ionicons name="chevron-down" size={13} color="#C39A38" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.fieldGroup} ref={fieldRef} collapsable={false}>
+          <Text style={styles.fieldLabel}>{t('compatBirthPlace')}</Text>
+          <LocationInput
+            value={data.placeOfBirth}
+            onChangeText={(val) => setData({ ...data, placeOfBirth: val })}
+            placeholder={t('compatEnterBirthCity')}
+            soft
+            onFocus={() => scrollToLocationField(fieldRef)}
+          />
+        </View>
+      </View>
+
+      <CalendarDatePicker
+        visible={showDatePicker}
+        value={data.dateOfBirth}
+        title={isBoy ? t('compatGroomDetails') : t('compatBrideDetails')}
+        minDate={new Date(1900, 0, 1)}
+        maxDate={new Date()}
+        onClose={() => setShowDatePicker(false)}
+        onConfirm={(dateStr) => {
+          setData({ ...data, dateOfBirth: dateStr });
+          setShowDatePicker(false);
+        }}
+      />
+      <CustomTimePicker
+        visible={showTimePicker}
+        value={data.timeOfBirth}
+        title={isBoy ? t('compatGroomDetails') : t('compatBrideDetails')}
+        onClose={() => setShowTimePicker(false)}
+        onConfirm={(timeStr) => {
+          setData({ ...data, timeOfBirth: timeStr });
+          setShowTimePicker(false);
+        }}
+      />
+    </Animated.View>
+  );
+});
+
 // ─── Screen ───────────────────────────────────────────────────────────────────
 const CompatibilityScreen = ({ navigation }) => {
   const { hasProfile } = useAuth();
@@ -220,6 +332,10 @@ const CompatibilityScreen = ({ navigation }) => {
   const scrollRef = React.useRef(null);
   const boyLocationFieldRef = React.useRef(null);
   const girlLocationFieldRef = React.useRef(null);
+  const firstCardEntrance = React.useRef(new Animated.Value(0)).current;
+  const secondCardEntrance = React.useRef(new Animated.Value(0)).current;
+  const ornamentFloat = React.useRef(new Animated.Value(0)).current;
+  const [focusedField, setFocusedField] = useState('');
 
   const scrollToLocationField = (fieldRef) => {
     setTimeout(() => {
@@ -244,6 +360,18 @@ const CompatibilityScreen = ({ navigation }) => {
   useEffect(() => {
     if (!hasProfile) { navigation.navigate('ProfileTab'); return; }
     fetchSubscriptionStatus();
+
+    Animated.stagger(130, [
+      Animated.timing(firstCardEntrance, { toValue: 1, duration: 480, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(secondCardEntrance, { toValue: 1, duration: 480, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+
+    const floatingLoop = Animated.loop(Animated.sequence([
+      Animated.timing(ornamentFloat, { toValue: 1, duration: 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(ornamentFloat, { toValue: 0, duration: 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    floatingLoop.start();
+    return () => floatingLoop.stop();
   }, []);
 
   useEffect(() => {
@@ -258,6 +386,10 @@ const CompatibilityScreen = ({ navigation }) => {
   };
 
   const isPremium = subscriptionPlan === 'premium';
+  const isFormComplete = Boolean(
+    boyData.dateOfBirth && boyData.timeOfBirth && boyData.placeOfBirth.trim()
+    && girlData.dateOfBirth && girlData.timeOfBirth && girlData.placeOfBirth.trim()
+  );
 
   const checkCompatibility = async () => {
     if (!boyData.dateOfBirth || !boyData.timeOfBirth || !boyData.placeOfBirth) {
@@ -452,113 +584,60 @@ const CompatibilityScreen = ({ navigation }) => {
     navigation.navigate('PricingScreen', { feature: 'compatibility-report' });
   };
 
-  const renderInputCard = (type, data, setData, showDatePicker, setShowDatePicker, showTimePicker, setShowTimePicker) => {
-    const isBoy = type === 'Boy';
-    return (
-      <View style={[styles.inputCard, { zIndex: isBoy ? 10 : 1 }]}>
-        <View style={styles.cardHeader}>
-          <View style={styles.cardHeaderLeft}>
-            <View style={[styles.genderIcon, { backgroundColor: isBoy ? '#F8EEE7' : '#F8EAEE' }]}>
-              <MaterialCommunityIcons name={isBoy ? "gender-male" : "gender-female"} size={19} color={isBoy ? "#A66D4F" : "#9B6476"} />
-            </View>
-            <View>
-              <Text style={styles.cardEyebrow}>{isBoy ? t('compatPartnerOne') : t('compatPartnerTwo')}</Text>
-              <Text style={styles.cardTitle}>{isBoy ? t('compatGroomDetails') : t('compatBrideDetails')}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.cardBody}>
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>{t('compatFullName')}</Text>
-            <TextInput
-              style={styles.compactInput}
-              placeholder={t('compatEnterName')}
-              value={data.name}
-              onChangeText={(val) => setData({ ...data, name: val })}
-              placeholderTextColor="#C0C0C0"
-            />
-          </View>
-
-          <View style={styles.row}>
-            <View style={[styles.fieldGroup, { flex: 1, marginRight: 8 }]}>
-              <Text style={styles.fieldLabel}>{t('compatBirthDate')}</Text>
-              <TouchableOpacity style={styles.compactInput} onPress={() => setShowDatePicker(true)}>
-                <Text style={{ fontSize: 13, color: data.dateOfBirth ? C.text : "#C0C0C0" }}>
-                  {data.dateOfBirth || 'YYYY-MM-DD'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[styles.fieldGroup, { flex: 1 }]}>
-              <Text style={styles.fieldLabel}>{t('compatBirthTime')}</Text>
-              <TouchableOpacity style={styles.compactInput} onPress={() => setShowTimePicker(true)}>
-                <Text style={{ fontSize: 13, color: data.timeOfBirth ? C.text : "#C0C0C0" }}>
-                  {data.timeOfBirth || 'HH:MM'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.fieldGroup} ref={isBoy ? boyLocationFieldRef : girlLocationFieldRef} collapsable={false}>
-            <Text style={styles.fieldLabel}>{t('compatBirthPlace')}</Text>
-            <LocationInput
-              value={data.placeOfBirth}
-              onChangeText={(val) => setData({ ...data, placeOfBirth: val })}
-              placeholder={t('compatEnterBirthCity')}
-              soft
-              onFocus={() => scrollToLocationField(isBoy ? boyLocationFieldRef : girlLocationFieldRef)}
-            />
-          </View>
-        </View>
-
-        <CalendarDatePicker
-          visible={showDatePicker}
-          value={data.dateOfBirth}
-          title={isBoy ? t('compatGroomDetails') : t('compatBrideDetails')}
-          minDate={new Date(1900, 0, 1)}
-          maxDate={new Date()}
-          onClose={() => setShowDatePicker(false)}
-          onConfirm={(dateStr) => {
-            setData({ ...data, dateOfBirth: dateStr });
-            setShowDatePicker(false);
-          }}
-        />
-        <CustomTimePicker
-          visible={showTimePicker}
-          value={data.timeOfBirth}
-          title={isBoy ? t('compatGroomDetails') : t('compatBrideDetails')}
-          onClose={() => setShowTimePicker(false)}
-          onConfirm={(timeStr) => {
-            setData({ ...data, timeOfBirth: timeStr });
-            setShowTimePicker(false);
-          }}
-        />
-      </View>
-    );
-  };
-
   const renderInput = () => (
     <View style={styles.body}>
       <View style={styles.verticalInputStack}>
-        {renderInputCard('Boy', boyData, setBoyData, showBoyDatePicker, setShowBoyDatePicker, showBoyTimePicker, setShowBoyTimePicker)}
+        <InputCard
+          type="Boy" data={boyData} setData={setBoyData}
+          entrance={firstCardEntrance} ornamentFloat={ornamentFloat} t={t}
+          focusedField={focusedField} setFocusedField={setFocusedField}
+          fieldRef={boyLocationFieldRef} scrollToLocationField={scrollToLocationField}
+          showDatePicker={showBoyDatePicker} setShowDatePicker={setShowBoyDatePicker}
+          showTimePicker={showBoyTimePicker} setShowTimePicker={setShowBoyTimePicker}
+        />
         <View style={styles.connectorLine}>
           <View style={styles.line} />
-          <View style={styles.connectorCircle}><Ionicons name="heart-outline" size={16} color="#A86C7D" /></View>
+          <Animated.View style={[styles.connectorCircle, { transform: [{ translateY: ornamentFloat.interpolate({ inputRange: [0, 1], outputRange: [2, -2] }) }] }]}>
+            <MaterialCommunityIcons name="creation" size={17} color="#C39835" />
+          </Animated.View>
           <View style={styles.line} />
         </View>
-        {renderInputCard('Girl', girlData, setGirlData, showGirlDatePicker, setShowGirlDatePicker, showGirlTimePicker, setShowGirlTimePicker)}
+        <InputCard
+          type="Girl" data={girlData} setData={setGirlData}
+          entrance={secondCardEntrance} ornamentFloat={ornamentFloat} t={t}
+          focusedField={focusedField} setFocusedField={setFocusedField}
+          fieldRef={girlLocationFieldRef} scrollToLocationField={scrollToLocationField}
+          showDatePicker={showGirlDatePicker} setShowDatePicker={setShowGirlDatePicker}
+          showTimePicker={showGirlTimePicker} setShowTimePicker={setShowGirlTimePicker}
+        />
       </View>
-
-      <TouchableOpacity style={styles.mainCheckBtn} onPress={checkCompatibility} disabled={loading} activeOpacity={0.8}>
-        <LinearGradient colors={['#6A1039', '#8B1F48']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.mainCheckBtnGrad}>
-          {loading ? <ActivityIndicator color={C.white} /> : <Text style={styles.mainCheckBtnText}>{t('compatCheck')}</Text>}
-        </LinearGradient>
-      </TouchableOpacity>
 
       <View style={styles.infoBox}>
-        <Ionicons name="information-circle-outline" size={18} color="#A87861" style={{ marginRight: 9 }} />
-        <Text style={styles.infoText}>{t('compatInfo')}</Text>
+        <View style={styles.infoIcon}><MaterialCommunityIcons name="heart-multiple-outline" size={17} color="#B57789" /></View>
+        <View style={styles.infoCopy}>
+          <Text style={styles.infoTitle}>{language === 'hi' ? 'आपकी यात्रा यहीं से शुरू होती है' : 'Your cosmic journey begins here.'}</Text>
+          <Text style={styles.infoText}>{t('compatInfo')}</Text>
+        </View>
       </View>
+
+      <TouchableOpacity
+        style={[styles.mainCheckBtn, (!isFormComplete || loading) && styles.mainCheckBtnDisabled]}
+        onPress={checkCompatibility}
+        disabled={!isFormComplete || loading}
+        activeOpacity={0.82}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: !isFormComplete || loading }}
+      >
+        <LinearGradient colors={['#E7C65F', '#C58B16', '#E0B83F']} locations={[0, 0.55, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.mainCheckBtnGrad}>
+          {loading ? <ActivityIndicator color="#4A351A" /> : (
+            <>
+              <Ionicons name="sparkles" size={17} color="#4A351A" />
+              <Text style={styles.mainCheckBtnText}>{language === 'hi' ? t('compatCheck') : 'Generate Compatibility Report'}</Text>
+              <Ionicons name="arrow-forward" size={17} color="#4A351A" />
+            </>
+          )}
+        </LinearGradient>
+      </TouchableOpacity>
     </View>
   );
 
@@ -729,9 +808,20 @@ const CompatibilityScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <Image source={MATCHING_ART} style={styles.screenBackground} resizeMode="cover" pointerEvents="none" />
+      <View style={styles.screenWash} pointerEvents="none" />
       <LinearGradient colors={['#FFF9F5', '#FAEEF1']} style={styles.header}>
-        <Image source={MATCHING_ART} style={styles.headerArt} resizeMode="cover" />
-        <LinearGradient colors={['rgba(255,250,246,0.76)', 'rgba(250,238,241,0.91)']} style={StyleSheet.absoluteFillObject} pointerEvents="none" />
+        <Image source={MATCHING_ART} style={styles.headerArt} resizeMode="cover" pointerEvents="none" />
+        {/* Legibility scrim (matches the HomeScreen hero): transparent over the
+            koi-heart art, easing into a soft milky base behind the title text. */}
+        <LinearGradient
+          colors={['rgba(255,253,249,0)', 'rgba(255,251,247,0.10)', 'rgba(251,245,241,0.58)']}
+          locations={[0, 0.5, 1]}
+          start={{ x: 0.3, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFillObject}
+          pointerEvents="none"
+        />
         <View style={styles.headerOrbLarge} />
         <View style={styles.headerOrbSmall} />
         <View style={styles.headerTopRow}>
@@ -757,7 +847,7 @@ const CompatibilityScreen = ({ navigation }) => {
         <Text style={styles.headerSub}>{t('compatSubtitle')}</Text>
       </LinearGradient>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} style={{ flex: 1 }} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
         <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 160 }}>
           {result ? renderResult() : renderInput()}
         </ScrollView>
@@ -832,49 +922,70 @@ const modal = StyleSheet.create({
 
 // ─── Screen Styles ────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF8F4' },
+  container: { flex: 1, backgroundColor: '#FAF7F2' },
+  screenBackground: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%', opacity: 0.035 },
+  screenWash: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(250,247,242,0.9)' },
   header: {
     paddingTop: Platform.OS === 'ios' ? 58 : 44,
-    paddingBottom: 28, paddingHorizontal: 20,
-    borderBottomLeftRadius: 30, borderBottomRightRadius: 30,
-    overflow: 'hidden', borderBottomWidth: 1, borderBottomColor: '#F0DEE3',
+    height: 292, paddingBottom: 24, paddingHorizontal: 20,
+    borderBottomLeftRadius: 34, borderBottomRightRadius: 34,
+    overflow: 'hidden', borderBottomWidth: 1, borderBottomColor: 'rgba(212,175,55,0.16)',
   },
-  headerArt: { ...StyleSheet.absoluteFillObject, width: '100%', height: '100%', opacity: 0.38 },
-  headerOrbLarge: { position: 'absolute', width: 180, height: 180, borderRadius: 90, right: -52, top: -72, backgroundColor: 'rgba(210,161,172,0.12)' },
-  headerOrbSmall: { position: 'absolute', width: 90, height: 90, borderRadius: 45, left: -35, bottom: -35, backgroundColor: 'rgba(222,183,144,0.12)' },
-  headerTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, zIndex: 1 },
+  // Art is taller than the header (292) and anchored to the top so the koi-heart
+  // fills the banner and the image's pale-water lower strip is clipped off the
+  // bottom. left/right:-8 (no explicit width) makes it bleed 8px past each edge —
+  // the HomeScreen hero trick that removes the hairline gap on rounded corners.
+  headerArt: { position: 'absolute', top: 0, left: -8, right: -8, height: 384, opacity: 1 },
+  headerOrbLarge: { position: 'absolute', width: 180, height: 180, borderRadius: 90, right: -52, top: -72, backgroundColor: 'rgba(212,175,55,0.09)' },
+  headerOrbSmall: { position: 'absolute', width: 90, height: 90, borderRadius: 45, left: -35, bottom: -35, backgroundColor: 'rgba(201,140,157,0.09)' },
+  headerTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, zIndex: 1 },
   headerRightControls: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  backBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: '#EEDDE2', justifyContent: 'center', alignItems: 'center' },
+  backBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,253,249,0.82)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.22)', justifyContent: 'center', alignItems: 'center' },
   headerPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.62)', borderWidth: 1, borderColor: '#EDDEE1' },
   headerPillText: { fontSize: 8.5, fontWeight: '500', letterSpacing: 1, color: '#8E6C61' },
-  languageToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 9, paddingVertical: 7, borderRadius: 15, backgroundColor: 'rgba(255,255,255,0.72)', borderWidth: 1, borderColor: '#EDDEE1' },
+  languageToggle: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 9, paddingVertical: 7, borderRadius: 15, backgroundColor: 'rgba(255,253,249,0.82)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.2)' },
   languageOption: { fontSize: 9.5, fontWeight: '400', color: '#B09A98' },
   languageOptionActive: { fontWeight: '500', color: '#74495B' },
   languageDivider: { width: 1, height: 11, backgroundColor: '#E5D4D8' },
-  headerIcon: { width: 50, height: 50, borderRadius: 18, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#EEDDE2', justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 11, shadowColor: '#8D6070', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 2 },
-  headerTitle: { fontSize: 25, fontWeight: '500', color: '#5A3948', textAlign: 'center', letterSpacing: -0.4 },
-  headerSub: { fontSize: 12, fontWeight: '400', color: '#9A7B87', textAlign: 'center', marginTop: 5 },
-  body: { paddingHorizontal: 16, paddingTop: 20 },
+  headerIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,253,249,0.9)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.28)', justifyContent: 'center', alignItems: 'center', alignSelf: 'center', marginBottom: 10, shadowColor: '#8D6C31', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3 },
+  headerTitle: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 27, fontWeight: '400', color: '#35281D', textAlign: 'center', letterSpacing: -0.45 },
+  headerSub: { fontSize: 11.5, fontWeight: '400', color: '#796A5D', textAlign: 'center', marginTop: 5, letterSpacing: 0.05 },
+  body: { paddingHorizontal: 16, paddingTop: 18 },
   verticalInputStack: { width: '100%' },
-  inputCard: { padding: 18, borderRadius: 22, marginBottom: 0, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#ECE3DE', shadowColor: '#72515E', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.06, shadowRadius: 14, elevation: 2 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
+  inputCard: { padding: 17, borderRadius: 28, marginBottom: 0, backgroundColor: 'rgba(255,253,249,0.97)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.18)', shadowColor: '#6F5639', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.08, shadowRadius: 17, elevation: 4 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   cardHeaderLeft: { flexDirection: 'row', alignItems: 'center' },
-  genderIcon: { width: 38, height: 38, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 11 },
-  cardEyebrow: { fontSize: 8.5, fontWeight: '500', letterSpacing: 1, color: '#AB9188', marginBottom: 2 },
-  cardTitle: { fontSize: 16, fontWeight: '500', color: '#604650' },
+  genderIcon: { width: 39, height: 39, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginRight: 11 },
+  cardEyebrow: { fontSize: 8, fontWeight: '700', letterSpacing: 1.15, color: '#B28728', marginBottom: 2 },
+  cardTitle: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 17, fontWeight: '400', color: '#35281D' },
+  featherOrnament: { width: 45, height: 39, borderRadius: 17, justifyContent: 'center', alignItems: 'center', transform: [{ rotate: '-12deg' }] },
+  featherOrnamentGold: { backgroundColor: '#FBF4E5', borderWidth: 1, borderColor: '#F0DFC0' },
+  featherOrnamentRose: { backgroundColor: '#FBEEF0', borderWidth: 1, borderColor: '#F0D8DD' },
+  featherSparkle: { position: 'absolute', right: 2, top: 0 },
   cardBody: { gap: 12 },
   fieldGroup: { marginBottom: 2 },
-  fieldLabel: { fontSize: 9, fontWeight: '500', color: '#947C72', letterSpacing: 0.75, textTransform: 'uppercase', marginBottom: 7, marginLeft: 2 },
-  compactInput: { minHeight: 48, justifyContent: 'center', backgroundColor: '#FCFAF8', borderRadius: 13, paddingHorizontal: 13, paddingVertical: 11, fontSize: 13, fontWeight: '400', color: '#54474B', borderWidth: 1, borderColor: '#ECE6E2' },
+  fieldLabel: { fontSize: 8.5, fontWeight: '600', color: '#75675B', letterSpacing: 0.78, textTransform: 'uppercase', marginBottom: 7, marginLeft: 2 },
+  compactInput: { minHeight: 50, justifyContent: 'center', backgroundColor: '#FCFAF7', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, fontSize: 13, fontWeight: '400', color: '#54474B', borderWidth: 1, borderColor: '#E7DCCF' },
+  inputWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  // NOTE: focus highlight must stay to border/background only. Adding elevation or
+  // shadow here promotes the wrapper to a new native layer on Android, which drops
+  // the TextInput's focus and bounces the cursor to the next EditText (birth place).
+  inputFocused: { backgroundColor: '#FFFDF9', borderColor: '#D9B95F' },
+  textInput: { flex: 1, paddingVertical: 0, fontSize: 13, color: '#4F443A' },
+  fieldValue: { flex: 1, fontSize: 12 },
   row: { flexDirection: 'row' },
-  connectorLine: { height: 52, alignItems: 'center', justifyContent: 'center' },
-  line: { width: 1, height: 10, backgroundColor: '#E5D7D9' },
-  connectorCircle: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#FFF8F8', borderWidth: 1, borderColor: '#EAD9DD', justifyContent: 'center', alignItems: 'center', elevation: 1, shadowColor: '#8D6070', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 5, zIndex: 10 },
-  mainCheckBtn: { borderRadius: 16, overflow: 'hidden', marginTop: 24, elevation: 2 },
-  mainCheckBtnGrad: { paddingVertical: 16, alignItems: 'center' },
-  mainCheckBtnText: { color: C.white, fontSize: 15, fontWeight: '500', letterSpacing: 0.15 },
-  infoBox: { flexDirection: 'row', marginTop: 20, padding: 15, backgroundColor: '#F8F2EF', borderRadius: 15, borderWidth: 1, borderColor: '#EDE1DC' },
-  infoText: { flex: 1, fontSize: 11.5, color: '#806E68', lineHeight: 17, fontWeight: '400' },
+  connectorLine: { height: 48, alignItems: 'center', justifyContent: 'center' },
+  line: { width: 1, height: 8, backgroundColor: '#E5D6B9' },
+  connectorCircle: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#E8D5A5', justifyContent: 'center', alignItems: 'center', elevation: 2, shadowColor: '#967022', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6, zIndex: 10 },
+  mainCheckBtn: { borderRadius: 18, overflow: 'hidden', marginTop: 16, elevation: 5, shadowColor: '#7D5711', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.28, shadowRadius: 12, borderWidth: 1, borderColor: '#B78316' },
+  mainCheckBtnDisabled: { opacity: 0.58, elevation: 1, shadowOpacity: 0.08 },
+  mainCheckBtnGrad: { minHeight: 54, paddingHorizontal: 18, flexDirection: 'row', gap: 10, justifyContent: 'center', alignItems: 'center' },
+  mainCheckBtnText: { color: '#3F2E19', fontSize: 14, fontWeight: '600', letterSpacing: 0.08 },
+  infoBox: { flexDirection: 'row', alignItems: 'center', marginTop: 16, padding: 13, backgroundColor: 'rgba(248,236,234,0.82)', borderRadius: 18, borderWidth: 1, borderColor: '#EFDDDA' },
+  infoIcon: { width: 36, height: 36, borderRadius: 14, backgroundColor: '#FFF9F8', borderWidth: 1, borderColor: '#EED9DE', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  infoCopy: { flex: 1 },
+  infoTitle: { fontSize: 10.5, color: '#5F4A4F', fontWeight: '600', marginBottom: 2 },
+  infoText: { fontSize: 9.5, color: '#887579', lineHeight: 14, fontWeight: '400' },
 
   // Results
   premiumResultCard: { borderRadius: 24, overflow: 'hidden', marginBottom: 24, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#EDE3DE', shadowColor: '#72515E', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.07, shadowRadius: 16, elevation: 3 },

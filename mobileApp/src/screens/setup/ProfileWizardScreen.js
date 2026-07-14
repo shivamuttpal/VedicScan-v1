@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, KeyboardAvoidingView, Platform, Alert,
+  ScrollView, KeyboardAvoidingView, Platform, Alert, Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
+import { authTheme as T } from '../../theme/authTheme';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { VedicCard } from '../../components/VedicCard';
@@ -12,6 +14,8 @@ import LocationInput from '../../components/LocationInput';
 import CalendarDatePicker from '../../components/CalendarDatePicker';
 import CustomTimePicker from '../../components/CustomTimePicker';
 import api from '../../config/api';
+
+const TEMPLE_BACKGROUND = require('../../../assets/vedicsplas.png');
 
 const ProfileWizardScreen = ({ navigation }) => {
   const { user, refreshProfileStatus } = useAuth();
@@ -118,10 +122,13 @@ const ProfileWizardScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <Image pointerEvents="none" source={TEMPLE_BACKGROUND} resizeMode="cover" style={styles.backgroundImage} />
+      <LinearGradient pointerEvents="none" colors={['rgba(255,253,248,0.76)', 'rgba(255,250,240,0.94)', '#FFFDF8']} locations={[0, 0.42, 1]} style={StyleSheet.absoluteFillObject} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="always" keyboardDismissMode="none" automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'} showsVerticalScrollIndicator={false}>
 
           <View style={styles.header}>
+            <View style={styles.lotusMark}><Ionicons name="flower-outline" size={19} color={T.colors.gold} /></View>
             <Text style={styles.brand}>Vedic<Text style={styles.brandAccent}>Scan</Text></Text>
             <Text style={styles.subtitle}>{t('cosmicProfileSetup')}</Text>
             {step > 0 && renderStepIndicator()}
@@ -171,7 +178,7 @@ const ProfileWizardScreen = ({ navigation }) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.primaryBtn} onPress={nextStep}>
-                  <LinearGradient colors={['#C9A45A', '#7B1A38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
+                  <LinearGradient colors={T.gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
                     <Text style={styles.btnText}>{t('continueBtn')}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -244,7 +251,7 @@ const ProfileWizardScreen = ({ navigation }) => {
                 </View>
 
                 <TouchableOpacity style={styles.primaryBtn} onPress={nextStep}>
-                  <LinearGradient colors={['#C9A45A', '#7B1A38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
+                  <LinearGradient colors={T.gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
                     <Text style={styles.btnText}>{t('continueBtn')}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -306,7 +313,7 @@ const ProfileWizardScreen = ({ navigation }) => {
                     onPress={handleFinish}
                     disabled={loading}
                   >
-                    <LinearGradient colors={['#C9A45A', '#7B1A38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
+                    <LinearGradient colors={T.gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
                       <Text style={styles.btnText}>{loading ? t('creating') : t('createProfile')}</Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -334,7 +341,7 @@ const ProfileWizardScreen = ({ navigation }) => {
                 </View>
 
                 <TouchableOpacity style={[styles.primaryBtn, { width: '100%' }]} onPress={() => {}}>
-                  <LinearGradient colors={['#C9A45A', '#7B1A38']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
+                  <LinearGradient colors={T.gradients.primary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.gradientBtn}>
                     <Text style={styles.btnText}>{t('startExploring')}</Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -434,6 +441,66 @@ const styles = StyleSheet.create({
   langCardTitleActive: { color: C.saffron },
   langCardSub: { fontSize: 12, color: C.textMuted, marginTop: 2 },
   langCheckmark: { fontSize: 20, color: C.saffron, fontWeight: '800' },
+
+  // Premium auth-aligned visual system
+  backgroundImage: { ...StyleSheet.absoluteFillObject, width: '100%', height: '58%', opacity: 0.56 },
+  scroll: { flexGrow: 1, paddingHorizontal: 20, paddingTop: Platform.OS === 'ios' ? 64 : 44, paddingBottom: 48 },
+  header: { alignItems: 'center', marginBottom: 24 },
+  lotusMark: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: T.colors.goldLight, backgroundColor: 'rgba(255,253,248,0.82)', alignItems: 'center', justifyContent: 'center', marginBottom: 8, ...T.shadow.card },
+  lotusText: { color: T.colors.gold, fontSize: 19 },
+  brand: { fontFamily: T.type.display, fontSize: 34, fontWeight: '400', color: T.colors.ink, letterSpacing: -1 },
+  brandAccent: { color: T.colors.gold },
+  subtitle: { fontSize: 14, fontWeight: '400', color: T.colors.body, marginTop: 4 },
+  stepperContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 20 },
+  stepCircle: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  stepActive: { backgroundColor: T.colors.gold, borderColor: T.colors.gold },
+  stepInactive: { backgroundColor: 'rgba(255,253,248,0.75)', borderColor: T.colors.border },
+  stepText: { fontWeight: '600', fontSize: 14 },
+  stepTextActive: { color: T.colors.white },
+  stepTextInactive: { color: T.colors.muted },
+  stepLine: { width: 38, height: 1, backgroundColor: T.colors.border, marginHorizontal: 7 },
+  stepLineActive: { backgroundColor: T.colors.gold },
+  card: { padding: 22, backgroundColor: 'rgba(255,254,251,0.93)', borderRadius: 24, borderWidth: 1, borderColor: 'rgba(224,190,130,0.58)', ...T.shadow.card },
+  stepContent: { width: '100%' },
+  stepTitle: { fontSize: 25, fontWeight: '600', color: T.colors.ink, letterSpacing: -0.5, marginBottom: 5 },
+  stepDesc: { fontSize: 13, lineHeight: 19, color: T.colors.body, marginBottom: 22 },
+  label: { fontSize: 13, fontWeight: '500', color: T.colors.ink, marginBottom: 7, marginTop: 10 },
+  input: { minHeight: 56, backgroundColor: '#FFFEFB', borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: T.colors.ink, justifyContent: 'center', borderWidth: 1, borderColor: T.colors.border },
+  inputText: { fontSize: 15, color: T.colors.ink },
+  infoBox: { backgroundColor: '#FFF8E9', padding: 16, borderRadius: 16, marginTop: 20, marginBottom: 18, borderLeftWidth: 2, borderLeftColor: T.colors.gold },
+  infoText: { color: T.colors.bronze, fontSize: 12, lineHeight: 19 },
+  primaryBtn: { borderRadius: 20, overflow: 'hidden', marginTop: 16, ...T.shadow.gold },
+  gradientBtn: { minHeight: 56, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
+  btnText: { color: T.colors.white, fontSize: 15, fontWeight: '600', letterSpacing: 0.15 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
+  chip: { backgroundColor: '#F8F1E6', paddingVertical: 11, paddingHorizontal: 17, borderRadius: 16, borderWidth: 1, borderColor: 'transparent' },
+  chipActive: { backgroundColor: '#FFF9ED', borderColor: T.colors.gold },
+  chipText: { color: T.colors.body, fontWeight: '500' },
+  chipTextActive: { color: T.colors.bronze },
+  previewBox: { backgroundColor: '#FFF9EB', borderRadius: 18, padding: 16, marginTop: 28, marginBottom: 18, borderWidth: 1, borderColor: T.colors.goldLight },
+  previewTitle: { fontSize: 10, fontWeight: '600', color: T.colors.amber, letterSpacing: 1.2 },
+  previewBadge: { backgroundColor: 'rgba(255,255,255,0.82)', paddingHorizontal: 10, paddingVertical: 7, borderRadius: 10, borderWidth: 1, borderColor: T.colors.border },
+  badgeText: { fontSize: 11, color: T.colors.body },
+  btnRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
+  secondaryBtn: { minHeight: 54, paddingHorizontal: 20, borderWidth: 1, borderColor: T.colors.gold, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  secondaryBtnText: { color: T.colors.bronze, fontWeight: '600', fontSize: 14 },
+  omCircle: { width: 78, height: 78, borderRadius: 39, backgroundColor: T.colors.gold, justifyContent: 'center', alignItems: 'center', marginBottom: 20, ...T.shadow.gold },
+  welcomeTitle: { fontFamily: T.type.display, fontSize: 29, fontWeight: '400', color: T.colors.ink, marginBottom: 8, textAlign: 'center' },
+  welcomeDesc: { fontSize: 14, lineHeight: 21, color: T.colors.body, textAlign: 'center', marginBottom: 26, paddingHorizontal: 8 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 22 },
+  featureCard: { width: '48.5%', minHeight: 112, backgroundColor: '#FAF4E9', borderRadius: 18, padding: 15, marginBottom: 9, borderWidth: 1, borderColor: 'rgba(233,210,172,0.7)' },
+  fIcon: { fontSize: 23, marginBottom: 8 },
+  fTitle: { fontSize: 13, fontWeight: '600', color: T.colors.ink, marginBottom: 3 },
+  fDesc: { fontSize: 11, lineHeight: 16, color: T.colors.muted },
+  langStepIcon: { fontSize: 42, textAlign: 'center', marginBottom: 16 },
+  langCard: { borderWidth: 1, borderColor: T.colors.border, borderRadius: 18, marginTop: 13, padding: 16, backgroundColor: '#FAF5EC' },
+  langCardActive: { borderColor: T.colors.gold, backgroundColor: '#FFFDF8' },
+  langCardInner: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  langCardSymbol: { fontFamily: T.type.display, fontSize: 29, fontWeight: '500', color: T.colors.bronze, width: 42, textAlign: 'center' },
+  langCardTitle: { fontSize: 16, fontWeight: '500', color: T.colors.ink },
+  langCardTitleActive: { color: T.colors.amber },
+  langCardSub: { fontSize: 12, color: T.colors.muted, marginTop: 3 },
+  langCheckmark: { fontSize: 20, color: T.colors.gold, fontWeight: '600' },
 });
 
 export default ProfileWizardScreen;

@@ -39,7 +39,7 @@ export default {
   babyNamingCardDesc: 'Most auspicious names for your baby',
 
   // HomeScreen — drawer
-  drawerFeatures: 'FEATURES',
+  drawerFeatures: 'MAIN SERVICES',
   drawerAccount: 'ACCOUNT',
   drawerKundaliMatching: 'Kundali Matching',
   drawerKundaliGenerate: 'Generate Kundali',
@@ -48,6 +48,10 @@ export default {
   drawerUnlockPremium: 'Unlock Premium',
   drawerMySubscription: 'My Subscription',
   drawerProfileSettings: 'Profile & Settings',
+  drawerLogout: 'Logout',
+  drawerLogoutTitle: 'Ready to leave?',
+  drawerLogoutMessage: 'You can sign back in anytime to continue your cosmic journey.',
+  drawerCancel: 'Cancel',
 
   // ProfileWizard — header
   cosmicProfileSetup: 'Set up your cosmic profile',

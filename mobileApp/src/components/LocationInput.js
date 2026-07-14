@@ -118,7 +118,7 @@ const LocationInput = ({
   };
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, showDropdown && styles.containerOpen, style]}>
       <View style={[styles.inputWrapper, { backgroundColor: th.inputBg, borderColor: th.inputBorder }]}>
         <Ionicons name="location-outline" size={17} color={th.iconColor} style={styles.searchIcon} />
         <TextInput
@@ -182,8 +182,12 @@ const LocationInput = ({
 
 const styles = StyleSheet.create({
   container: {
-    zIndex: 9999,
+    zIndex: 1,
     width: '100%',
+  },
+  containerOpen: {
+    zIndex: 9999,
+    elevation: 20,
   },
   inputWrapper: {
     flexDirection: 'row',

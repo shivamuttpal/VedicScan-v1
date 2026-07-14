@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-  Alert, RefreshControl, Platform, Image, Linking
+  Alert, RefreshControl, Platform, Image, ImageBackground, Linking
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { C, spacing, radius, fontSize, shadow } from '../../theme';
+import { C, spacing, radius, fontSize } from '../../theme';
 import { useAuth } from '../../context/AuthContext';
-import { VedicCard, GoldBar } from '../../components/VedicCard';
+import { VedicCard } from '../../components/VedicCard';
 import LocationInput from '../../components/LocationInput';
 import CalendarDatePicker from '../../components/CalendarDatePicker';
 import CustomTimePicker from '../../components/CustomTimePicker';
 import api from '../../config/api';
 
-const LOGO = require('../../../assets/logo.jpeg');
-const BANNER = require('../../../assets/banner.png');
+const PROFILE_BG = require('../../../assets/profile/profile-celestial-bg.png');
+const QUILL_ART = require('../../../assets/profile/quill-inkpot.png');
 
 const GENDERS = ['Male', 'Female', 'Other'];
 const RELATIONSHIPS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Friend', 'Other'];
@@ -21,11 +21,20 @@ const RELATIONSHIPS = ['Self', 'Spouse', 'Child', 'Parent', 'Sibling', 'Friend',
 // Hosted legal documents (also linked from the web app footer)
 const LEGAL_BASE = 'https://vedicscan.com';
 const LEGAL_LINKS = [
-  { label: 'Privacy Policy', url: `${LEGAL_BASE}/privacy` },
-  { label: 'Terms of Service', url: `${LEGAL_BASE}/terms` },
-  { label: 'Refund & Cancellation', url: `${LEGAL_BASE}/refund` },
-  { label: 'Account & Data Deletion', url: `${LEGAL_BASE}/data-deletion` },
+  { label: 'Privacy Policy', symbol: '♢', url: `${LEGAL_BASE}/privacy` },
+  { label: 'Terms of Service', symbol: '≡', url: `${LEGAL_BASE}/terms` },
+  { label: 'Refund & Cancellation', symbol: '↻', url: `${LEGAL_BASE}/refund` },
+  { label: 'Account & Data Deletion', symbol: '♙', url: `${LEGAL_BASE}/data-deletion` },
 ];
+
+const ProfileIcon = ({ symbol, danger = false, compact = false }) => (
+  <LinearGradient
+    colors={danger ? ['#FFF1F1', '#F9DEDE'] : ['#FFF9EB', '#F5E7CB']}
+    style={[styles.iconTile, compact && styles.iconTileCompact]}
+  >
+    <Text style={[styles.iconSymbol, compact && styles.iconSymbolCompact, danger && styles.iconSymbolDanger]}>{symbol}</Text>
+  </LinearGradient>
+);
 
 const ProfileScreen = ({ route, navigation }) => {
   const { user, hasProfile, refreshProfileStatus, logout } = useAuth();
@@ -228,29 +237,21 @@ const ProfileScreen = ({ route, navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <ImageBackground source={PROFILE_BG} style={styles.container} resizeMode="cover">
+      <View pointerEvents="none" style={styles.backgroundVeil} />
       {/* Header */}
-      <LinearGradient colors={['#6A1039', '#6A1039']} style={styles.header}>
-        <Image source={BANNER} style={styles.headerBannerOverlay} />
+      <View style={styles.header}>
         <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-               <Text style={styles.headerTitle}>Profile</Text>
-            </View>
-            <Text style={styles.headerSub}>
-              {hasProfile ? `${profiles.length} birth profile(s)` : 'Create your first profile'}
-            </Text>
+          <View style={styles.headerCopy}>
+            <Text style={styles.headerTitle}>Profile</Text>
+            <View style={styles.headerOrnament}><View style={styles.headerDot} /><View style={styles.headerLine} /></View>
+            <Text style={styles.headerSub}>Manage your account and birth profiles</Text>
           </View>
-          <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Logout</Text>
+          <TouchableOpacity accessibilityRole="button" onPress={logout} style={styles.logoutBtn} activeOpacity={0.82}>
+            <Text style={styles.logoutIcon}>↪</Text><Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
         </View>
-        {user && (
-          <Text style={styles.userInfo}>
-            {user.firstName} {user.lastName || ''} · {user.email || user.phone || ''}
-          </Text>
-        )}
-      </LinearGradient>
+      </View>
 
       <ScrollView
         ref={scrollViewRef}
@@ -419,7 +420,7 @@ const ProfileScreen = ({ route, navigation }) => {
 
           {/* Profiles List */}
           {profiles.map((p, i) => (
-            <VedicCard key={p._id || i} style={{ marginBottom: spacing.md }}>
+            <VedicCard key={p._id || i} style={styles.profileShell}>
               <View style={styles.profileCard}>
                 <View style={styles.profileHeader}>
                   <View style={styles.profileAvatar}>
@@ -429,42 +430,51 @@ const ProfileScreen = ({ route, navigation }) => {
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={styles.nameRow}>
-                      <Text style={styles.profileName}>{p.name}</Text>
+                      <Text style={styles.profileName} numberOfLines={1}>{p.name}</Text>
+                    </View>
+                    <View style={styles.profileMetaRow}>
+                      <Text style={styles.profileRel} numberOfLines={1}>{p.relationship || 'Self'}</Text>
                       {p.isDefault && (
                         <View style={styles.primaryBadge}>
-                          <Text style={styles.primaryBadgeText}>Primary</Text>
+                          <Text style={styles.primaryBadgeText}>♛  Primary</Text>
                         </View>
                       )}
                     </View>
-                    <Text style={styles.profileRel}>{p.relationship || 'Self'}</Text>
                   </View>
                   <View style={styles.profileActions}>
                     {!p.isDefault && (
-                      <TouchableOpacity onPress={() => handleSetDefault(p.id)} style={styles.actionBtn}>
-                        <Text style={styles.actionText}>⭐</Text>
+                      <TouchableOpacity accessibilityLabel="Make primary profile" hitSlop={8} onPress={() => handleSetDefault(p.id || p._id)} style={styles.actionBtn}>
+                        <Text style={styles.actionText}>♛</Text>
                       </TouchableOpacity>
                     )}
-                    <TouchableOpacity onPress={() => handleEdit(p)} style={styles.actionBtn}>
-                      <Text style={styles.actionText}>✏️</Text>
+                    <TouchableOpacity accessibilityLabel="Edit profile" hitSlop={8} onPress={() => handleEdit(p)} style={styles.actionBtn}>
+                      <Text style={styles.actionText}>✎</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDelete(p.id)} style={styles.actionBtn}>
-                      <Text style={styles.actionText}>🗑️</Text>
+                    <TouchableOpacity accessibilityLabel="Delete profile" hitSlop={8} onPress={() => handleDelete(p.id || p._id)} style={[styles.actionBtn, styles.actionBtnDanger]}>
+                      <Text style={[styles.actionText, styles.actionTextDanger]}>⌫</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
-                <GoldBar />
+                <View style={styles.profileDivider}>
+                  <View style={styles.profileDividerLine} />
+                  <Text style={styles.profileDividerStar}>{'\u2726'}</Text>
+                  <View style={styles.profileDividerLine} />
+                </View>
                 <View style={styles.detailGrid}>
                   <View style={styles.detailItem}>
+                    <ProfileIcon symbol="▣" compact />
                     <Text style={styles.detailLabel}>DOB</Text>
-                    <Text style={styles.detailValue}>{p.dateOfBirth || '—'}</Text>
+                    <Text style={styles.detailValue} numberOfLines={2}>{p.dateOfBirth || '—'}</Text>
                   </View>
                   <View style={styles.detailItem}>
+                    <ProfileIcon symbol="◷" compact />
                     <Text style={styles.detailLabel}>Time</Text>
-                    <Text style={styles.detailValue}>{p.timeOfBirth || '—'}</Text>
+                    <Text style={styles.detailValue} numberOfLines={2}>{p.timeOfBirth || '—'}</Text>
                   </View>
                   <View style={styles.detailItem}>
+                    <ProfileIcon symbol="⌖" compact />
                     <Text style={styles.detailLabel}>Place</Text>
-                    <Text style={styles.detailValue}>{p.placeOfBirth || '—'}</Text>
+                    <Text style={styles.detailValue} numberOfLines={2}>{p.placeOfBirth || '—'}</Text>
                   </View>
                 </View>
               </View>
@@ -476,9 +486,14 @@ const ProfileScreen = ({ route, navigation }) => {
             <TouchableOpacity
               style={styles.addBtn}
               onPress={() => setShowForm(true)}
-              activeOpacity={0.7}
+              activeOpacity={0.84}
             >
-              <Text style={styles.addText}>+ Add Another Profile</Text>
+              <View style={styles.addPlus}><Text style={styles.addPlusText}>+</Text></View>
+              <View style={styles.addCopy}>
+                <Text style={styles.addText}>Add Another Birth Profile</Text>
+                <Text style={styles.addSubtext}>Create birth charts for family and loved ones.</Text>
+              </View>
+              <Image source={QUILL_ART} style={styles.quillArt} resizeMode="contain" />
             </TouchableOpacity>
           )}
 
@@ -486,7 +501,7 @@ const ProfileScreen = ({ route, navigation }) => {
             <>
               {/* Legal & Support */}
               <View style={styles.legalSection}>
-                <Text style={styles.legalHeading}>Legal & Support</Text>
+                <View style={styles.legalTitleRow}><ProfileIcon symbol="♢" /><Text style={styles.legalHeading}>Legal & Support</Text><View style={styles.legalTitleLine} /></View>
                 {LEGAL_LINKS.map((link) => (
                   <TouchableOpacity
                     key={link.url}
@@ -494,6 +509,7 @@ const ProfileScreen = ({ route, navigation }) => {
                     onPress={() => openLegal(link.url)}
                     activeOpacity={0.7}
                   >
+                    <ProfileIcon symbol={link.symbol} />
                     <Text style={styles.legalLabel}>{link.label}</Text>
                     <Text style={styles.legalChevron}>›</Text>
                   </TouchableOpacity>
@@ -503,16 +519,17 @@ const ProfileScreen = ({ route, navigation }) => {
               {/* Danger Zone — delete account */}
               <View style={styles.dangerSection}>
                 <View style={styles.dangerContent}>
-                  <View style={{ flex: 1 }}>
+                  <ProfileIcon symbol="!" danger />
+                  <View style={styles.dangerCopy}>
                     <Text style={styles.dangerHeading}>Delete Account</Text>
-                    <Text style={styles.dangerText}>Remove all data permanently</Text>
+                    <Text style={styles.dangerText}>Permanently remove your account and all associated data. This action cannot be undone.</Text>
                   </View>
                   <TouchableOpacity
                     style={styles.dangerBtn}
                     onPress={handleDeleteAccount}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.dangerBtnText}>🗑️</Text>
+                    <Text style={styles.dangerBtnText}>⌫</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -522,7 +539,7 @@ const ProfileScreen = ({ route, navigation }) => {
           <View style={{ height: 100 }} />
         </View>
       </ScrollView>
-    </View>
+    </ImageBackground>
   );
 };
 
@@ -683,6 +700,71 @@ const styles = StyleSheet.create({
   subTitle: { fontSize: 16, fontWeight: '700', color: C.text },
   subDesc: { fontSize: 12, color: C.textMuted, marginTop: 2 },
   subArrow: { fontSize: 20, color: C.saffron, fontWeight: '700' },
+
+  // Premium profile dashboard overrides
+  backgroundVeil: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(250,247,242,0.28)' },
+  header: { paddingTop: Platform.OS === 'ios' ? 58 : 48, paddingBottom: 28, paddingHorizontal: 22 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headerCopy: { flex: 1, paddingRight: 14 },
+  headerTitle: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 40, lineHeight: 46, fontWeight: '600', color: '#35281D', letterSpacing: -0.9 },
+  headerSub: { maxWidth: 230, fontSize: 13.5, color: '#786B60', lineHeight: 20, marginTop: 8 },
+  headerOrnament: { width: 76, flexDirection: 'row', alignItems: 'center', marginTop: 6 },
+  headerDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#D4AF37', marginRight: 6 },
+  headerLine: { flex: 1, height: 1, backgroundColor: 'rgba(212,175,55,0.55)' },
+  logoutBtn: { minHeight: 48, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,253,249,0.86)', borderRadius: 24, paddingHorizontal: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)', shadowColor: '#72543D', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.11, shadowRadius: 14, elevation: 4 },
+  logoutIcon: { color: '#956B1A', fontSize: 22, marginRight: 7 },
+  logoutText: { color: '#6F5D4F', fontSize: 13.5, fontWeight: '600' },
+  body: { paddingHorizontal: 18, paddingBottom: 30 },
+  profileShell: { marginBottom: 14, borderRadius: 24, borderColor: 'rgba(212,175,55,0.24)', backgroundColor: 'rgba(255,253,249,0.95)', shadowColor: '#72543D', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.09, shadowRadius: 16, elevation: 4 },
+  profileCard: { paddingHorizontal: 14, paddingTop: 13, paddingBottom: 11 },
+  profileHeader: { flexDirection: 'row', alignItems: 'center', minHeight: 58 },
+  profileAvatar: { width: 58, height: 58, borderRadius: 29, backgroundColor: '#F8ECEA', justifyContent: 'center', alignItems: 'center', marginRight: 11, borderWidth: 1.5, borderColor: '#D4AF37', shadowColor: '#D4AF37', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 7, elevation: 2 },
+  avatarText: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 24, fontWeight: '600', color: '#742844' },
+  profileName: { flexShrink: 1, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 17, lineHeight: 21, fontWeight: '600', color: '#35281D' },
+  profileRel: { flexShrink: 1, fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 12.5, color: '#8A5368' },
+  nameRow: { flexDirection: 'row', alignItems: 'center' },
+  profileMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 5 },
+  primaryBadge: { backgroundColor: '#F4E2AC', paddingHorizontal: 7, paddingVertical: 3, borderRadius: 7, borderWidth: 1, borderColor: '#E4C975' },
+  primaryBadgeText: { color: '#9B6D08', fontSize: 8.5, fontWeight: '800' },
+  profileActions: { flexDirection: 'row', gap: 6, alignSelf: 'flex-start', paddingTop: 2 },
+  actionBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,253,249,0.9)', borderWidth: 1, borderColor: '#E8DDD0', shadowColor: '#72543D', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.07, shadowRadius: 6, elevation: 2 },
+  actionBtnDanger: { borderColor: '#F0D1D1', backgroundColor: '#FFF8F7' },
+  actionText: { color: '#6C4937', fontSize: 15, fontWeight: '700' },
+  actionTextDanger: { color: '#C33D3D' },
+  profileDivider: { flexDirection: 'row', alignItems: 'center', marginVertical: 8 },
+  profileDividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(212,175,55,0.42)' },
+  profileDividerStar: { color: '#D4AF37', fontSize: 14, marginHorizontal: 7 },
+  detailGrid: { flexDirection: 'row' },
+  detailItem: { width: '33.333%', minHeight: 82, paddingHorizontal: 7, paddingVertical: 4, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: '#E9DED1' },
+  detailLabel: { fontSize: 8.5, color: '#97877A', fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 5 },
+  detailValue: { fontSize: 11.5, lineHeight: 15.5, color: '#35281D', fontWeight: '700', marginTop: 4 },
+  detailHelper: { color: '#9B8B7D', fontSize: 9.5, marginTop: 2 },
+  iconTile: { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(212,175,55,0.18)' },
+  iconTileCompact: { width: 32, height: 32, borderRadius: 10 },
+  iconSymbol: { color: '#A87308', fontSize: 20, fontWeight: '700' },
+  iconSymbolCompact: { fontSize: 16 },
+  iconSymbolDanger: { color: '#BE3C3C' },
+  addBtn: { minHeight: 132, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#DDBA91', borderStyle: 'dashed', borderRadius: 25, paddingLeft: 15, paddingRight: 8, marginTop: 2, backgroundColor: 'rgba(255,248,238,0.78)', overflow: 'hidden' },
+  addPlus: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#E8DCCB', shadowColor: '#72543D', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.09, shadowRadius: 10, elevation: 3 },
+  addPlusText: { color: '#B77C08', fontSize: 30, lineHeight: 32, fontWeight: '300' },
+  addCopy: { flex: 1, marginLeft: 13, paddingRight: 68 },
+  addText: { color: '#A7700B', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontWeight: '600', fontSize: 17 },
+  addSubtext: { color: '#8B7A6B', fontSize: 10.5, lineHeight: 15, marginTop: 5 },
+  quillArt: { position: 'absolute', right: -8, bottom: 3, width: 102, height: 116 },
+  legalSection: { marginTop: 22, backgroundColor: 'rgba(255,253,249,0.94)', borderRadius: 26, borderWidth: 1, borderColor: '#EADBC8', overflow: 'hidden', paddingHorizontal: 16, shadowColor: '#72543D', shadowOffset: { width: 0, height: 7 }, shadowOpacity: 0.07, shadowRadius: 15, elevation: 3 },
+  legalTitleRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16 },
+  legalHeading: { fontSize: 12.5, fontWeight: '800', color: '#A7700B', textTransform: 'uppercase', letterSpacing: 0.8, marginLeft: 10 },
+  legalTitleLine: { flex: 1, height: 1, backgroundColor: 'rgba(212,175,55,0.3)', marginLeft: 12 },
+  legalRow: { minHeight: 66, flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#EEE5DA' },
+  legalLabel: { flex: 1, fontSize: 14, color: '#45372D', marginLeft: 12, fontWeight: '500' },
+  legalChevron: { fontSize: 25, color: '#C18B0A', marginLeft: 8 },
+  dangerSection: { marginTop: 17, backgroundColor: 'rgba(255,239,239,0.9)', borderRadius: 25, borderWidth: 1, borderColor: '#F0CFCF', padding: 16 },
+  dangerContent: { flexDirection: 'row', alignItems: 'center' },
+  dangerCopy: { flex: 1, marginLeft: 13, marginRight: 10 },
+  dangerHeading: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 17, fontWeight: '600', color: '#A52F36', marginBottom: 4 },
+  dangerText: { fontSize: 10.5, color: '#976568', lineHeight: 15 },
+  dangerBtn: { width: 54, height: 54, borderRadius: 16, backgroundColor: '#C93D3D', alignItems: 'center', justifyContent: 'center', shadowColor: '#C93D3D', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 4 },
+  dangerBtnText: { color: '#FFF', fontSize: 22, fontWeight: '700' },
 });
 
 export default ProfileScreen;

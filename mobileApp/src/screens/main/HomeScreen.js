@@ -1,17 +1,16 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   StyleSheet,
   ScrollView,
   RefreshControl,
   Platform,
   Animated,
-  Modal,
   Dimensions,
   Image,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -22,9 +21,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import api from '../../config/api';
 import { SIGNS, LORD_HI, EL_HI } from '../../data/signs';
+import PremiumDrawer from '../../components/navigation/PremiumDrawer';
 
 const LOGO = require('../../../assets/logo.jpeg');
-const BANNER = require('../../../assets/home/banner.png');
+const BANNER = require('../../../assets/home/hero-celestial-v2.jpg');
 const HOME_ART = {
   kundali: require('../../../assets/home/kundali.jpg'),
   matching: require('../../../assets/home/matching.jpg'),
@@ -54,7 +54,7 @@ const formatDate = () => {
 };
 
 const HomeScreen = ({ navigation }) => {
-  const { user, hasProfile, isAuthenticated, refreshProfileStatus } = useAuth();
+  const { user, hasProfile, isAuthenticated, refreshProfileStatus, logout } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const [predictions, setPredictions] = useState({});
   const [predictionsHi, setPredictionsHi] = useState({});
@@ -63,17 +63,18 @@ const HomeScreen = ({ navigation }) => {
   const [selectedSignName, setSelectedSignName] = useState('Mesh');
   const [defaultProfile, setDefaultProfile] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const drawerAnim = useRef(new Animated.Value(-width * 0.78)).current;
+  const heroDrift = useRef(new Animated.Value(0)).current;
 
-  const openDrawer = () => {
-    setDrawerOpen(true);
-    Animated.spring(drawerAnim, { toValue: 0, useNativeDriver: true, tension: 65, friction: 11 }).start();
-  };
+  useEffect(() => {
+    const animation = Animated.loop(Animated.sequence([
+      Animated.timing(heroDrift, { toValue: 1, duration: 12000, useNativeDriver: true }),
+      Animated.timing(heroDrift, { toValue: 0, duration: 12000, useNativeDriver: true }),
+    ]));
+    animation.start();
+    return () => animation.stop();
+  }, [heroDrift]);
 
-  const closeDrawer = () => {
-    Animated.timing(drawerAnim, { toValue: -width * 0.78, duration: 220, useNativeDriver: true })
-      .start(() => setDrawerOpen(false));
-  };
+  const openDrawer = () => setDrawerOpen(true);
 
   const STACK_ROUTES = new Set(['Compatibility', 'BabyNaming', 'Kundali', 'Pricing', 'Subscription', 'PaymentSuccess']);
 
@@ -86,10 +87,14 @@ const HomeScreen = ({ navigation }) => {
     }
   };
 
-  const navigateTo = (route) => {
-    closeDrawer();
-    setTimeout(() => goTo(route), 240);
-  };
+  const confirmLogout = () => Alert.alert(
+    t('drawerLogoutTitle'),
+    t('drawerLogoutMessage'),
+    [
+      { text: t('drawerCancel'), style: 'cancel' },
+      { text: t('drawerLogout'), style: 'destructive', onPress: logout },
+    ],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -162,6 +167,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const firstName = defaultProfile?.name || user?.firstName || 'Arjun';
+  const greetingFontSize = firstName.length > 25 ? 23 : firstName.length > 18 ? 26 : firstName.length > 12 ? 29 : 32;
   const selectedSign = SIGNS.find((s) => s.rashi === selectedSignName) || SIGNS[0];
   const isHindi = language === 'hi';
 
@@ -219,9 +225,12 @@ const HomeScreen = ({ navigation }) => {
       >
         {/* ── HERO ── */}
         <View style={styles.hero}>
-          <Image source={BANNER} style={styles.heroBanner} resizeMode="cover" />
+          <Animated.Image source={BANNER} style={[styles.heroBanner, { transform: [
+            { translateX: heroDrift.interpolate({ inputRange: [0, 1], outputRange: [0, -8] }) },
+            { scale: heroDrift.interpolate({ inputRange: [0, 1], outputRange: [1.02, 1.06] }) },
+          ] }]} resizeMode="cover" />
           <LinearGradient
-            colors={['rgba(17,8,30,0.12)', 'rgba(29,8,27,0.34)', 'rgba(24,6,22,0.82)']}
+            colors={['rgba(255,253,249,0)', 'rgba(255,253,249,0.08)', 'rgba(250,247,242,0.46)']}
             start={{ x: 0.2, y: 0 }}
             end={{ x: 0.5, y: 1 }}
             style={StyleSheet.absoluteFillObject}
@@ -240,14 +249,21 @@ const HomeScreen = ({ navigation }) => {
                   <Text style={[styles.langOpt, language === 'hi' && styles.langOptActive]}>अ</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.menuBtn} onPress={openDrawer} activeOpacity={0.7}>
-                  <Ionicons name="menu" size={23} color="#FFFFFF" />
+                  <Ionicons name="menu" size={22} color="#2D241D" />
                 </TouchableOpacity>
               </View>
             </View>
 
             <View style={styles.heroGreetingBlock}>
               <Text style={styles.heroNamaste}>{t('namaste')}</Text>
-              <Text style={styles.heroGreeting} numberOfLines={2}>{firstName}</Text>
+              <Text
+                style={[styles.heroGreeting, { fontSize: greetingFontSize }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.68}
+              >
+                {firstName}
+              </Text>
               <View style={styles.taglineRow}>
                 <Ionicons name="sparkles" size={13} color="#E7C573" />
                 <Text style={styles.heroTagline}>{t('tagline')}</Text>
@@ -256,7 +272,7 @@ const HomeScreen = ({ navigation }) => {
 
             <TouchableOpacity onPress={() => navigation.navigate('Chat')} activeOpacity={0.86}>
               <LinearGradient
-                colors={['rgba(255,255,255,0.17)', 'rgba(255,255,255,0.08)']}
+                colors={['rgba(255,255,255,0.94)', 'rgba(255,251,243,0.86)']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.aiGuideCard}
@@ -436,19 +452,19 @@ const HomeScreen = ({ navigation }) => {
             style={styles.premiumWrap}
           >
             <LinearGradient
-              colors={['#7A1F3D', '#4A0E22']}
+              colors={['#F4E3B1', '#D8B44A']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.premiumGrad}
             >
               <View style={styles.premiumIconWrap}>
-                <Ionicons name="diamond-outline" size={23} color="#F4D58A" />
+                <Ionicons name="diamond-outline" size={23} color="#6B5015" />
               </View>
               <View style={styles.premiumTextBlock}>
                 <Text style={styles.premiumTitle}>{t('unlockPremium')}</Text>
                 <Text style={styles.premiumDesc}>{t('premiumDesc')}</Text>
               </View>
-              <Ionicons name="arrow-forward" size={21} color="#E4BF6A" />
+              <Ionicons name="arrow-forward" size={21} color="#5F4817" />
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -456,77 +472,15 @@ const HomeScreen = ({ navigation }) => {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* ── SIDE DRAWER ── */}
-      <Modal visible={drawerOpen} transparent animationType="none" onRequestClose={closeDrawer} statusBarTranslucent>
-        <View style={styles.drawerOverlay}>
-          <TouchableWithoutFeedback onPress={closeDrawer}>
-            <View style={styles.drawerBackdrop} />
-          </TouchableWithoutFeedback>
-
-          <Animated.View style={[styles.drawerPanel, { transform: [{ translateX: drawerAnim }] }]}>
-            <LinearGradient colors={['#6E1532', '#6A1039']} style={styles.drawerHeader}>
-              <View style={styles.drawerUserRow}>
-                <View style={styles.drawerAvatar}>
-                  <Image source={LOGO} style={styles.drawerAvatarLogo} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.drawerUserName}>{defaultProfile?.name || user?.firstName || t('welcomeTitle')}</Text>
-                  <Text style={styles.drawerUserSub}>{user?.email || t('vedicMember')}</Text>
-                </View>
-              </View>
-              <TouchableOpacity onPress={closeDrawer} style={styles.drawerCloseBtn} activeOpacity={0.7}>
-                <Ionicons name="close" size={22} color="rgba(255,255,255,0.85)" />
-              </TouchableOpacity>
-            </LinearGradient>
-
-            <ScrollView style={styles.drawerBody} showsVerticalScrollIndicator={false}>
-              {[
-                {
-                  titleKey: 'drawerFeatures',
-                  items: [
-                    { icon: 'heart-outline', labelKey: 'drawerKundaliMatching', route: 'CompatibilityTab', color: '#6A1039', iconBg: '#F2D8E0' },
-                    { icon: 'star-four-points-outline', labelKey: 'drawerKundaliGenerate', route: 'KundaliTab', color: '#6A1039', iconBg: '#EDE0F7' },
-                    { icon: 'happy-outline', labelKey: 'drawerBabyNaming', route: 'BabyNaming', color: '#0B7060', iconBg: '#D0F0EA' },
-                    { icon: 'chatbubble-ellipses-outline', labelKey: 'drawerAskMaharishi', route: 'Chat', color: '#6A1039', iconBg: '#F2D8E0' },
-                  ],
-                },
-                {
-                  titleKey: 'drawerAccount',
-                  items: [
-                    { icon: 'star-outline', labelKey: 'drawerUnlockPremium', route: 'Pricing', color: '#B8860B', iconBg: '#FFF3C4', badge: 'PRO' },
-                    { icon: 'card-outline', labelKey: 'drawerMySubscription', route: 'Subscription', color: '#2C6FAC', iconBg: '#D6E8F7' },
-                    { icon: 'person-outline', labelKey: 'drawerProfileSettings', route: 'ProfileTab', color: '#6A1039', iconBg: '#F0E8DE' },
-                  ],
-                },
-              ].map((section) => (
-                <View key={section.titleKey} style={styles.drawerSection}>
-                  <Text style={styles.drawerSectionTitle}>{t(section.titleKey)}</Text>
-                  {section.items.map((item) => (
-                    <TouchableOpacity
-                      key={item.route + item.labelKey}
-                      style={styles.drawerItem}
-                      onPress={() => navigateTo(item.route)}
-                      activeOpacity={0.72}
-                    >
-                      <View style={[styles.drawerItemIcon, { backgroundColor: item.iconBg }]}>
-                        <Ionicons name={item.icon} size={19} color={item.color} />
-                      </View>
-                      <Text style={styles.drawerItemLabel}>{t(item.labelKey)}</Text>
-                      {item.badge && (
-                        <View style={styles.drawerBadge}>
-                          <Text style={styles.drawerBadgeText}>{item.badge}</Text>
-                        </View>
-                      )}
-                      <Ionicons name="chevron-forward" size={15} color="#C4B8AC" />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              ))}
-              <View style={{ height: 48 }} />
-            </ScrollView>
-          </Animated.View>
-        </View>
-      </Modal>
+      <PremiumDrawer
+        visible={drawerOpen}
+        user={user}
+        profileName={defaultProfile?.name}
+        t={t}
+        onNavigate={goTo}
+        onClosed={() => setDrawerOpen(false)}
+        onLogout={confirmLogout}
+      />
     </View>
   );
 };
@@ -1011,73 +965,50 @@ const styles = StyleSheet.create({
   premiumTitle: { color: '#FFFFFF', fontWeight: '700', fontSize: 16, marginBottom: 2 },
   premiumDesc: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
 
-  // ── DRAWER ──
-  drawerOverlay: { flex: 1, flexDirection: 'row' },
-  drawerBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.48)' },
-  drawerPanel: {
-    position: 'absolute',
-    left: 0, top: 0, bottom: 0,
-    width: width * 0.78,
-    backgroundColor: '#FDFAF6',
-    shadowColor: '#000',
-    shadowOffset: { width: 4, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 16,
-    elevation: 24,
-  },
-  drawerHeader: {
-    paddingTop: Platform.OS === 'ios' ? 56 : 40,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  drawerUserRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 4,
-  },
-  drawerAvatar: {
-    width: 46, height: 46,
-    borderRadius: 10,
-    backgroundColor: '#FFF',
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: '#FFFFFF',
-    overflow: 'hidden',
-  },
-  drawerAvatarLogo: { width: 38, height: 38, resizeMode: 'contain' },
-  drawerUserName: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
-  drawerUserSub: { fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2 },
-  drawerCloseBtn: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 52 : 36,
-    right: 16,
-    width: 34, height: 34,
-    borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  drawerBody: { flex: 1 },
-  drawerSection: { paddingTop: 20, paddingHorizontal: 16 },
-  drawerSectionTitle: {
-    fontSize: 10, fontWeight: '800', color: '#A08856',
-    letterSpacing: 1.5, marginBottom: 4, paddingLeft: 4,
-  },
-  drawerItem: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: 12, paddingVertical: 12, paddingHorizontal: 4,
-  },
-  drawerItemIcon: {
-    width: 38, height: 38, borderRadius: 10,
-    justifyContent: 'center', alignItems: 'center', flexShrink: 0,
-  },
-  drawerItemLabel: { flex: 1, fontSize: 15, fontWeight: '600', color: '#6A1039' },
-  drawerBadge: {
-    backgroundColor: '#6A1039', paddingHorizontal: 8,
-    paddingVertical: 3, borderRadius: 6,
-  },
-  drawerBadgeText: {
-    fontSize: 10, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.5,
-  },
+  // Light luxury home system
+  root: { flex: 1, backgroundColor: '#FAF7F2' },
+  scrollContent: { paddingBottom: 118, backgroundColor: '#FAF7F2' },
+  hero: { minHeight: 382, overflow: 'hidden', backgroundColor: '#FFFDF9' },
+  heroBanner: { position: 'absolute', left: -8, top: 0, width: width + 16, height: 382 },
+  heroContent: { flex: 1, paddingHorizontal: 20, paddingTop: Platform.OS === 'ios' ? 60 : 42, paddingBottom: 24, justifyContent: 'flex-start' },
+  datePill: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: 'rgba(255,253,249,0.82)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(212,175,55,0.28)' },
+  dateDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#D4AF37' },
+  datePillText: { fontSize: 10, color: '#6F5A46', fontWeight: '600', letterSpacing: 0.65 },
+  langToggle: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,253,249,0.82)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(212,175,55,0.25)', gap: 7 },
+  langOpt: { fontSize: 12, color: '#9E8E7E', fontWeight: '500' },
+  langOptActive: { color: '#8D6C18', fontWeight: '600' },
+  langDivider: { width: 1, height: 13, backgroundColor: '#E4D6C4' },
+  menuBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,253,249,0.84)', borderWidth: 1, borderColor: 'rgba(212,175,55,0.25)', justifyContent: 'center', alignItems: 'center' },
+  heroGreetingBlock: { width: '94%', marginTop: 24, marginBottom: 0 },
+  heroNamaste: { fontSize: 17, fontWeight: '400', color: '#7B6B5C', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontStyle: 'italic', lineHeight: 24, marginBottom: 2 },
+  heroGreeting: { width: '100%', fontWeight: '400', color: '#2D241D', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', letterSpacing: -0.8, lineHeight: 38, marginBottom: 8 },
+  taglineRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  heroTagline: { fontSize: 12, color: '#9A7421', fontWeight: '500', letterSpacing: 0.2 },
+  aiGuideCard: { minHeight: 76, flexDirection: 'row', alignItems: 'center', borderRadius: 24, padding: 10, paddingRight: 13, borderWidth: 1, borderColor: 'rgba(212,175,55,0.28)', marginTop: 22, marginBottom: 0, shadowColor: '#765D3A', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 18, elevation: 5 },
+  aiAvatarRing: { width: 52, height: 52, borderRadius: 17, backgroundColor: '#FFF8EE', marginRight: 12, borderWidth: 1, borderColor: '#E8C878', overflow: 'hidden' },
+  aiCapsuleEyebrow: { fontSize: 8, fontWeight: '600', color: '#B5851B', letterSpacing: 1.1, marginBottom: 2 },
+  aiCapsuleName: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 16, fontWeight: '400', color: '#2D241D', lineHeight: 20 },
+  aiGuideHint: { fontSize: 10.5, color: '#8A7A6B', marginTop: 2 },
+  aiGuideArrow: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#EDD17F', justifyContent: 'center', alignItems: 'center', marginLeft: 8 },
+  profileWarning: { marginTop: 14, flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF6E5', borderRadius: 18, padding: 14, borderWidth: 1, borderColor: '#E8C878' },
+  warningDesc: { color: '#7F6D5B', fontSize: 12, marginTop: 1 },
+  rashiCardWrap: { marginTop: 0, paddingHorizontal: 16, paddingTop: 18, backgroundColor: '#FAF7F2', zIndex: 10 },
+  rashiCard: { backgroundColor: '#FFFDF9', borderRadius: 28, overflow: 'hidden', shadowColor: '#6B553B', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.09, shadowRadius: 20, elevation: 5, borderWidth: 1, borderColor: 'rgba(212,175,55,0.18)', marginTop: 0 },
+  rashiName: { fontSize: 24, fontWeight: '400', color: '#2D241D', fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
+  rashiSymDeco: { position: 'absolute', right: 18, top: 4, fontSize: 64, opacity: 0.06, color: '#D4AF37' },
+  insightBox: { backgroundColor: '#F7F1E8', marginHorizontal: 14, marginBottom: 14, borderRadius: 20, padding: 17, borderWidth: 1, borderColor: '#EEE2D2' },
+  insightText: { fontSize: 13.5, color: '#51463D', lineHeight: 22, fontWeight: '400' },
+  section: { paddingHorizontal: 16, paddingTop: 28 },
+  sectionLabel: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif', fontSize: 19, fontWeight: '400', color: '#2D241D', letterSpacing: -0.2 },
+  rashiChip: { alignItems: 'center', justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 9, borderRadius: 20, backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#E9DED0', minWidth: 78, shadowColor: '#6A533A', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
+  rashiChipActive: { backgroundColor: '#FFF9EC', borderColor: '#D4AF37', shadowColor: '#B68A26', shadowOpacity: 0.13, shadowRadius: 8, elevation: 3 },
+  rashiChipSymbolActive: { backgroundColor: '#D4AF37' },
+  featureCardInner: { backgroundColor: '#FFFDF9', borderRadius: 26, padding: 12, borderWidth: 1, borderColor: 'rgba(212,175,55,0.16)', shadowColor: '#735A3B', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 3, minHeight: 258, justifyContent: 'space-between' },
+  premiumWrap: { borderRadius: 24, overflow: 'hidden', ...Platform.select({ ios: { shadowColor: '#8B6420', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 14 }, android: { elevation: 4 } }) },
+  premiumGrad: { flexDirection: 'row', alignItems: 'center', padding: 19, gap: 14 },
+  premiumIconWrap: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,253,249,0.45)', borderWidth: 1, borderColor: 'rgba(107,80,21,0.16)', justifyContent: 'center', alignItems: 'center' },
+  premiumTitle: { color: '#2D241D', fontWeight: '600', fontSize: 16, marginBottom: 2 },
+  premiumDesc: { color: '#6E5B43', fontSize: 12 },
 });
 
 export default HomeScreen;

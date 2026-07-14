@@ -18,6 +18,7 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#DFC289"

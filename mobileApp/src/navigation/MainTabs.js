@@ -12,8 +12,8 @@ import KundaliScreen from '../screens/main/KundaliScreen';
 
 const Tab = createBottomTabNavigator();
 
-const ACTIVE = '#7B1A38';
-const MUTED  = '#9A8878';
+const ACTIVE = '#B68A21';
+const MUTED  = '#8F8479';
 
 // ── Regular tab icon ──
 const TabIcon = ({ children, label, focused }) => (
@@ -140,8 +140,9 @@ const styles = StyleSheet.create({
   bottom: Platform.OS === 'ios' ? 26 : 14,
   height: 88,
   borderRadius: 28,
-  backgroundColor: '#FFFFFF',
-  borderTopWidth: 0,
+  backgroundColor: 'rgba(255,253,249,0.96)',
+  borderTopWidth: 1,
+  borderTopColor: 'rgba(212,175,55,0.18)',
   overflow: 'visible',
 
 
@@ -149,9 +150,9 @@ const styles = StyleSheet.create({
   paddingTop: 12,
   paddingBottom: 12,
 
-  shadowColor: '#1A0A00',
+  shadowColor: '#5E4930',
   shadowOffset: { width: 0, height: 8 },
-  shadowOpacity: 0.14,
+  shadowOpacity: 0.10,
   shadowRadius: 18,
   elevation: 14,
 },
@@ -174,7 +175,7 @@ activeBar: {
 },
 
 activeBarVisible: {
-  backgroundColor: '#C8660A',
+  backgroundColor: '#D4AF37',
 },
 
 tabLabel: {
@@ -189,7 +190,7 @@ tabLabel: {
 
 tabLabelActive: {
   color: ACTIVE,
-  fontWeight: '800',
+  fontWeight: '600',
 },
 
 centerWrapper: {
@@ -202,8 +203,8 @@ centerWrapper: {
 centerBg: {
   width: 56,
   height: 56,
-  borderRadius: 19,
-  backgroundColor: '#C8A45A',
+  borderRadius: 28,
+  backgroundColor: '#D4AF37',
   justifyContent: 'center',
   alignItems: 'center',
   marginBottom: 4,
@@ -219,7 +220,7 @@ centerBg: {
 },
 
 centerBgFocused: {
-  backgroundColor: '#A07C30',
+  backgroundColor: '#B68A21',
   transform: [{ scale: 1.04 }],
 },
 
