@@ -191,31 +191,10 @@ export const compatibilityController = {
                 return;
             }
 
-            // TEMP: payments disabled — skip the premium/purchase gate entirely.
-            if (PAYMENTS_ENABLED) {
-                // Check for premium plan or one-time purchase of 'compatibility-report'
-                const [user, usage] = await Promise.all([
-                    User.findById(userId).select('role purchasedFeatures'),
-                    UserUsage.findOne({ userId }).select('plan planEndDate'),
-                ]);
-
-                const isAdmin = user?.role === 'admin';
-                const hasPurchased = user?.purchasedFeatures?.includes('compatibility-report');
-                const isPremium = usage?.plan === 'premium' && (!usage.planEndDate || new Date() <= usage.planEndDate);
-
-                if (!isAdmin && !hasPurchased && !isPremium) {
-                    res.status(403).json({
-                        success: false,
-                        message: 'The Full Compatibility Report requires a VedicScan Premium subscription or a one-time purchase.',
-                        detail: {
-                            type: 'feature_locked',
-                            feature: 'compatibility-report',
-                            upgrade_url: '/subscription',
-                        },
-                    });
-                    return;
-                }
-            }
+            // Entitlement and quota are enforced by requireFeature(COMPATIBILITY_REPORT)
+            // in compatibility.router.ts. Keeping a second, divergent check here
+            // was how the old premium/one-time gate drifted out of sync with the
+            // plan catalogue — the route middleware is now the single gate.
 
             const { boy, girl, lang } = req.body;
             if (!boy || !girl) {

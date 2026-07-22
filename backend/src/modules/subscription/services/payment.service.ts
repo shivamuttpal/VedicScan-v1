@@ -61,6 +61,17 @@ class PaymentService {
             quantity: 1,
           };
 
+      // Metadata must be attached to the Subscription / PaymentIntent as well as
+      // the Session. Later lifecycle events (invoice.paid on renewal,
+      // customer.subscription.deleted, charge.refunded) carry the Subscription or
+      // Charge — NOT the Session — so metadata set only on the Session is
+      // unreachable and the webhook cannot tell which user to credit.
+      const metadata = {
+        userId: params.userId,
+        plan: params.plan,
+        billingCycle: params.billingCycle,
+      };
+
       const session = await this.stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [lineItem],
@@ -68,11 +79,10 @@ class PaymentService {
         success_url: params.successUrl,
         cancel_url: params.cancelUrl,
         customer_email: params.email,
-        metadata: {
-          userId: params.userId,
-          plan: params.plan,
-          billingCycle: params.billingCycle,
-        },
+        metadata,
+        ...(isOneTimePurchase
+          ? { payment_intent_data: { metadata } }
+          : { subscription_data: { metadata } }),
       });
       return session;
     } catch (error: any) {

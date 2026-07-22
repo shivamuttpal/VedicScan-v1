@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { rashifalService } from '../modules/rashifal/services/rashifal.service';
 import { runSubscriptionLifecycle } from './subscriptionLifecycle.util';
+import { registerBillingCronJobs } from '../modules/billing';
 
 /**
  * Initializes all cron jobs for the application
@@ -27,5 +28,9 @@ export const initCronJobs = () => {
     }
   });
 
-  console.log('✅ Cron Jobs Scheduled: [Daily Rashifal, Subscription Lifecycle (every 6h)]');
+  // RevenueCat billing housekeeping: add-on expiry, webhook retries,
+  // subscription reconciliation and retention pruning. See modules/billing/jobs.
+  registerBillingCronJobs();
+
+  console.log('✅ Cron Jobs Scheduled: [Daily Rashifal, Subscription Lifecycle (every 6h), Billing]');
 };

@@ -8,7 +8,11 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "lint": "eslint src/**/*.ts",
-    "test": "jest"
+    "test": "jest",
+    "check:billing": "ts-node --transpile-only src/modules/billing/__checks__/engine.check.ts",
+    "check:billing:period": "ts-node --transpile-only src/modules/billing/__checks__/period.check.ts",
+    "seed:billing": "ts-node-dev --transpile-only src/modules/billing/seeds/run.ts",
+    "seed:billing:prod": "node dist/modules/billing/seeds/run.js"
   },
   "dependencies": {
     "@aws-sdk/client-ses": "^3.1031.0",
@@ -44,6 +48,7 @@
     "@types/node": "^20.10.5",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^8.0.0",
+    "mongodb-memory-server": "^11.2.0",
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"

@@ -328,7 +328,7 @@ const CompatibilityScreen = ({ navigation }) => {
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [downloadingPremium, setDownloadingPremium] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [subscriptionPlan, setSubscriptionPlan] = useState('free');
+  const [reportQuota, setReportQuota] = useState(null);
   const scrollRef = React.useRef(null);
   const boyLocationFieldRef = React.useRef(null);
   const girlLocationFieldRef = React.useRef(null);
@@ -380,12 +380,19 @@ const CompatibilityScreen = ({ navigation }) => {
 
   const fetchSubscriptionStatus = async () => {
     try {
-      const res = await api.get('/api/subscription/status');
-      setSubscriptionPlan(res.data?.plan || 'free');
+      // Read the detailed-report quota directly rather than checking a plan
+      // NAME. Gating on `plan === 'premium'` broke the moment the tier was
+      // renamed, and it could not account for Add-on Pack units either.
+      const res = await api.get('/api/billing/status');
+      const data = res.data?.success ? res.data.data : null;
+      const quota = (data?.quotas || []).find((q) => q.feature === 'compatibility_report');
+      setReportQuota(quota || null);
     } catch (err) {}
   };
 
-  const isPremium = subscriptionPlan === 'premium';
+  // Entitled when the plan includes detailed reports AND there is allowance
+  // left — from the plan itself or from a live add-on pack.
+  const canDownloadReport = Boolean(reportQuota?.allowed);
   const isFormComplete = Boolean(
     boyData.dateOfBirth && boyData.timeOfBirth && boyData.placeOfBirth.trim()
     && girlData.dateOfBirth && girlData.timeOfBirth && girlData.placeOfBirth.trim()
@@ -529,7 +536,7 @@ const CompatibilityScreen = ({ navigation }) => {
   const downloadPremiumReport = async () => {
     if (!result?.guna_milan || downloadingPremium) return;
 
-    if (!isPremium) {
+    if (!canDownloadReport) {
       setShowPremiumModal(true);
       return;
     }
@@ -563,25 +570,29 @@ const CompatibilityScreen = ({ navigation }) => {
         Alert.alert(t('compatPremiumReportTitle'), t('compatShareUnavailable'));
       }
     } catch (err) {
-      if (err.response?.status === 403) {
+      // 403 = feature not in plan; 429 = allowance spent. Both mean "show the
+      // paywall", but the backend distinguishes them so the copy can differ.
+      if (err.response?.status === 403 || err.response?.status === 429) {
         setShowPremiumModal(true);
       } else {
         Alert.alert(t('compatPremiumReportTitle'), t('compatPremiumReportError'));
       }
     } finally {
       setDownloadingPremium(false);
+      // The download consumed one report unit — re-read so the UI reflects it.
+      fetchSubscriptionStatus();
     }
   };
 
   const handleUpgrade = () => {
     setShowPremiumModal(false);
-    navigation.navigate('PricingScreen');
+    navigation.navigate('Pricing');
   };
 
   const handlePurchaseReport = () => {
     setShowPremiumModal(false);
     // Navigate to pricing with one-time purchase pre-selected
-    navigation.navigate('PricingScreen', { feature: 'compatibility-report' });
+    navigation.navigate('Pricing');
   };
 
   const renderInput = () => (
@@ -694,19 +705,19 @@ const CompatibilityScreen = ({ navigation }) => {
                     <ActivityIndicator size="small" color="#C8A45A" />
                   ) : (
                     <>
-                      <MaterialCommunityIcons name={isPremium ? "file-pdf-box" : "crown"} size={20} color="#C8A45A" />
+                      <MaterialCommunityIcons name={canDownloadReport ? "file-pdf-box" : "crown"} size={20} color="#C8A45A" />
                       <View style={styles.premiumReportTextWrap}>
                         <Text style={styles.premiumReportTitle}>{t('compatPremiumReportTitle')}</Text>
                         <Text style={styles.premiumReportSub}>
-                          {isPremium ? t('compatPremiumReportSub') : t('compatPremiumReportLocked')}
+                          {canDownloadReport ? t('compatPremiumReportSub') : t('compatPremiumReportLocked')}
                         </Text>
                       </View>
-                      {!isPremium && (
+                      {!canDownloadReport && (
                         <View style={styles.premiumLockBadge}>
                           <Ionicons name="lock-closed" size={12} color="#4A0C1F" />
                         </View>
                       )}
-                      {isPremium && <Ionicons name="chevron-forward" size={18} color="rgba(200,164,90,0.6)" />}
+                      {canDownloadReport && <Ionicons name="chevron-forward" size={18} color="rgba(200,164,90,0.6)" />}
                     </>
                   )}
                 </LinearGradient>

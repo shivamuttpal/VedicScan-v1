@@ -7,15 +7,31 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { VedicCard, GoldBar } from '../../components/VedicCard';
 import api from '../../config/api';
-import { getCustomerInfo, hasPro, getActiveProductId, presentCustomerCenter, syncRevenueCatToBackend } from '../../config/revenuecat';
+import { syncToBackend, openManageSubscriptions, fetchBillingStatus } from '../../config/revenuecat';
 
 const LOGO = require('../../../assets/logo.jpeg');
 const BANNER = require('../../../assets/banner.png');
 
+/**
+ * Visual styling per plan code. Intentionally NO 'premium' entry — the plans are
+ * Free, Standard Monthly, Standard Yearly and the Add-on Pack. Display NAMES
+ * always come from the API (and therefore MongoDB); this map is colours only.
+ */
 const PLAN_META = {
-  free: { label: 'Free', color: '#A08856', bg: '#FFFDF8', border: '#F7F1E5', icon: '✨' },
-  standard: { label: 'Standard', color: '#C9A45A', bg: '#FFFDF8', border: '#FFDAB9', icon: '👑' },
-  premium: { label: 'Premium', color: '#6A1039', bg: '#F5F0FF', border: '#DCD0FF', icon: '👑' },
+  free:             { color: '#A08856', bg: '#FFFDF8', border: '#F7F1E5', icon: '✨' },
+  standard_monthly: { color: '#C9A45A', bg: '#FFFDF8', border: '#FFDAB9', icon: '👑' },
+  standard_yearly:  { color: '#C9A45A', bg: '#FFFDF8', border: '#FFDAB9', icon: '👑' },
+};
+
+/** Friendly names for feature keys, with a graceful fallback for new ones. */
+const FEATURE_LABELS = {
+  ai_chat: 'AI Chat Sessions',
+  kundali_report: 'Detailed Kundali Reports',
+  kundali_basic: 'Basic Kundali',
+  compatibility_report: 'Detailed Compatibility Reports',
+  compatibility_basic: 'Basic Compatibility Match',
+  baby_naming: 'Baby Naming',
+  rashifal_notification: 'Daily Rashifal',
 };
 
 function daysUntil(dateStr) {
@@ -24,9 +40,10 @@ function daysUntil(dateStr) {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
+/** Renders one feature quota. `limit === null` means unlimited. */
 const UsageBar = ({ label, used, limit, color }) => {
-  const isUnlimited = limit >= 99999;
-  const pct = isUnlimited ? 0 : Math.min(100, Math.round((used / limit) * 100));
+  const isUnlimited = limit === null || limit === undefined;
+  const pct = isUnlimited || !limit ? 0 : Math.min(100, Math.round((used / limit) * 100));
   const barColor = pct >= 90 ? '#D93025' : pct >= 70 ? '#C9A45A' : '#188038';
 
   return (
@@ -48,34 +65,32 @@ const UsageBar = ({ label, used, limit, color }) => {
   );
 };
 
-const PRODUCT_LABEL = { monthly: 'Monthly', yearly: 'Yearly', lifetime: 'Lifetime' };
 
 const SubscriptionScreen = ({ navigation }) => {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
-  const [rcIsPro, setRcIsPro] = useState(false);
-  const [rcProduct, setRcProduct] = useState(null);
+  const [emailUnsubscribed, setEmailUnsubscribed] = useState(true);
 
   const fetchStatus = async () => {
     try {
-      // 1. Check RevenueCat first
-      const rcInfo = await getCustomerInfo();
+      // Ask the backend to re-verify with RevenueCat first. The webhook is
+      // authoritative but not instantaneous, so this closes the gap when a
+      // server-to-server event was delayed or missed.
+      await syncToBackend();
 
-      // 2. If RC shows an active subscription, push it to the backend before reading backend status.
-      //    This bridges the gap when the server-to-server webhook was delayed or missed.
-      if (rcInfo && hasPro(rcInfo)) {
-        await syncRevenueCatToBackend();
-      }
+      // The backend is the sole authority on entitlement — never the SDK's
+      // local cache, which a tampered client could forge.
+      const billing = await fetchBillingStatus();
+      setStatus(billing);
 
-      // 3. Now read the (potentially freshly updated) backend status
-      const { data } = await api.get('/api/subscription/status');
-      setStatus(data);
-
-      if (rcInfo) {
-        setRcIsPro(hasPro(rcInfo));
-        setRcProduct(getActiveProductId(rcInfo));
+      // Email preference still lives on the legacy subscription endpoints.
+      try {
+        const { data } = await api.get('/api/subscription/status');
+        setEmailUnsubscribed(data?.emailUnsubscribed ?? true);
+      } catch {
+        // Non-fatal — the rest of the screen renders fine without it.
       }
     } catch (err) {
       console.log('Error fetching subscription status:', err?.message);
@@ -119,10 +134,18 @@ const SubscriptionScreen = ({ navigation }) => {
     );
   }
 
-  const plan = status?.plan || 'free';
+  const plan = status?.plan?.code || 'free';
+  const planLabel = status?.plan?.displayName || 'Free';
   const meta = PLAN_META[plan] || PLAN_META.free;
-  const daysLeft = daysUntil(status?.planEndDate);
-  const isActive = plan !== 'free';
+  const subscription = status?.subscription;
+  const daysLeft = daysUntil(subscription?.expiresAt);
+  const isActive = Boolean(status?.isPremium);
+
+  // Quotas render generically, so a new premium feature appears here with no
+  // app change once it is added to a plan in MongoDB.
+  const quotas = status?.quotas || [];
+  const chatQuota = quotas.find((q) => q.feature === 'ai_chat');
+  const addons = status?.addons || [];
   const expiringSoon = isActive && daysLeft !== null && daysLeft <= 7 && daysLeft > 0;
 
   return (
@@ -153,7 +176,7 @@ const SubscriptionScreen = ({ navigation }) => {
               </View>
               <View>
                 <Text style={styles.planLabel}>CURRENT PLAN</Text>
-                <Text style={[styles.planName, { color: meta.color }]}>{meta.label}</Text>
+                <Text style={[styles.planName, { color: meta.color }]}>{planLabel}</Text>
               </View>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: isActive ? '#E6F4EA' : '#F1F3F4' }]}>
@@ -176,7 +199,7 @@ const SubscriptionScreen = ({ navigation }) => {
               <View>
                 <Text style={styles.detailLabel}>{isActive ? 'Renews On' : 'Plan'}</Text>
                 <Text style={styles.detailValue}>
-                  {status?.planEndDate ? new Date(status.planEndDate).toLocaleDateString() : 'No expiry'}
+                  {subscription?.expiresAt ? new Date(subscription.expiresAt).toLocaleDateString() : 'No expiry'}
                 </Text>
               </View>
             </View>
@@ -199,33 +222,35 @@ const SubscriptionScreen = ({ navigation }) => {
           </View>
           <GoldBar />
           <View style={styles.usageContent}>
-            <UsageBar
-              label="Daily Questions"
-              used={status?.usage?.daily?.used || 0}
-              limit={status?.limits?.daily_questions || 3}
-            />
-            {/* Monthly question limit tracking disabled
-            <UsageBar
-              label="Monthly Questions"
-              used={status?.usage?.monthly?.used || 0}
-              limit={status?.limits?.monthly_questions || 90}
-            /> */}
+            {quotas.length === 0 && (
+              <Text style={styles.remLabel}>No usage data available yet.</Text>
+            )}
 
-            <View style={styles.remainingRow}>
-              <View style={styles.remainingBox}>
-                <Text style={styles.remNum}>
-                  {Math.max(0, (status?.limits?.daily_questions || 3) - (status?.usage?.daily?.used || 0))}
-                </Text>
-                <Text style={styles.remLabel}>Left Today</Text>
+            {quotas.map((q) => (
+              <UsageBar
+                key={q.feature}
+                label={FEATURE_LABELS[q.feature] || q.feature.replace(/_/g, ' ')}
+                used={q.used}
+                limit={q.limit}
+              />
+            ))}
+
+            {chatQuota && (
+              <View style={styles.remainingRow}>
+                <View style={styles.remainingBox}>
+                  <Text style={styles.remNum}>
+                    {chatQuota.unlimited ? '∞' : chatQuota.remaining}
+                  </Text>
+                  <Text style={styles.remLabel}>Chats Left Today</Text>
+                </View>
+                {chatQuota.addonLimit > 0 && (
+                  <View style={styles.remainingBox}>
+                    <Text style={styles.remNum}>+{chatQuota.addonLimit}</Text>
+                    <Text style={styles.remLabel}>From Add-on</Text>
+                  </View>
+                )}
               </View>
-              {/* Monthly "Left Month" box disabled
-              <View style={styles.remainingBox}>
-                <Text style={styles.remNum}>
-                  {Math.max(0, (status?.limits?.monthly_questions || 90) - (status?.usage?.monthly?.used || 0))}
-                </Text>
-                <Text style={styles.remLabel}>Left Month</Text>
-              </View> */}
-            </View>
+            )}
           </View>
         </VedicCard>
 
@@ -235,13 +260,13 @@ const SubscriptionScreen = ({ navigation }) => {
             <View style={styles.notifyInfo}>
               <Text style={styles.notifyTitle}>📩 Email Notifications</Text>
               <Text style={styles.notifyDesc}>
-                {status?.emailUnsubscribed
+                {emailUnsubscribed
                   ? 'Notifications are currently disabled.'
                   : 'Receive renewal alerts and cosmic insights.'}
               </Text>
             </View>
             <TouchableOpacity
-              style={[styles.toggleBtn, status?.emailUnsubscribed && styles.toggleBtnOff]}
+              style={[styles.toggleBtn, emailUnsubscribed && styles.toggleBtnOff]}
               onPress={handleEmailToggle}
               disabled={emailLoading}
             >
@@ -249,38 +274,78 @@ const SubscriptionScreen = ({ navigation }) => {
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.toggleBtnText}>
-                  {status?.emailUnsubscribed ? 'Enable' : 'Disable'}
+                  {emailUnsubscribed ? 'Enable' : 'Disable'}
                 </Text>
               )}
             </TouchableOpacity>
           </View>
         </VedicCard>
 
-        {/* RevenueCat Pro badge */}
-        {rcIsPro && (
+        {/* Active add-on packs */}
+        {addons.length > 0 && (
+          <VedicCard style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>⚡ Active Add-ons</Text>
+            </View>
+            <GoldBar />
+            <View style={styles.usageContent}>
+              {addons.map((addon, i) => (
+                <View key={`${addon.planCode}-${i}`} style={{ marginBottom: 12 }}>
+                  <Text style={styles.notifyTitle}>Add-on Pack</Text>
+                  <Text style={styles.notifyDesc}>
+                    Expires {new Date(addon.expiresAt).toLocaleString()}
+                  </Text>
+                  {addon.grants.map((g) => (
+                    <Text key={g.feature} style={styles.remLabel}>
+                      {FEATURE_LABELS[g.feature] || g.feature.replace(/_/g, ' ')}: {g.remaining} / {g.granted} left
+                    </Text>
+                  ))}
+                </View>
+              ))}
+            </View>
+          </VedicCard>
+        )}
+
+        {/* Manage (store-owned subscriptions can only be cancelled in the store) */}
+        {isActive && subscription?.platform !== 'stripe' && (
           <VedicCard style={styles.rcProCard}>
             <View style={styles.rcProRow}>
               <View style={styles.rcProInfo}>
-                <Text style={styles.rcProTitle}>
-                  ✦ VedicScan Pro{rcProduct ? ` — ${PRODUCT_LABEL[rcProduct] ?? rcProduct}` : ''}
+                <Text style={styles.rcProTitle}>✦ {planLabel}</Text>
+                <Text style={styles.rcProSub}>
+                  Verified via {subscription?.platform === 'app_store' ? 'App Store' : 'Google Play'}
                 </Text>
-                <Text style={styles.rcProSub}>Verified via App Store / Google Play</Text>
               </View>
             </View>
-            <TouchableOpacity style={styles.customerCenterBtn} onPress={presentCustomerCenter}>
+            <TouchableOpacity style={styles.customerCenterBtn} onPress={openManageSubscriptions}>
               <Text style={styles.customerCenterText}>Manage Subscription →</Text>
             </TouchableOpacity>
           </VedicCard>
         )}
 
+        {/* Purchased on the web — tell the user where to manage it, rather than
+            opening the Play Store, which knows nothing about this subscription. */}
+        {isActive && subscription?.platform === 'stripe' && (
+          <VedicCard style={styles.rcProCard}>
+            <View style={styles.rcProRow}>
+              <View style={styles.rcProInfo}>
+                <Text style={styles.rcProTitle}>✦ {planLabel}</Text>
+                <Text style={styles.rcProSub}>
+                  Purchased on the web. Manage it from your account on our website.
+                </Text>
+              </View>
+            </View>
+          </VedicCard>
+        )}
+
         {/* Upgrade CTA */}
-        {!rcIsPro && plan === 'free' && (
+        {!isActive && (
           <TouchableOpacity
             style={styles.upgradeBtn}
             onPress={() => navigation.navigate('Pricing')}
           >
             <LinearGradient colors={['#C9A45A', '#C9A45A']} style={styles.upgradeGrad}>
-              <Text style={styles.upgradeText}>🚀 Unlock VedicScan Pro</Text>
+              <Text style={styles.upgradeText}>🚀 View Plans</Text>
             </LinearGradient>
           </TouchableOpacity>
         )}

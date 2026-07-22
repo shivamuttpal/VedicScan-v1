@@ -107,3 +107,8 @@ credentials.json
 *.pem
 *.key
 .credentials
+
+# Templates must be committed: they contain no secrets, only variable names
+# and documentation. Negations come last so they override the .env.* patterns above.
+!.env.example
+!*.env.example

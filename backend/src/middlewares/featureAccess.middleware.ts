@@ -5,6 +5,17 @@ import { UserUsage } from '../modules/subscription/model/subscription.model';
 import { isOneTimeFeature, PLAN_DISPLAY_NAMES, SUBSCRIPTION_PLANS, PAYMENTS_ENABLED } from '../config/plans';
 
 /**
+ * @deprecated SUPERSEDED by the billing module. Do NOT attach to new routes.
+ *
+ * Replaced by `requireFeature()` / `requireFeatureOnce()` from `modules/billing`.
+ * No router references this any more (compatibility and baby-naming migrated in
+ * the RevenueCat rollout).
+ *
+ * Why it must not be reused: its first statement is `if (!PAYMENTS_ENABLED)
+ * return next()`, and `PAYMENTS_ENABLED` is `false` — so it currently grants
+ * every user access to every feature unconditionally.
+ *
+ * ---
  * Middleware to check if a user has access to a one-time feature.
  * 
  * Access is granted if ANY of these are true:

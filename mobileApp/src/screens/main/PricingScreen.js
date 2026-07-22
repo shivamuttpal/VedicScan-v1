@@ -1,4 +1,19 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * Pricing Screen
+ *
+ * Plans, prices and feature lists come from `GET /api/billing/plans` — the same
+ * MongoDB catalogue the website reads — so web and mobile can never advertise
+ * different plans or prices. Purchasing goes through the RevenueCat SDK, which
+ * maps each plan's `storeProductIds` to a Google Play product.
+ *
+ * There is no "Pro" or "Premium" tier: the plans are Free, Standard Monthly,
+ * Standard Yearly and the one-day Add-on Pack.
+ *
+ * Entitlement state is read from OUR backend, never from the SDK's local cache —
+ * the client is not trusted to decide what the user has paid for.
+ */
+
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   Alert, Image, Platform, ActivityIndicator,
@@ -8,126 +23,199 @@ import { C, spacing, radius, fontSize, shadow } from '../../theme';
 import { VedicCard } from '../../components/VedicCard';
 import api from '../../config/api';
 import {
-  getCustomerInfo,
-  hasPro,
-  getActiveProductId,
-  getProExpiryDate,
-  presentPaywall,
-  presentCustomerCenter,
+  purchaseProduct,
   restorePurchases,
-  syncRevenueCatToBackend,
+  openManageSubscriptions,
+  fetchBillingStatus,
+  isConfigured,
 } from '../../config/revenuecat';
 
 const LOGO = require('../../../assets/logo.jpeg');
 const BANNER = require('../../../assets/banner.png');
 
-const PRO_FEATURES = [
-  { icon: '🔮', title: 'Unlimited AI Questions', desc: 'Ask as many Vedic questions as you need, every day.' },
-  { icon: '📜', title: 'Full Birth Chart Analysis', desc: 'Deep Kundali readings with all 9 planets and 12 houses.' },
-  { icon: '💕', title: 'Compatibility Reports', desc: 'Detailed Kundali Milan and Guna matching for relationships.' },
-  { icon: '👶', title: 'Baby Name Generator', desc: 'Nakshatra-based name suggestions for your newborn.' },
-  { icon: '📅', title: 'Monthly Rashifal', desc: 'Personalized monthly horoscope delivered to you.' },
-  { icon: '💬', title: 'Extended Chat History', desc: 'Access your full conversation history, always.' },
-];
-
-const PLAN_LABEL = {
-  monthly: 'Monthly',
-  yearly: 'Yearly',
-  lifetime: 'Lifetime',
+/** Human-readable allowance for a feature entitlement. */
+const describeFeature = (f) => {
+  if (f.unlimited) return `Unlimited ${f.displayName}`;
+  const cadence =
+    f.period === 'daily' ? 'per day' : f.period === 'monthly' ? 'per month' : 'total';
+  return `${f.limit} ${f.displayName} ${cadence}`;
 };
 
 const PricingScreen = ({ navigation }) => {
-  const [isPro, setIsPro] = useState(false);
-  const [activeProduct, setActiveProduct] = useState(null);
-  const [expiryDate, setExpiryDate] = useState(null);
+  const [plans, setPlans] = useState([]);
+  const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState(false);
+  const [purchasing, setPurchasing] = useState(null);
   const [restoring, setRestoring] = useState(false);
-  const [pricingMap, setPricingMap] = useState({});
 
-  useEffect(() => {
-    loadStatus();
-    api.get('/api/subscription/pricing')
-      .then(({ data }) => {
-        if (data.success && Array.isArray(data.data)) {
-          const map = {};
-          data.data.forEach((p) => { map[p.planId] = p; });
-          setPricingMap(map);
-        }
-      })
-      .catch(() => {});
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [plansRes, billing] = await Promise.all([
+        api.get('/api/billing/plans'),
+        fetchBillingStatus(),
+      ]);
+
+      if (plansRes.data?.success) setPlans(plansRes.data.data.plans || []);
+      setStatus(billing);
+    } catch (e) {
+      console.warn('[Pricing] load failed:', e?.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const loadStatus = async () => {
-    setLoading(true);
-    const info = await getCustomerInfo();
-    if (info) {
-      setIsPro(hasPro(info));
-      setActiveProduct(getActiveProductId(info));
-      setExpiryDate(getProExpiryDate(info));
-    }
-    setLoading(false);
-  };
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const handleGetPro = async () => {
-    setPurchasing(true);
-    const result = await presentPaywall();
-    setPurchasing(false);
+  const currentPlanCode = status?.plan?.code || 'free';
+  const isPremium = Boolean(status?.isPremium);
 
-    if (result === 'purchased' || result === 'restored') {
-      // Sync the new purchase to the custom backend immediately
-      await syncRevenueCatToBackend();
-      await loadStatus();
+  const handlePurchase = async (plan) => {
+    const productId = plan.storeProductIds?.[0];
+
+    if (!productId) {
       Alert.alert(
-        'Welcome to VedicScan Pro! 🎉',
-        'Your cosmic journey is now fully unlocked.',
-        [{ text: 'Start Exploring', onPress: () => navigation.goBack() }]
+        'Unavailable',
+        'This plan is not available for in-app purchase yet. Please try our website.'
       );
-    } else if (result === 'not_presented') {
-      // Already has Pro — still sync in case backend is stale
-      await syncRevenueCatToBackend();
-      loadStatus();
+      return;
     }
-    // 'cancelled' and 'error' — do nothing, user is still on the screen
+
+    if (!isConfigured()) {
+      Alert.alert(
+        'Purchases Unavailable',
+        'In-app purchases are not available in this build. Please try again later or use our website.'
+      );
+      return;
+    }
+
+    setPurchasing(plan.code);
+    const { status: result, error } = await purchaseProduct(productId);
+    setPurchasing(null);
+
+    if (result === 'purchased') {
+      await load();
+      Alert.alert('You are all set!', `${plan.displayName} is now active on your account.`, [
+        { text: 'Continue', onPress: () => navigation.goBack() },
+      ]);
+    } else if (result === 'error') {
+      Alert.alert('Purchase Failed', error?.message || 'Something went wrong. Please try again.');
+    }
+    // 'cancelled' — the user backed out; stay on the screen silently.
   };
 
   const handleRestore = async () => {
     setRestoring(true);
-    const { success, customerInfo } = await restorePurchases();
+    const { success, error } = await restorePurchases();
     setRestoring(false);
 
-    if (success && hasPro(customerInfo)) {
-      // Push the restored subscription to the backend
-      await syncRevenueCatToBackend();
-      setIsPro(true);
-      setActiveProduct(getActiveProductId(customerInfo));
-      setExpiryDate(getProExpiryDate(customerInfo));
-      Alert.alert('Restored!', 'Your VedicScan Pro subscription has been restored.');
-    } else if (success) {
-      Alert.alert('Nothing to Restore', 'No active purchases found for this account.');
+    if (!success) {
+      Alert.alert('Restore Failed', error?.message || 'Could not restore purchases.');
+      return;
+    }
+
+    // Re-read from the backend rather than trusting the SDK's local view.
+    const refreshed = await fetchBillingStatus();
+    setStatus(refreshed);
+
+    if (refreshed?.isPremium) {
+      Alert.alert('Restored', `${refreshed.plan.displayName} has been restored to your account.`);
     } else {
-      Alert.alert('Restore Failed', 'Could not restore purchases. Please try again.');
+      Alert.alert('Nothing to Restore', 'No active purchases found for this account.');
     }
   };
 
-  const formatExpiry = (dateStr) => {
+  const formatDate = (dateStr) => {
     if (!dateStr) return null;
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
   };
+
+  const subscriptionPlans = plans.filter((p) => p.kind === 'subscription' && p.code !== 'free');
+  const addonPlans = plans.filter((p) => p.kind === 'one_time');
+  const freePlan = plans.find((p) => p.code === 'free');
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={C.saffron} />
-        <Text style={styles.loadingText}>Loading subscription info…</Text>
+        <Text style={styles.loadingText}>Loading plans…</Text>
       </View>
     );
   }
 
+  const renderPlanCard = (plan, highlight) => {
+    const isCurrent = currentPlanCode === plan.code;
+
+    return (
+      <VedicCard key={plan.code} style={[styles.planCard, highlight && styles.planCardHighlight]}>
+        {highlight && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>BEST VALUE</Text>
+          </View>
+        )}
+
+        <Text style={styles.planName}>{plan.displayName}</Text>
+        {!!plan.description && <Text style={styles.planDesc}>{plan.description}</Text>}
+
+        <View style={styles.planPriceRow}>
+          <Text style={styles.planPrice}>{plan.price?.displayPrice || '—'}</Text>
+          <Text style={styles.planPer}>
+            {plan.billingInterval === 'yearly'
+              ? '/year'
+              : plan.billingInterval === 'monthly'
+                ? '/month'
+                : ''}
+          </Text>
+        </View>
+
+        {plan.billingInterval === 'yearly' && (
+          <Text style={styles.planNote}>Limits refresh every month, all year long</Text>
+        )}
+
+        <View style={styles.planFeatures}>
+          {plan.features.map((f) => (
+            <View key={f.featureKey} style={styles.planFeatureRow}>
+              <Text style={styles.planFeatureTick}>✓</Text>
+              <Text style={styles.planFeatureText}>{describeFeature(f)}</Text>
+            </View>
+          ))}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.planBtn, isCurrent && styles.planBtnCurrent]}
+          onPress={() => !isCurrent && handlePurchase(plan)}
+          disabled={isCurrent || !!purchasing}
+          activeOpacity={0.85}
+        >
+          {purchasing === plan.code ? (
+            <View style={styles.planBtnGradient}>
+              <ActivityIndicator color={C.white} />
+            </View>
+          ) : isCurrent ? (
+            <Text style={styles.planBtnCurrentText}>✓ Current Plan</Text>
+          ) : (
+            <LinearGradient
+              colors={['#C9A45A', '#B8650A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.planBtnGradient}
+            >
+              <Text style={styles.planBtnText}>Get {plan.displayName}</Text>
+            </LinearGradient>
+          )}
+        </TouchableOpacity>
+      </VedicCard>
+    );
+  };
+
   return (
     <View style={styles.container}>
-      {/* Header */}
       <LinearGradient colors={C.heroGradient} style={styles.header}>
         <Image source={BANNER} style={styles.headerBannerOverlay} />
         <View style={styles.headerTopRow}>
@@ -136,122 +224,92 @@ const PricingScreen = ({ navigation }) => {
           </TouchableOpacity>
           <Image source={LOGO} style={styles.headerLogo} />
         </View>
-        <Text style={styles.headerTitle}>VedicScan Pro</Text>
+        <Text style={styles.headerTitle}>Choose Your Plan</Text>
         <Text style={styles.headerSub}>Unlock the full power of Vedic wisdom</Text>
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-
         {/* Active subscription banner */}
-        {isPro && (
+        {isPremium && (
           <View style={styles.activeBanner}>
             <Text style={styles.activeBannerIcon}>✓</Text>
             <View style={styles.activeBannerText}>
-              <Text style={styles.activeBannerTitle}>
-                VedicScan Pro{activeProduct ? ` — ${PLAN_LABEL[activeProduct] ?? activeProduct}` : ''}
-              </Text>
-              {expiryDate && activeProduct !== 'lifetime' ? (
-                <Text style={styles.activeBannerSub}>Renews {formatExpiry(expiryDate)}</Text>
-              ) : activeProduct === 'lifetime' ? (
-                <Text style={styles.activeBannerSub}>Lifetime access — never expires</Text>
-              ) : null}
+              <Text style={styles.activeBannerTitle}>{status.plan.displayName} active</Text>
+              {status.subscription?.expiresAt && (
+                <Text style={styles.activeBannerSub}>
+                  {status.subscription.willRenew ? 'Renews' : 'Access until'}{' '}
+                  {formatDate(status.subscription.expiresAt)}
+                </Text>
+              )}
             </View>
           </View>
         )}
 
-        {/* Feature list */}
-        <VedicCard style={styles.featuresCard}>
-          <Text style={styles.featuresTitle}>Everything included in Pro</Text>
-          {PRO_FEATURES.map((f) => (
-            <View key={f.title} style={styles.featureRow}>
-              <View style={styles.featureIconWrap}>
-                <Text style={styles.featureIcon}>{f.icon}</Text>
-              </View>
-              <View style={styles.featureText}>
-                <Text style={styles.featureName}>{f.title}</Text>
-                <Text style={styles.featureDesc}>{f.desc}</Text>
-              </View>
-            </View>
-          ))}
-        </VedicCard>
+        {/* Subscription plans */}
+        {subscriptionPlans.map((plan) => renderPlanCard(plan, plan.billingInterval === 'yearly'))}
 
-        {/* Pricing preview */}
-        {!isPro && pricingMap.premium && (
-          <VedicCard style={styles.priceCard}>
-            <Text style={styles.priceCardTitle}>VedicScan Pro</Text>
-            <View style={styles.priceRow}>
-              <View style={styles.priceItem}>
-                <Text style={styles.priceAmount}>₹{pricingMap.premium.INR.monthly}<Text style={styles.pricePer}>/mo</Text></Text>
-                <Text style={styles.priceLabel}>Monthly</Text>
-              </View>
-              <View style={styles.priceDivider} />
-              <View style={styles.priceItem}>
-                <Text style={styles.priceAmount}>₹{pricingMap.premium.INR.annual}<Text style={styles.pricePer}>/yr</Text></Text>
-                <Text style={styles.priceLabel}>Annual</Text>
-              </View>
+        {/* Add-on packs */}
+        {addonPlans.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>Need a top-up?</Text>
+            <Text style={styles.sectionSub}>
+              One-time boosts — valid for the day of purchase only.
+            </Text>
+            {addonPlans.map((plan) => renderPlanCard(plan, false))}
+          </>
+        )}
+
+        {/* Free plan reference */}
+        {freePlan && !isPremium && (
+          <VedicCard style={styles.planCard}>
+            <Text style={styles.planName}>{freePlan.displayName}</Text>
+            {!!freePlan.description && <Text style={styles.planDesc}>{freePlan.description}</Text>}
+            <View style={styles.planFeatures}>
+              {freePlan.features.map((f) => (
+                <View key={f.featureKey} style={styles.planFeatureRow}>
+                  <Text style={styles.planFeatureTick}>✓</Text>
+                  <Text style={styles.planFeatureText}>{describeFeature(f)}</Text>
+                </View>
+              ))}
             </View>
-            <Text style={styles.priceNote}>Final price selected in checkout · USD pricing also available</Text>
+            <Text style={styles.planNote}>
+              {currentPlanCode === 'free' ? 'Your current plan' : 'Included for everyone'}
+            </Text>
           </VedicCard>
         )}
 
-        {/* CTA */}
-        {!isPro ? (
-          <>
-            <TouchableOpacity
-              style={styles.ctaBtn}
-              onPress={handleGetPro}
-              disabled={purchasing}
-              activeOpacity={0.85}
-            >
-              <LinearGradient
-                colors={['#C9A45A', '#B8650A']}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                style={styles.ctaGradient}
-              >
-                {purchasing ? (
-                  <ActivityIndicator color={C.white} />
-                ) : (
-                  <>
-                    <Text style={styles.ctaText}>Unlock VedicScan Pro</Text>
-                    <Text style={styles.ctaSub}>Monthly · Yearly · Lifetime — choose inside</Text>
-                  </>
-                )}
-              </LinearGradient>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.restoreBtn}
-              onPress={handleRestore}
-              disabled={restoring}
-            >
-              {restoring
-                ? <ActivityIndicator size="small" color={C.textMuted} />
-                : <Text style={styles.restoreText}>Restore Previous Purchase</Text>}
-            </TouchableOpacity>
-          </>
-        ) : (
+        {/* Restore / manage */}
+        {isPremium ? (
           <TouchableOpacity
             style={styles.manageBtn}
-            onPress={presentCustomerCenter}
+            onPress={openManageSubscriptions}
             activeOpacity={0.85}
           >
             <LinearGradient
               colors={['#1C6EF2', '#1558C0']}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={styles.ctaGradient}
             >
               <Text style={styles.ctaText}>Manage Subscription</Text>
-              <Text style={styles.ctaSub}>Cancel, upgrade, or request a refund</Text>
+              <Text style={styles.ctaSub}>Cancel or change your plan</Text>
             </LinearGradient>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.restoreBtn} onPress={handleRestore} disabled={restoring}>
+            {restoring ? (
+              <ActivityIndicator size="small" color={C.textMuted} />
+            ) : (
+              <Text style={styles.restoreText}>Restore Previous Purchase</Text>
+            )}
           </TouchableOpacity>
         )}
 
-        {/* Legal note */}
         <Text style={styles.legalNote}>
           {Platform.OS === 'ios'
             ? 'Subscriptions auto-renew unless cancelled 24h before the renewal date in Apple App Store Settings.'
             : 'Subscriptions auto-renew unless cancelled in Google Play Store before the renewal date.'}
-          {'\n'}Prices are shown in the checkout screen.
+          {'\n'}Add-on packs are one-time purchases valid for the day of purchase only.
         </Text>
 
         <View style={{ height: 40 }} />
@@ -302,51 +360,52 @@ const styles = StyleSheet.create({
   activeBannerTitle: { fontSize: fontSize.lg, fontWeight: '800', color: '#15803D' },
   activeBannerSub: { fontSize: fontSize.sm, color: '#4ADE80', marginTop: 2 },
 
-  // Features card
-  featuresCard: {
+  // Section headings
+  sectionTitle: {
+    fontSize: fontSize.lg, fontWeight: '800', color: C.text,
+    marginTop: spacing.md, marginBottom: 2,
+  },
+  sectionSub: { fontSize: fontSize.sm, color: C.textMuted, marginBottom: spacing.lg },
+
+  // Plan cards
+  planCard: {
     backgroundColor: C.white, marginBottom: spacing.xl,
     padding: spacing.xl, borderWidth: 0, ...shadow.md,
   },
-  featuresTitle: {
-    fontSize: fontSize.lg, fontWeight: '800', color: C.text,
-    marginBottom: spacing.xl,
+  planCardHighlight: { borderWidth: 2, borderColor: '#C9A45A' },
+  badge: {
+    position: 'absolute', top: -10, alignSelf: 'center',
+    backgroundColor: '#B8650A', paddingHorizontal: 12, paddingVertical: 4,
+    borderRadius: radius.md,
   },
-  featureRow: {
-    flexDirection: 'row', alignItems: 'flex-start',
-    marginBottom: spacing.lg,
+  badgeText: { color: C.white, fontSize: 10, fontWeight: '800', letterSpacing: 1 },
+  planName: { fontSize: fontSize.lg, fontWeight: '800', color: C.text },
+  planDesc: { fontSize: fontSize.sm, color: C.textMuted, marginTop: 4, lineHeight: 18 },
+  planPriceRow: { flexDirection: 'row', alignItems: 'flex-end', marginTop: spacing.md },
+  planPrice: { fontSize: fontSize.h2, fontWeight: '800', color: '#C9A45A' },
+  planPer: { fontSize: fontSize.sm, color: C.textMuted, marginLeft: 4, marginBottom: 4 },
+  planNote: { fontSize: 11, color: '#16A34A', marginTop: 4, fontWeight: '600' },
+  planFeatures: { marginTop: spacing.lg, marginBottom: spacing.lg },
+  planFeatureRow: {
+    flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.sm,
   },
-  featureIconWrap: {
-    width: 44, height: 44, borderRadius: 12,
-    backgroundColor: '#FFFDF8', alignItems: 'center', justifyContent: 'center',
-    marginRight: spacing.md, flexShrink: 0,
+  planFeatureTick: {
+    color: '#16A34A', fontSize: fontSize.md, fontWeight: '800',
+    marginRight: spacing.sm, marginTop: 1,
   },
-  featureIcon: { fontSize: 22 },
-  featureText: { flex: 1 },
-  featureName: { fontSize: fontSize.md, fontWeight: '700', color: C.text },
-  featureDesc: { fontSize: fontSize.sm, color: C.textMuted, marginTop: 2, lineHeight: 18 },
-
-  // Pricing preview card
-  priceCard: {
-    backgroundColor: C.white, marginBottom: spacing.xl,
-    padding: spacing.lg, borderWidth: 0, ...shadow.md,
+  planFeatureText: { flex: 1, fontSize: fontSize.sm, color: C.text, lineHeight: 19 },
+  planBtn: { borderRadius: radius.xl, overflow: 'hidden' },
+  planBtnGradient: {
+    paddingVertical: 16, alignItems: 'center', paddingHorizontal: spacing.lg,
   },
-  priceCardTitle: {
-    fontSize: fontSize.md, fontWeight: '700', color: C.text,
-    textAlign: 'center', marginBottom: spacing.md,
+  planBtnText: { color: C.white, fontSize: fontSize.md, fontWeight: '800' },
+  planBtnCurrent: {
+    backgroundColor: '#F0FDF4', borderWidth: 1.5, borderColor: '#22C55E',
+    paddingVertical: 16, alignItems: 'center',
   },
-  priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  priceItem: { flex: 1, alignItems: 'center' },
-  priceAmount: { fontSize: fontSize.h2, fontWeight: '800', color: '#C9A45A' },
-  pricePer: { fontSize: fontSize.sm, fontWeight: '400', color: C.textMuted },
-  priceLabel: { fontSize: fontSize.xs ?? 11, color: C.textMuted, marginTop: 2 },
-  priceDivider: { width: 1, height: 40, backgroundColor: C.border ?? '#E5E7EB', marginHorizontal: spacing.md },
-  priceNote: {
-    fontSize: 11, color: C.textMuted, textAlign: 'center',
-    marginTop: spacing.md, lineHeight: 15,
-  },
+  planBtnCurrentText: { color: '#15803D', fontSize: fontSize.md, fontWeight: '800' },
 
   // CTA
-  ctaBtn: { borderRadius: radius.xl, overflow: 'hidden', marginBottom: spacing.lg },
   manageBtn: { borderRadius: radius.xl, overflow: 'hidden', marginBottom: spacing.lg },
   ctaGradient: {
     paddingVertical: 20, alignItems: 'center', paddingHorizontal: spacing.lg,

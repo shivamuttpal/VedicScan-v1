@@ -14,10 +14,30 @@ import VedicLoader from '../components/VedicLoader';
 import api from '../utils/api';
 import { toast } from 'sonner';
 
+/**
+ * Visual styling per plan code. There is intentionally NO 'premium' entry —
+ * the plan set is Free, Standard Monthly, Standard Yearly and the Add-on Pack.
+ * The display NAME always comes from the API (and therefore MongoDB); this map
+ * only carries colours and icons.
+ */
 const PLAN_META = {
-  free:     { label: 'Free',     color: 'text-vtext-mid', bg: 'bg-vborder/30',       border: 'border-vborder',     icon: Sparkles  },
-  standard: { label: 'Standard', color: 'text-saffron',   bg: 'bg-saffron-pale',     border: 'border-saffron/40',  icon: Crown     },
-  premium:  { label: 'Premium',  color: 'text-vpurple',   bg: 'bg-vpurple-soft',     border: 'border-vpurple/40',  icon: Crown     },
+  free:             { color: 'text-vtext-mid', bg: 'bg-vborder/30',   border: 'border-vborder',    icon: Sparkles },
+  standard_monthly: { color: 'text-saffron',   bg: 'bg-saffron-pale', border: 'border-saffron/40', icon: Crown },
+  standard_yearly:  { color: 'text-saffron',   bg: 'bg-saffron-pale', border: 'border-saffron/40', icon: Crown },
+};
+
+/**
+ * Friendly names for feature keys. Falls back to a de-underscored key, so a
+ * newly added feature still renders sensibly before this map is updated.
+ */
+const FEATURE_LABELS = {
+  ai_chat: 'AI Chat Sessions',
+  kundali_report: 'Detailed Kundali Reports',
+  kundali_basic: 'Basic Kundali',
+  compatibility_report: 'Detailed Compatibility Reports',
+  compatibility_basic: 'Basic Compatibility Match',
+  baby_naming: 'Baby Naming',
+  rashifal_notification: 'Daily Rashifal',
 };
 
 function daysUntil(dateStr) {
@@ -33,9 +53,10 @@ function formatDate(dateStr) {
   });
 }
 
+/** Renders one feature quota. `limit === null` means unlimited. */
 const UsageBar = ({ label, used, limit }) => {
-  const isUnlimited = limit >= 99999;
-  const pct = isUnlimited ? 0 : Math.min(100, Math.round((used / limit) * 100));
+  const isUnlimited = limit === null || limit === undefined;
+  const pct = isUnlimited || !limit ? 0 : Math.min(100, Math.round((used / limit) * 100));
   const barColor = pct >= 90 ? 'bg-vred' : pct >= 70 ? 'bg-saffron' : 'bg-vgreen';
   return (
     <div>
@@ -67,9 +88,22 @@ const Subscription = () => {
   const fetchStatus = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/api/subscription/status');
-      setStatus(data);
-      setEmailUnsubscribed(data?.emailUnsubscribed ?? true);
+      // Billing state comes from the entitlement engine. Email preference still
+      // lives on the legacy subscription endpoints, so it is fetched separately.
+      const [billing, legacy] = await Promise.allSettled([
+        api.get('/api/billing/status'),
+        api.get('/api/subscription/status'),
+      ]);
+
+      if (billing.status === 'fulfilled' && billing.value.data?.success) {
+        setStatus(billing.value.data.data);
+      } else {
+        throw new Error('billing status unavailable');
+      }
+
+      if (legacy.status === 'fulfilled') {
+        setEmailUnsubscribed(legacy.value.data?.emailUnsubscribed ?? true);
+      }
     } catch (err) {
       toast.error('Failed to load subscription details');
     } finally {
@@ -98,12 +132,25 @@ const Subscription = () => {
     }
   };
 
-  const plan = status?.plan || 'free';
+  const plan = status?.plan?.code || 'free';
+  const planLabel = status?.plan?.displayName || 'Free';
   const meta = PLAN_META[plan] || PLAN_META.free;
   const PlanIcon = meta.icon;
-  const daysLeft = daysUntil(status?.planEndDate);
-  const isActive = plan !== 'free';
+  const subscription = status?.subscription;
+  const daysLeft = daysUntil(subscription?.expiresAt);
+  const isActive = Boolean(status?.isPremium);
   const expiringSoon = isActive && daysLeft !== null && daysLeft <= 7 && daysLeft > 0;
+
+  // Quotas are rendered generically from the API, so a new premium feature
+  // appears here automatically with no frontend change.
+  const quotas = status?.quotas || [];
+  const chatQuota = quotas.find((q) => q.feature === 'ai_chat');
+  const addons = status?.addons || [];
+
+  // Access continues after cancellation until the paid period ends — say so
+  // rather than showing a bare "Active" badge that hides the pending end.
+  const isCancelled = subscription?.status === 'cancelled';
+  const inGracePeriod = subscription?.isInGracePeriod;
 
   if (loading) {
     return (
@@ -154,12 +201,20 @@ const Subscription = () => {
                 </div>
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-vtext-muted font-bold">Current Plan</p>
-                  <h2 className={`text-2xl font-bold font-playfair ${meta.color}`}>{meta.label}</h2>
+                  <h2 className={`text-2xl font-bold font-playfair ${meta.color}`}>{planLabel}</h2>
                 </div>
               </div>
 
               {isActive ? (
-                expiringSoon ? (
+                isCancelled ? (
+                  <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-saffron-pale text-saffron border border-saffron/20">
+                    <AlertCircle className="w-3.5 h-3.5" /> Cancelled · access until expiry
+                  </span>
+                ) : inGracePeriod ? (
+                  <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-saffron-pale text-saffron border border-saffron/20">
+                    <AlertCircle className="w-3.5 h-3.5" /> Payment issue · retrying
+                  </span>
+                ) : expiringSoon ? (
                   <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-saffron-pale text-saffron border border-saffron/20">
                     <AlertCircle className="w-3.5 h-3.5" /> Expiring Soon
                   </span>
@@ -183,8 +238,15 @@ const Subscription = () => {
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-vtext-muted font-bold">Billing</p>
                   <p className="font-semibold text-vtext capitalize">
-                    {status?.billingCycle && status.billingCycle !== 'none' ? status.billingCycle : 'N/A'}
+                    {status?.plan?.billingInterval && status.plan.billingInterval !== 'none'
+                      ? status.plan.billingInterval
+                      : 'N/A'}
                   </p>
+                  {subscription?.platform && subscription.platform !== 'unknown' && (
+                    <p className="text-xs text-vtext-muted mt-0.5">
+                      via {subscription.platform.replace(/_/g, ' ')}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -197,7 +259,7 @@ const Subscription = () => {
                     {isActive ? 'Renews / Expires' : 'Plan'}
                   </p>
                   <p className="font-semibold text-vtext">
-                    {status?.planEndDate ? formatDate(status.planEndDate) : 'No expiry'}
+                    {subscription?.expiresAt ? formatDate(subscription.expiresAt) : 'No expiry'}
                   </p>
                   {isActive && daysLeft !== null && (
                     <p className={`text-xs mt-0.5 font-medium ${expiringSoon ? 'text-saffron' : 'text-vtext-muted'}`}>
@@ -214,8 +276,8 @@ const Subscription = () => {
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-vtext-muted font-bold">Daily Reset</p>
                   <p className="font-semibold text-vtext">
-                    {status?.next_daily_reset
-                      ? new Date(status.next_daily_reset).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                    {chatQuota?.resetAt
+                      ? new Date(chatQuota.resetAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
                       : '12:00 AM'}
                   </p>
                   <p className="text-xs text-vtext-muted mt-0.5">IST midnight</p>
@@ -228,7 +290,7 @@ const Subscription = () => {
                 <AlertCircle className="w-5 h-5 text-saffron flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-saffron">Plan expires in {daysLeft} day{daysLeft !== 1 ? 's' : ''}</p>
-                  <p className="text-xs text-vtext-muted mt-1">Renew now to keep your premium access uninterrupted.</p>
+                  <p className="text-xs text-vtext-muted mt-1">Renew now to keep your Standard access uninterrupted.</p>
                 </div>
                 <Button
                   onClick={() => navigate('/pricing')}
@@ -250,40 +312,82 @@ const Subscription = () => {
               </h3>
             </div>
             <div className="p-6 space-y-6">
-              <UsageBar
-                label="Daily Questions"
-                used={status?.usage?.daily?.used ?? 0}
-                limit={status?.limits?.daily_questions ?? 3}
-              />
-              {/* Monthly question limit tracking disabled
-              <UsageBar
-                label="Monthly Questions"
-                used={status?.usage?.monthly?.used ?? 0}
-                limit={status?.limits?.monthly_questions ?? 90}
-              /> */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div className="p-5 rounded-xl bg-vedic-bg border border-vborder/50 text-center shadow-sm">
-                  <p className="text-3xl font-bold text-vtext font-playfair">
-                    {Math.max(0, (status?.limits?.daily_questions ?? 3) - (status?.usage?.daily?.used ?? 0)) >= 99999
-                      ? '∞'
-                      : Math.max(0, (status?.limits?.daily_questions ?? 3) - (status?.usage?.daily?.used ?? 0))
-                    }
-                  </p>
-                  <p className="text-[10px] uppercase tracking-wider text-vtext-muted mt-2 font-semibold">Questions left today</p>
+              {/* Rendered generically from the API, so adding a premium feature
+                  to a plan in MongoDB surfaces it here with no frontend change. */}
+              {quotas.length === 0 && (
+                <p className="text-sm text-vtext-muted">No usage data available yet.</p>
+              )}
+
+              {quotas.map((q) => (
+                <UsageBar
+                  key={q.feature}
+                  label={FEATURE_LABELS[q.feature] || q.feature.replace(/_/g, ' ')}
+                  used={q.used}
+                  limit={q.limit}
+                />
+              ))}
+
+              {chatQuota && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div className="p-5 rounded-xl bg-vedic-bg border border-vborder/50 text-center shadow-sm">
+                    <p className="text-3xl font-bold text-vtext font-playfair">
+                      {chatQuota.unlimited ? '∞' : chatQuota.remaining}
+                    </p>
+                    <p className="text-[10px] uppercase tracking-wider text-vtext-muted mt-2 font-semibold">
+                      Chats left today
+                    </p>
+                  </div>
+                  {chatQuota.addonLimit > 0 && (
+                    <div className="p-5 rounded-xl bg-saffron-pale border border-saffron/30 text-center shadow-sm">
+                      <p className="text-3xl font-bold text-saffron font-playfair">
+                        +{chatQuota.addonLimit}
+                      </p>
+                      <p className="text-[10px] uppercase tracking-wider text-vtext-muted mt-2 font-semibold">
+                        From add-on pack
+                      </p>
+                    </div>
+                  )}
                 </div>
-                {/* Monthly "Questions left this month" box disabled
-                <div className="p-5 rounded-xl bg-vedic-bg border border-vborder/50 text-center shadow-sm">
-                  <p className="text-3xl font-bold text-vtext font-playfair">
-                    {Math.max(0, (status?.limits?.monthly_questions ?? 90) - (status?.usage?.monthly?.used ?? 0)) >= 99999
-                      ? '∞'
-                      : Math.max(0, (status?.limits?.monthly_questions ?? 90) - (status?.usage?.monthly?.used ?? 0))
-                    }
-                  </p>
-                  <p className="text-[10px] uppercase tracking-wider text-vtext-muted mt-2 font-semibold">Questions left this month</p>
-                </div> */}
-              </div>
+              )}
             </div>
           </GoldCard>
+
+          {/* Active add-on packs */}
+          {addons.length > 0 && (
+            <GoldCard className="shadow-md">
+              <div className="px-6 py-4 border-b border-vborder">
+                <h3 className="flex items-center gap-2 font-semibold text-vtext">
+                  <Zap className="w-4 h-4 text-saffron" />
+                  Active Add-ons
+                </h3>
+              </div>
+              <div className="p-6 space-y-4">
+                {addons.map((addon, i) => (
+                  <div
+                    key={`${addon.planCode}-${i}`}
+                    className="p-4 rounded-xl bg-vedic-bg border border-vborder/50"
+                  >
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <p className="font-semibold text-vtext text-sm">Add-on Pack</p>
+                      <span className="text-xs text-vtext-muted">
+                        Expires {new Date(addon.expiresAt).toLocaleString('en-IN', {
+                          hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short',
+                        })}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                      {addon.grants.map((g) => (
+                        <span key={g.feature} className="text-xs text-vtext-mid">
+                          {FEATURE_LABELS[g.feature] || g.feature.replace(/_/g, ' ')}:{' '}
+                          <strong className="text-saffron">{g.remaining}</strong> / {g.granted} left
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </GoldCard>
+          )}
 
           {/* Email Preferences */}
           <GoldCard className="shadow-md">
@@ -337,7 +441,7 @@ const Subscription = () => {
                 className="flex-1 bg-gradient-to-r from-saffron to-maroon text-white font-bold py-6 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 group"
               >
                 <Zap className="w-5 h-5" />
-                Upgrade to Premium
+                Upgrade to Standard
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             ) : (

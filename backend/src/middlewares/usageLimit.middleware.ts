@@ -1,6 +1,20 @@
 /**
+ * @deprecated SUPERSEDED by the billing module. Do NOT attach to new routes.
+ *
+ * Replaced by `requireFeature(FEATURE_KEYS.AI_CHAT)` from `modules/billing`.
+ * No router references this any more (chat migrated in the RevenueCat rollout).
+ *
+ * Why it must not be reused: it reads limits from the hardcoded `config/plans.ts`
+ * table and is gated by `PAYMENTS_ENABLED`, which is `false` — so it grants
+ * effectively unlimited access to everyone. Attaching it to a route would
+ * silently bypass the database-driven entitlement system.
+ *
+ * Kept only so the legacy `/api/subscription` Stripe endpoints keep compiling.
+ * Safe to delete once those are retired.
+ *
+ * ---
  * Usage Limit Middleware
- * 
+ *
  * Enforces per-plan daily and monthly question limits,
  * and validates message word count before reaching the AI.
  * 

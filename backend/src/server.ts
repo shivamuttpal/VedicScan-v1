@@ -8,7 +8,7 @@ import rateLimit from 'express-rate-limit';
 import config from './config';
 import connectDatabase from './config/database';
 import { errorHandler, notFoundHandler } from './middlewares';
-import { userRouter, profileRouter, chartRouter, chatRouter, subscriptionRouter, compatibilityRouter, babyNamingRouter, rashifalRouter, systemRouter, kundaliRouter } from './modules';
+import { userRouter, profileRouter, chartRouter, chatRouter, subscriptionRouter, billingRouter, compatibilityRouter, babyNamingRouter, rashifalRouter, systemRouter, kundaliRouter } from './modules';
 import { initCronJobs } from './utils/cron.util';
 
 // Initialize Express app
@@ -58,10 +58,18 @@ app.use(limiter);
 // Body parsing middleware
 // SECURITY: a 1 MB limit is ample for JSON API payloads (chat, profiles, charts) and
 // reduces the large-payload DoS surface. Raise per-route only if a specific endpoint needs it.
+// Stripe signs the RAW request bytes, so the unparsed buffer must be preserved
+// for any route that verifies a Stripe signature. Without this the HMAC is
+// computed over re-serialised JSON and never matches, so every webhook 400s.
+const STRIPE_WEBHOOK_PATHS = [
+  '/api/billing/webhooks/stripe', // current rail
+  '/api/subscription/webhook',    // legacy rail, retained during migration
+];
+
 app.use(express.json({
   limit: '1mb',
   verify: (req: any, _res, buf) => {
-    if (req.originalUrl && req.originalUrl.startsWith('/api/subscription/webhook')) {
+    if (req.originalUrl && STRIPE_WEBHOOK_PATHS.some((p) => req.originalUrl.startsWith(p))) {
       req.rawBody = buf;
     }
   }
@@ -88,7 +96,11 @@ app.use('/api/users', userRouter);
 app.use('/api/profiles', profileRouter);
 app.use('/api/chart', chartRouter);
 app.use('/api/chat', chatRouter);
+// Legacy Stripe/web checkout + email preferences. Retained for the web payment
+// rail; mobile subscriptions are handled entirely by /api/billing (RevenueCat).
 app.use('/api/subscription', subscriptionRouter);
+// RevenueCat-backed billing: plan catalogue, entitlements, quotas, webhooks.
+app.use('/api/billing', billingRouter);
 app.use('/api/compatibility', compatibilityRouter);
 app.use('/api/baby-naming', babyNamingRouter);
 app.use('/api/rashifal', rashifalRouter);

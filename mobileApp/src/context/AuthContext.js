@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api, { TOKEN_KEY } from '../config/api';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { loginRevenueCat, logoutRevenueCat, syncRevenueCatToBackend } from '../config/revenuecat';
+import { loginRevenueCat, logoutRevenueCat, syncToBackend } from '../config/revenuecat';
 
 // IMPORTANT: Replace this with the "Web Client ID" from your new google-services.json (client_type: 3)
 const GOOGLE_WEB_CLIENT_ID = '556295205143-hbht1irra1a2lb2vnp2i34ko6ki3c5dr.apps.googleusercontent.com';
@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         // Sync RevenueCat → backend on every app start to catch any missed webhooks
-        syncRevenueCatToBackend().catch(() => {});
+        syncToBackend().catch(() => {});
 
       }
     } catch (error) {

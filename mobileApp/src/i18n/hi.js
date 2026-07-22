@@ -20,8 +20,8 @@ export default {
   kundaliMatching: 'कुंडली मिलान',
   kundali36Gunas: '36 गुण',
   kundaliDesc: 'अष्टकूट संगतता और गुण मिलान विश्लेषण',
-  unlockPremium: 'प्रीमियम अनलॉक करें',
-  premiumDesc: 'असीमित चैट, विस्तृत चार्ट और बहुत कुछ',
+  unlockPremium: 'स्टैंडर्ड में अपग्रेड करें',
+  premiumDesc: 'रोज़ 11 AI चैट, विस्तृत रिपोर्ट और बहुत कुछ',
 
   // HomeScreen — AI guide capsule
   yourVedicGuide: 'आपका वैदिक मार्गदर्शक',
@@ -45,7 +45,7 @@ export default {
   drawerKundaliGenerate: 'कुंडली बनाएं',
   drawerBabyNaming: 'शिशु नामकरण',
   drawerAskMaharishi: 'महर्षि AI से पूछें',
-  drawerUnlockPremium: 'प्रीमियम अनलॉक करें',
+  drawerUnlockPremium: 'स्टैंडर्ड में अपग्रेड करें',
   drawerMySubscription: 'मेरी सदस्यता',
   drawerProfileSettings: 'प्रोफ़ाइल और सेटिंग्स',
   drawerLogout: 'लॉगआउट',
@@ -165,16 +165,16 @@ export default {
   // Premium report
   compatPremiumReportTitle: 'सम्पूर्ण विश्लेषण रिपोर्ट',
   compatPremiumReportSub: '9-पृष्ठ प्रीमियम PDF · सभी गुण · उपाय · जीवन क्षेत्र',
-  compatPremiumReportLocked: '₹1,499 में अनलॉक करें या प्रीमियम से',
+  compatPremiumReportLocked: 'स्टैंडर्ड या ऐड-ऑन पैक से अनलॉक करें',
   compatPremiumReportError: 'रिपोर्ट तैयार नहीं हो सकी। कृपया पुनः प्रयास करें।',
-  compatPremiumShareTitle: 'अपनी प्रीमियम संगतता रिपोर्ट साझा करें',
+  compatPremiumShareTitle: 'अपनी संगतता रिपोर्ट साझा करें',
 
   // Premium paywall modal
   compatModalTitle: 'सम्पूर्ण कुंडली मिलान रिपोर्ट',
   compatModalBadge: 'प्रीमियम रिपोर्ट',
   compatWhatsIncluded: 'क्या शामिल है',
   compatUnlockOptions: 'अनलॉक विकल्प',
-  compatPremiumPlanDesc: 'असीमित रिपोर्ट + सभी सुविधाएं + AI चैट',
+  compatPremiumPlanDesc: 'हर महीने 5 विस्तृत रिपोर्ट + AI चैट + असीमित बेबी नामकरण',
   compatPerMonth: '/माह',
   compatBestValue: 'सर्वश्रेष्ठ मूल्य',
   compatReportOnlyTitle: 'केवल यह रिपोर्ट',
